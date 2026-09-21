@@ -125,11 +125,8 @@
     });
   }
 
-  // ─── UAZAPI Config ──────────────────────────────────
-  var UAZAPI = {
-    url: 'https://clara-ai.uazapi.com',
-    token: '10625a6c-1690-4356-a862-57da4401d555'
-  };
+  // ─── WhatsApp Proxy (via n8n) ────────────────────────
+  var WHATSAPP_PROXY = 'https://qubitadvisors.app.n8n.cloud/webhook/ragui-whatsapp';
 
   // ─── Validação e Verificação WhatsApp ──────────────
   var form = document.getElementById('form-cadastro');
@@ -173,14 +170,13 @@
     return '(' + tel.slice(0, 2) + ') ' + tel.slice(2, 6) + '-' + tel.slice(6);
   }
 
-  // Enviar mensagem via UAZAPI
+  // Enviar mensagem via proxy n8n → UAZAPI
   function enviarWhatsApp(numero, mensagem) {
     var numeroCompleto = '55' + numero;
-    return fetch(UAZAPI.url + '/sendText', {
+    return fetch(WHATSAPP_PROXY, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'token': UAZAPI.token
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         number: numeroCompleto,
