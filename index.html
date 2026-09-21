@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RAGUI — Vídeos Educacionais de Alto Desempenho</title>
+  <meta name="description" content="Aprenda como nunca. Sinta como cinema. Vídeos educacionais em formato de novela vertical com qualidade Hollywood.">
+
+  <!-- ============================================================
+       MEDIÇÃO
+       Preencha só o que for usar; o que ficar vazio não carrega nada.
+       ============================================================ -->
+  <script>
+  window.RAGUI_LISTA = 'https://qubitadvisors.app.n8n.cloud/webhook/cadastro-aluno';
+
+  window.RAGUI_MEDICAO = {
+    meta:   '',
+    tiktok: '',
+    ga4:    ''
+  };
+
+  (function(){
+    var P = window.RAGUI_MEDICAO || {};
+
+    if (P.meta){
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+      (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', P.meta);
+      fbq('track', 'PageView');
+    }
+
+    if (P.tiktok){
+      !function(w,d,t){w.TiktokAnalyticsObject=t;var q=w[t]=w[t]||[];
+      q.methods=['page','track','identify','instances','debug','on','off','once','ready','alias','group','enableCookie','disableCookie'];
+      q.setAndDefer=function(o,m){o[m]=function(){o.push([m].concat(Array.prototype.slice.call(arguments,0)))}};
+      for(var i=0;i<q.methods.length;i++)q.setAndDefer(q,q.methods[i]);
+      q.load=function(e){var u='https://analytics.tiktok.com/i18n/pixel/events.js';
+      q._i=q._i||{};q._i[e]=[];q._i[e]._u=u;q._t=q._t||{};q._t[e]=+new Date;q._o=q._o||{};
+      var o=d.createElement('script');o.async=!0;o.src=u+'?sdkid='+e+'&lib='+t;
+      var a=d.getElementsByTagName('script')[0];a.parentNode.insertBefore(o,a)};
+      q.load(P.tiktok);q.page()}(window,document,'ttq');
+    }
+
+    if (P.ga4){
+      var g = document.createElement('script'); g.async = true;
+      g.src = 'https://www.googletagmanager.com/gtag/js?id=' + P.ga4;
+      document.head.appendChild(g);
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function(){ dataLayer.push(arguments); };
+      gtag('js', new Date());
+      gtag('config', P.ga4);
+    }
+
+    window.RAGUI_ATIVO = !!(P.meta || P.tiktok || P.ga4);
+
+    window.raguiEvento = function(nome, dados){
+      try { if (window.fbq)  fbq('track', nome, dados || {}); } catch(e){}
+      try { if (window.ttq)  ttq.track(nome, dados || {});    } catch(e){}
+      try { if (window.gtag) gtag('event', nome, dados || {}); } catch(e){}
+    };
+  })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <div class="header__inner">
+      <a href="/" class="header__logo">
+        <span class="logo-text">RAG<span class="logo-accent">UI</span></span>
+      </a>
+      <button class="btn btn--primary btn--sm abre-cadastro" type="button">Cadastre-se Grátis</button>
+    </div>
+  </header>
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero" id="hero">
+    <div class="hero__bg">
+      <div class="hero__gradient"></div>
+      <div class="hero__particles" id="particles"></div>
+    </div>
+    <div class="hero__content">
+      <p class="hero__pre">🎬 Uma nova era de aprendizado</p>
+      <h1 class="hero__title hero__title--compact">
+        Aprenda como <span class="text-glow">nunca</span>.
+        Sinta como <span class="text-glow-red">cinema</span>.
+      </h1>
+      <p class="hero__sub hero__sub--compact">
+        Vídeos educacionais em formato de novela vertical — com a intensidade de uma série da Netflix.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== CATÁLOGO ===================== -->
+  <section class="catalogo" id="catalogo">
+    <div class="catalogo__header">
+      <h2 class="catalogo__title">Catálogo <span class="text-glow">Completo</span></h2>
+      <p class="catalogo__sub">Cada título é uma jornada. Escolha seu gênero. Aperte o play.</p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="catalogo__filtros" id="filtros">
+      <button class="filtro filtro--ativo" data-genero="todos">Todos</button>
+      <button class="filtro" data-genero="acao">🔥 Ação</button>
+      <button class="filtro" data-genero="terror">🔪 Terror</button>
+      <button class="filtro" data-genero="suspense">🕵️ Suspense</button>
+      <button class="filtro" data-genero="drama">🎭 Drama</button>
+      <button class="filtro" data-genero="scifi">🚀 Sci-Fi</button>
+    </div>
+
+    <!-- Grid de filmes -->
+    <div class="catalogo__grid" id="grid">
+
+      <!-- Filme 1 -->
+      <article class="card" data-genero="acao suspense">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #e63946 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">🧮</div>
+          </div>
+          <span class="card__badge card__badge--acao">Ação</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">O Código Final</h3>
+          <p class="card__meta">Matemática &bull; 12 min &bull; T1</p>
+          <p class="card__desc">Quando os números se tornam armas letais, só quem domina a lógica sobrevive.</p>
+        </div>
+      </article>
+
+      <!-- Filme 2 -->
+      <article class="card" data-genero="terror">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #0d0d0d 0%, #1a0a2e 50%, #6a0572 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">⚛️</div>
+          </div>
+          <span class="card__badge card__badge--terror">Terror</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">Vozes na Escuridão</h3>
+          <p class="card__meta">Física Quântica &bull; 15 min &bull; T1</p>
+          <p class="card__desc">As partículas observam você. E nesta aula, elas falam de volta.</p>
+        </div>
+      </article>
+
+      <!-- Filme 3 -->
+      <article class="card" data-genero="suspense">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #533483 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">📐</div>
+          </div>
+          <span class="card__badge card__badge--suspense">Suspense</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">A Última Variável</h3>
+          <p class="card__meta">Álgebra &bull; 10 min &bull; T1</p>
+          <p class="card__desc">Uma equação incompleta. Um segredo mortal. O tempo está acabando.</p>
+        </div>
+      </article>
+
+      <!-- Filme 4 -->
+      <article class="card" data-genero="acao">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #1a0000 0%, #8b0000 50%, #ff4500 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">🧪</div>
+          </div>
+          <span class="card__badge card__badge--acao">Ação</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">Império de Fogo</h3>
+          <p class="card__meta">Química &bull; 14 min &bull; T1</p>
+          <p class="card__desc">Reações em cadeia. Explosões controladas. A química nunca foi tão perigosa.</p>
+        </div>
+      </article>
+
+      <!-- Filme 5 -->
+      <article class="card" data-genero="drama">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #1a1a0e 0%, #3d3522 50%, #c9a227 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">📜</div>
+          </div>
+          <span class="card__badge card__badge--drama">Drama</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">O Despertar</h3>
+          <p class="card__meta">História &bull; 18 min &bull; T1</p>
+          <p class="card__desc">Impérios caem. Heróis se erguem. A história que mudou o mundo, contada como nunca.</p>
+        </div>
+      </article>
+
+      <!-- Filme 6 -->
+      <article class="card" data-genero="terror scifi">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 50%, #cc0000 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">🤖</div>
+          </div>
+          <span class="card__badge card__badge--terror">Terror</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">Sangue e Algoritmo</h3>
+          <p class="card__meta">Programação &bull; 16 min &bull; T1</p>
+          <p class="card__desc">A IA aprendeu demais. Agora ela decide quem passa e quem fica para trás.</p>
+        </div>
+      </article>
+
+      <!-- Filme 7 -->
+      <article class="card" data-genero="acao scifi">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #001a1a 0%, #003333 50%, #00cccc 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">🧬</div>
+          </div>
+          <span class="card__badge card__badge--scifi">Sci-Fi</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">Fronteira Zero</h3>
+          <p class="card__meta">Biologia &bull; 13 min &bull; T1</p>
+          <p class="card__desc">No limite entre o humano e o impossível, o DNA guarda a última fronteira.</p>
+        </div>
+      </article>
+
+      <!-- Filme 8 -->
+      <article class="card" data-genero="suspense">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #0d0d1a 0%, #1a1a33 50%, #4a4a8a 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">✍️</div>
+          </div>
+          <span class="card__badge card__badge--suspense">Suspense</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">O Pacto</h3>
+          <p class="card__meta">Redação &bull; 11 min &bull; T1</p>
+          <p class="card__desc">Cada palavra é uma sentença. Uma redação pode te salvar — ou te condenar.</p>
+        </div>
+      </article>
+
+      <!-- Filme 9 -->
+      <article class="card" data-genero="terror scifi">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #0a000a 0%, #2d002d 50%, #8a2be2 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">🌊</div>
+          </div>
+          <span class="card__badge card__badge--terror">Terror</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">Ressonância</h3>
+          <p class="card__meta">Física (Ondas) &bull; 12 min &bull; T1</p>
+          <p class="card__desc">Frequências que não deveriam existir. Ondas que destroem por dentro.</p>
+        </div>
+      </article>
+
+      <!-- Filme 10 -->
+      <article class="card" data-genero="drama">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #1a1500 0%, #4a3c00 50%, #d4a017 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">🌍</div>
+          </div>
+          <span class="card__badge card__badge--drama">Drama</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">A Ascensão</h3>
+          <p class="card__meta">Geografia &bull; 17 min &bull; T1</p>
+          <p class="card__desc">Territórios disputados. Recursos escassos. A geopolítica como campo de batalha épico.</p>
+        </div>
+      </article>
+
+      <!-- Filme 11 -->
+      <article class="card" data-genero="acao">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #001a00 0%, #003300 50%, #00ff41 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">💻</div>
+          </div>
+          <span class="card__badge card__badge--acao">Ação</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">Protocolo X</h3>
+          <p class="card__meta">Programação &bull; 14 min &bull; T1</p>
+          <p class="card__desc">Um código proibido. Uma corrida contra o tempo. Hackers nunca dormiram tão pouco.</p>
+        </div>
+      </article>
+
+      <!-- Filme 12 -->
+      <article class="card" data-genero="suspense drama">
+        <div class="card__poster">
+          <div class="card__img" style="background: linear-gradient(135deg, #1a1a1a 0%, #333333 50%, #8b7355 100%);">
+            <div class="card__img-overlay">
+              <span class="card__play">▶</span>
+            </div>
+            <div class="card__icon">⚖️</div>
+          </div>
+          <span class="card__badge card__badge--suspense">Suspense</span>
+        </div>
+        <div class="card__info">
+          <h3 class="card__title">O Veredito</h3>
+          <p class="card__meta">Filosofia &bull; 15 min &bull; T1</p>
+          <p class="card__desc">No tribunal das ideias, a verdade é relativa. E o veredito pode mudar tudo.</p>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ===================== CADASTRO ===================== -->
+  <section class="cadastro" id="cadastro">
+    <div class="cadastro__inner">
+      <div class="cadastro__text">
+        <h2 class="cadastro__title">Garanta seu <span class="text-glow">acesso</span></h2>
+        <p class="cadastro__sub">Cadastro rápido. Sem cartão. Sem compromisso.</p>
+      </div>
+      <form class="cadastro__form" id="form-cadastro" novalidate>
+        <div class="form-row">
+          <div class="form-field" id="f-nome">
+            <label for="nome">Seu nome</label>
+            <input type="text" id="nome" name="nome" placeholder="Como podemos te chamar?" autocomplete="given-name" required>
+            <span class="form-error">Preencha seu nome.</span>
+          </div>
+          <div class="form-field" id="f-telefone">
+            <label for="telefone">Telefone / WhatsApp</label>
+            <input type="tel" id="telefone" name="telefone" placeholder="(11) 99999-0000" inputmode="numeric" autocomplete="tel" required>
+            <span class="form-error">Número com DDD.</span>
+          </div>
+          <div class="form-field" id="f-email">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email" required>
+            <span class="form-error">E-mail inválido.</span>
+          </div>
+          <button type="submit" class="btn btn--primary btn--form" id="btn-enviar">
+            Cadastrar
+          </button>
+        </div>
+        <p class="form-legal">
+          Ao se cadastrar, você aceita nossa 
+          <a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.
+        </p>
+        <p class="form-feedback form-feedback--error" id="form-erro" hidden>
+          Não conseguimos enviar. Confira sua internet e tente novamente.
+        </p>
+        <p class="form-feedback form-feedback--success" id="form-sucesso" hidden>
+          ✅ Cadastro feito! Em breve entraremos em contato.
+        </p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__logo">
+        <span class="logo-text">RAG<span class="logo-accent">UI</span></span>
+        <p>Educação que parece cinema.</p>
+      </div>
+      <div class="footer__links">
+        <a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>
+        <a href="#cadastro">Cadastre-se</a>
+        <a href="#catalogo">Catálogo</a>
+      </div>
+      <p class="footer__copy">&copy; 2026 RAGUI. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
