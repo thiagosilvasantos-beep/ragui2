@@ -125,11 +125,31 @@
     });
   }
 
-  // ─── Validação e Envio do Formulário ────────────────
+  // ─── UAZAPI Config ──────────────────────────────────
+  var UAZAPI = {
+    url: 'https://clara-ai.uazapi.com',
+    token: '10625a6c-1690-4356-a862-57da4401d555'
+  };
+
+  // ─── Validação e Verificação WhatsApp ──────────────
   var form = document.getElementById('form-cadastro');
-  var btnEnviar = document.getElementById('btn-enviar');
-  var formErro = document.getElementById('form-erro');
+  var etapaDados = document.getElementById('etapa-dados');
+  var etapaCodigo = document.getElementById('etapa-codigo');
   var formSucesso = document.getElementById('form-sucesso');
+  var formErroEnvio = document.getElementById('form-erro-envio');
+  var formErroCodigo = document.getElementById('form-erro-codigo');
+  var btnEnviarCodigo = document.getElementById('btn-enviar-codigo');
+  var btnValidar = document.getElementById('btn-validar');
+  var btnReenviar = document.getElementById('btn-reenviar');
+  var btnVoltar = document.getElementById('btn-voltar');
+  var campoCodigo = document.getElementById('codigo');
+  var erroCodigo = document.getElementById('erro-codigo');
+  var numeroDestino = document.getElementById('numero-destino');
+  var timerSpan = document.getElementById('timer-reenvio');
+
+  var codigoGerado = '';
+  var codigoExpira = 0;
+  var timerInterval = null;
   var enviando = false;
 
   function marcar(id, ok) {
@@ -142,6 +162,104 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
+  function gerarCodigo() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  function formatarNumeroExibicao(tel) {
+    if (tel.length === 11) {
+      return '(' + tel.slice(0, 2) + ') ' + tel.slice(2, 7) + '-' + tel.slice(7);
+    }
+    return '(' + tel.slice(0, 2) + ') ' + tel.slice(2, 6) + '-' + tel.slice(6);
+  }
+
+  // Enviar mensagem via UAZAPI
+  function enviarWhatsApp(numero, mensagem) {
+    var numeroCompleto = '55' + numero;
+    return fetch(UAZAPI.url + '/sendText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'token': UAZAPI.token
+      },
+      body: JSON.stringify({
+        number: numeroCompleto,
+        text: mensagem
+      })
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+
+  // Iniciar timer de reenvio
+  function iniciarTimer() {
+    var segundos = 60;
+    btnReenviar.disabled = true;
+    timerSpan.textContent = segundos;
+
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(function () {
+      segundos--;
+      timerSpan.textContent = segundos;
+      if (segundos <= 0) {
+        clearInterval(timerInterval);
+        btnReenviar.disabled = false;
+        btnReenviar.innerHTML = '🔄 Reenviar código';
+      }
+    }, 1000);
+  }
+
+  // ETAPA 1: Validar dados e enviar código
+  function enviarCodigo() {
+    if (enviando) return;
+
+    var nome = document.getElementById('nome').value.trim();
+    var telefone = campoTelefone.value.replace(/\D/g, '');
+    var email = document.getElementById('email').value.trim();
+
+    var v1 = marcar('f-nome', nome.length >= 2);
+    var v2 = marcar('f-telefone', telefone.length === 10 || telefone.length === 11);
+    var v3 = marcar('f-email', validarEmail(email));
+
+    if (!(v1 && v2 && v3)) return;
+
+    enviando = true;
+    formErroEnvio.hidden = true;
+    btnEnviarCodigo.disabled = true;
+    btnEnviarCodigo.textContent = '📲 Enviando…';
+
+    codigoGerado = gerarCodigo();
+    codigoExpira = Date.now() + 5 * 60 * 1000; // 5 minutos
+
+    var mensagem = '🎬 *RAGUI* — Código de verificação\n\n'
+      + 'Seu código é: *' + codigoGerado + '*\n\n'
+      + 'Válido por 5 minutos.\n'
+      + 'Se você não solicitou, ignore esta mensagem.';
+
+    enviarWhatsApp(telefone, mensagem).then(function () {
+      // Sucesso — mostrar etapa 2
+      etapaDados.hidden = true;
+      etapaCodigo.hidden = false;
+      numeroDestino.textContent = formatarNumeroExibicao(telefone);
+      campoCodigo.value = '';
+      campoCodigo.focus();
+      iniciarTimer();
+
+      if (window.RAGUI_ATIVO) {
+        raguiEvento('Contact', { content_name: 'Código WhatsApp enviado' });
+      }
+    }).catch(function (err) {
+      formErroEnvio.hidden = false;
+      if (window.console) console.warn('Erro UAZAPI:', err && err.message);
+    }).then(function () {
+      enviando = false;
+      btnEnviarCodigo.disabled = false;
+      btnEnviarCodigo.textContent = '📲 Enviar código';
+    });
+  }
+
+  // Gravar cadastro no webhook
   function gravar(dados) {
     if (!window.RAGUI_LISTA) return Promise.reject(new Error('RAGUI_LISTA vazio'));
     return fetch(window.RAGUI_LISTA, {
@@ -160,48 +278,120 @@
       });
   }
 
+  // Event listeners
+  if (btnEnviarCodigo) {
+    btnEnviarCodigo.addEventListener('click', enviarCodigo);
+  }
+
+  if (btnReenviar) {
+    btnReenviar.addEventListener('click', function () {
+      var telefone = campoTelefone.value.replace(/\D/g, '');
+      enviando = false;
+      codigoGerado = gerarCodigo();
+      codigoExpira = Date.now() + 5 * 60 * 1000;
+
+      btnReenviar.disabled = true;
+      btnReenviar.innerHTML = '📲 Reenviando…';
+      formErroCodigo.hidden = true;
+      erroCodigo.style.display = 'none';
+      campoCodigo.classList.remove('erro');
+
+      var mensagem = '🎬 *RAGUI* — Novo código de verificação\n\n'
+        + 'Seu código é: *' + codigoGerado + '*\n\n'
+        + 'Válido por 5 minutos.';
+
+      enviarWhatsApp(telefone, mensagem).then(function () {
+        campoCodigo.value = '';
+        campoCodigo.focus();
+        iniciarTimer();
+      }).catch(function (err) {
+        formErroCodigo.hidden = false;
+        btnReenviar.disabled = false;
+        btnReenviar.innerHTML = '🔄 Reenviar código';
+        if (window.console) console.warn('Erro reenvio:', err && err.message);
+      });
+    });
+  }
+
+  if (btnVoltar) {
+    btnVoltar.addEventListener('click', function () {
+      etapaCodigo.hidden = true;
+      etapaDados.hidden = false;
+      formErroCodigo.hidden = true;
+      if (timerInterval) clearInterval(timerInterval);
+    });
+  }
+
+  // Filtrar input do código (só números)
+  if (campoCodigo) {
+    campoCodigo.addEventListener('input', function () {
+      this.value = this.value.replace(/\D/g, '').slice(0, 6);
+      erroCodigo.style.display = 'none';
+      this.classList.remove('erro');
+    });
+  }
+
+  // ETAPA 2: Validar código e completar cadastro
   if (form) {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (enviando) return;
 
-      var nome = document.getElementById('nome').value.trim();
-      var telefone = campoTelefone.value.replace(/\D/g, '');
-      var email = document.getElementById('email').value.trim();
+      var digitado = campoCodigo.value.trim();
 
-      var v1 = marcar('f-nome', nome.length >= 2);
-      var v2 = marcar('f-telefone', telefone.length === 10 || telefone.length === 11);
-      var v3 = marcar('f-email', validarEmail(email));
+      // Verificar expiração
+      if (Date.now() > codigoExpira) {
+        formErroCodigo.hidden = false;
+        formErroCodigo.textContent = '⏰ Código expirado. Reenvie um novo código.';
+        campoCodigo.classList.add('erro');
+        return;
+      }
 
-      if (!(v1 && v2 && v3)) return;
+      // Verificar código
+      if (digitado !== codigoGerado) {
+        erroCodigo.style.display = 'block';
+        campoCodigo.classList.add('erro');
+        campoCodigo.value = '';
+        campoCodigo.focus();
+        return;
+      }
 
+      // Código correto — gravar cadastro
       enviando = true;
-      formErro.hidden = true;
-      formSucesso.hidden = true;
-      btnEnviar.disabled = true;
-      btnEnviar.textContent = 'Enviando…';
+      formErroCodigo.hidden = true;
+      btnValidar.disabled = true;
+      btnValidar.textContent = '⏳ Finalizando…';
 
       var dados = {
-        nome: nome,
-        telefone: telefone,
-        email: email,
+        nome: document.getElementById('nome').value.trim(),
+        telefone: campoTelefone.value.replace(/\D/g, ''),
+        email: document.getElementById('email').value.trim(),
+        verificado: true,
         origem: location.href,
         quando: new Date().toISOString()
       };
 
       gravar(dados).then(function () {
         if (window.RAGUI_ATIVO) {
-          raguiEvento('Lead', { content_name: 'Cadastro RAGUI 2' });
+          raguiEvento('Lead', { content_name: 'Cadastro RAGUI verificado' });
         }
+        etapaCodigo.hidden = true;
         formSucesso.hidden = false;
-        form.reset();
+        if (timerInterval) clearInterval(timerInterval);
+
+        // Enviar confirmação por WhatsApp
+        enviarWhatsApp(dados.telefone, '✅ *RAGUI* — Cadastro confirmado!\n\n'
+          + 'Olá, ' + dados.nome.split(' ')[0] + '! Seu acesso foi ativado. 🎬\n'
+          + 'Em breve entraremos em contato pelo WhatsApp.\n\n'
+          + 'Bem-vindo à RAGUI!').catch(function () {});
       }).catch(function (err) {
-        formErro.hidden = false;
+        formErroCodigo.hidden = false;
+        formErroCodigo.textContent = 'Erro ao finalizar cadastro. Tente novamente.';
         if (window.console) console.warn('cadastro não gravado:', err && err.message);
       }).then(function () {
         enviando = false;
-        btnEnviar.disabled = false;
-        btnEnviar.textContent = 'Cadastrar';
+        btnValidar.disabled = false;
+        btnValidar.textContent = '✅ Validar e Cadastrar';
       });
     });
   }

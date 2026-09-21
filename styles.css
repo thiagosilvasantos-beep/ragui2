@@ -440,6 +440,93 @@ img, video { max-width: 100%; display: block; }
   border: 1px solid rgba(0, 200, 80, 0.2);
 }
 
+/* ─── Verificação WhatsApp ────────────────────────────── */
+.verificacao {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.verificacao__icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.verificacao__texto {
+  color: var(--text-dim);
+  font-size: 1rem;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.verificacao__texto strong {
+  color: var(--gold);
+}
+
+.verificacao__input-wrap {
+  margin-bottom: 20px;
+}
+
+.verificacao__input {
+  width: 200px;
+  padding: 16px;
+  font-size: 2rem;
+  font-family: 'Bebas Neue', monospace;
+  letter-spacing: 12px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--gold);
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.verificacao__input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245, 185, 90, 0.15), 0 0 20px rgba(245, 185, 90, 0.1);
+}
+
+.verificacao__input.erro {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
+  animation: shake 0.4s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+.verificacao__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.3s;
+}
+
+.btn-link:hover {
+  color: var(--gold);
+}
+
 /* ─── Catálogo (Carousel) ─────────────────────────────── */
 .catalogo {
   position: relative;

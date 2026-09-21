@@ -346,35 +346,68 @@
         <p class="cadastro__sub">Cadastro rápido. Sem cartão. Sem compromisso.</p>
       </div>
       <form class="cadastro__form" id="form-cadastro" novalidate>
-        <div class="form-row">
-          <div class="form-field" id="f-nome">
-            <label for="nome">Seu nome</label>
-            <input type="text" id="nome" name="nome" placeholder="Como podemos te chamar?" autocomplete="given-name" required>
-            <span class="form-error">Preencha seu nome.</span>
+        <!-- ETAPA 1: Dados -->
+        <div id="etapa-dados">
+          <div class="form-row">
+            <div class="form-field" id="f-nome">
+              <label for="nome">Seu nome</label>
+              <input type="text" id="nome" name="nome" placeholder="Como podemos te chamar?" autocomplete="given-name" required>
+              <span class="form-error">Preencha seu nome.</span>
+            </div>
+            <div class="form-field" id="f-telefone">
+              <label for="telefone">Telefone / WhatsApp</label>
+              <input type="tel" id="telefone" name="telefone" placeholder="(11) 99999-0000" inputmode="numeric" autocomplete="tel" required>
+              <span class="form-error">Número com DDD.</span>
+            </div>
+            <div class="form-field" id="f-email">
+              <label for="email">E-mail</label>
+              <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email" required>
+              <span class="form-error">E-mail inválido.</span>
+            </div>
+            <button type="button" class="btn btn--primary btn--form" id="btn-enviar-codigo">
+              📲 Enviar código
+            </button>
           </div>
-          <div class="form-field" id="f-telefone">
-            <label for="telefone">Telefone / WhatsApp</label>
-            <input type="tel" id="telefone" name="telefone" placeholder="(11) 99999-0000" inputmode="numeric" autocomplete="tel" required>
-            <span class="form-error">Número com DDD.</span>
-          </div>
-          <div class="form-field" id="f-email">
-            <label for="email">E-mail</label>
-            <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email" required>
-            <span class="form-error">E-mail inválido.</span>
-          </div>
-          <button type="submit" class="btn btn--primary btn--form" id="btn-enviar">
-            Cadastrar
-          </button>
+          <p class="form-legal">
+            Ao se cadastrar, você aceita nossa 
+            <a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.
+          </p>
+          <p class="form-feedback form-feedback--error" id="form-erro-envio" hidden>
+            Não conseguimos enviar o código. Verifique o número e tente novamente.
+          </p>
         </div>
-        <p class="form-legal">
-          Ao se cadastrar, você aceita nossa 
-          <a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.
-        </p>
-        <p class="form-feedback form-feedback--error" id="form-erro" hidden>
-          Não conseguimos enviar. Confira sua internet e tente novamente.
-        </p>
+
+        <!-- ETAPA 2: Verificação do código -->
+        <div id="etapa-codigo" hidden>
+          <div class="verificacao">
+            <div class="verificacao__icon">📱</div>
+            <p class="verificacao__texto">
+              Enviamos um código de 6 dígitos para o WhatsApp 
+              <strong id="numero-destino"></strong>
+            </p>
+            <div class="verificacao__input-wrap">
+              <input type="text" id="codigo" maxlength="6" inputmode="numeric" 
+                     placeholder="000000" autocomplete="one-time-code" class="verificacao__input">
+              <span class="form-error" id="erro-codigo" style="display:none;">Código incorreto. Tente novamente.</span>
+            </div>
+            <div class="verificacao__actions">
+              <button type="submit" class="btn btn--primary" id="btn-validar">
+                ✅ Validar e Cadastrar
+              </button>
+              <button type="button" class="btn btn--ghost btn--sm" id="btn-reenviar" disabled>
+                Reenviar código (<span id="timer-reenvio">60</span>s)
+              </button>
+            </div>
+            <button type="button" class="btn-link" id="btn-voltar">← Alterar dados</button>
+          </div>
+          <p class="form-feedback form-feedback--error" id="form-erro-codigo" hidden>
+            Código inválido ou expirado. Tente reenviar.
+          </p>
+        </div>
+
+        <!-- Sucesso -->
         <p class="form-feedback form-feedback--success" id="form-sucesso" hidden>
-          ✅ Cadastro feito! Em breve entraremos em contato.
+          ✅ Cadastro feito! Número verificado com sucesso. Em breve entraremos em contato.
         </p>
       </form>
     </div>
