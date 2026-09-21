@@ -125,8 +125,8 @@
     });
   }
 
-  // ─── WhatsApp Proxy (via n8n) ────────────────────────
-  var WHATSAPP_PROXY = 'https://qubitadvisors.app.n8n.cloud/webhook/ragui-whatsapp';
+  // ─── WhatsApp Proxy (Cloudflare Worker) ──────────────
+  var WHATSAPP_PROXY = 'https://ragui-whatsapp-proxy.ragui-whatsapp.workers.dev';
 
   // ─── Validação e Verificação WhatsApp ──────────────
   var form = document.getElementById('form-cadastro');
