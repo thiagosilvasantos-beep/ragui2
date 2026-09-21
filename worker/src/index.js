@@ -52,7 +52,7 @@ export default {
       }
 
       // Repassar para UAZAPI
-      const resp = await fetch(`${UAZAPI_URL}/sendText`, {
+      const resp = await fetch(`${UAZAPI_URL}/send/text`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
