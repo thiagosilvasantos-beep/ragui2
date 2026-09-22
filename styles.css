@@ -147,6 +147,17 @@ img, video { max-width: 100%; display: block; }
 
 .header__logo { text-decoration: none; }
 
+.logo-img {
+  height: 40px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.logo-img--footer {
+  height: 48px;
+}
+
 .logo-text {
   font-family: var(--font-display);
   font-size: 2rem;
