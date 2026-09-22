@@ -161,6 +161,198 @@
 
   renderizarCatalogo();
 
+  // ─── Player Overlay ────────────────────────────────
+  (function initPlayer() {
+    var overlay      = document.getElementById('player-overlay');
+    var btnClose     = document.getElementById('player-close');
+    var videoEl      = document.getElementById('player-video');
+    var noVideo      = document.getElementById('player-no-video');
+    var titleEl      = document.getElementById('player-title');
+    var descEl       = document.getElementById('player-desc');
+    var chaptersEl   = document.getElementById('player-chapters');
+
+    if (!overlay) return;
+
+    var currentObjUrl = null; // track blob URL for cleanup
+
+    function normalizePath(p) {
+      if (!p) return p;
+      return p.replace(/^\.\.\/capas\//, 'capas/').replace(/^\.\.\/videos\//, 'videos/');
+    }
+
+    // ── Open / Close helpers ──
+    function openOverlay() {
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeOverlay() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      videoEl.pause();
+      videoEl.removeAttribute('src');
+      videoEl.load();
+      videoEl.classList.remove('active');
+      noVideo.classList.remove('hidden');
+      if (currentObjUrl) { URL.revokeObjectURL(currentObjUrl); currentObjUrl = null; }
+    }
+
+    btnClose.addEventListener('click', closeOverlay);
+    overlay.querySelector('.player-overlay__bg').addEventListener('click', closeOverlay);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) closeOverlay();
+    });
+
+    // ── Load video from IndexedDB ──
+    function loadFromIDB(key, cb) {
+      var req = indexedDB.open('ragui_videos', 1);
+      req.onupgradeneeded = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains('videos')) db.createObjectStore('videos');
+      };
+      req.onsuccess = function (e) {
+        var db = e.target.result;
+        try {
+          var tx = db.transaction('videos', 'readonly');
+          var store = tx.objectStore('videos');
+          var get = store.get(key);
+          get.onsuccess = function () { cb(get.result || null); };
+          get.onerror   = function () { cb(null); };
+        } catch (err) { cb(null); }
+      };
+      req.onerror = function () { cb(null); };
+    }
+
+    // ── Play a chapter ──
+    function playChapter(videoSrc, chapterIndex) {
+      // highlight active chapter
+      var items = chaptersEl.querySelectorAll('.chapter-item');
+      items.forEach(function (it) { it.classList.remove('active'); });
+      if (items[chapterIndex]) items[chapterIndex].classList.add('active');
+
+      if (!videoSrc) {
+        videoEl.pause();
+        videoEl.removeAttribute('src');
+        videoEl.load();
+        videoEl.classList.remove('active');
+        noVideo.classList.remove('hidden');
+        return;
+      }
+
+      var src = normalizePath(videoSrc);
+
+      if (src.indexOf('idb://') === 0) {
+        var idbKey = src.replace('idb://', '');
+        loadFromIDB(idbKey, function (blob) {
+          if (!blob) {
+            videoEl.classList.remove('active');
+            noVideo.classList.remove('hidden');
+            return;
+          }
+          if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
+          currentObjUrl = URL.createObjectURL(blob);
+          videoEl.src = currentObjUrl;
+          videoEl.classList.add('active');
+          noVideo.classList.add('hidden');
+          videoEl.play().catch(function () {});
+        });
+      } else {
+        if (currentObjUrl) { URL.revokeObjectURL(currentObjUrl); currentObjUrl = null; }
+        videoEl.src = src;
+        videoEl.classList.add('active');
+        noVideo.classList.add('hidden');
+        videoEl.play().catch(function () {});
+      }
+    }
+
+    // ── Build chapter list ──
+    function renderChapters(capitulos) {
+      if (!capitulos || !capitulos.length) {
+        chaptersEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Nenhum capítulo disponível.</p>';
+        return;
+      }
+
+      chaptersEl.innerHTML = capitulos.map(function (cap, i) {
+        var isObj    = typeof cap === 'object' && cap !== null;
+        var nome     = isObj ? (cap.nome || 'Capítulo ' + (i + 1)) : cap;
+        var hasVideo = isObj && cap.video;
+        var extraCls = hasVideo ? '' : ' chapter-item--no-video';
+
+        return '<div class="chapter-item' + extraCls + '" data-index="' + i + '">'
+          + '<span class="chapter-item__number">' + (i + 1) + '</span>'
+          + '<span class="chapter-item__name">' + nome + '</span>'
+          + '<span class="chapter-item__play">' + (hasVideo ? '▶' : '—') + '</span>'
+          + '</div>';
+      }).join('');
+
+      // Click handlers
+      var items = chaptersEl.querySelectorAll('.chapter-item');
+      items.forEach(function (item) {
+        item.addEventListener('click', function () {
+          var idx = parseInt(this.getAttribute('data-index'), 10);
+          var cap = capitulos[idx];
+          var isObj = typeof cap === 'object' && cap !== null;
+          var videoSrc = isObj ? (cap.video || null) : null;
+          playChapter(videoSrc, idx);
+        });
+      });
+    }
+
+    // ── Get film data from localStorage matching the card ──
+    function getFilmes() {
+      var filmes = [];
+      try { filmes = JSON.parse(localStorage.getItem('ragui_filmes')) || []; } catch(e) {}
+      if (!filmes.length) filmes = FILMES_PADRAO;
+      return filmes;
+    }
+
+    // ── Attach click on cards ──
+    function attachCardClicks() {
+      var cards = document.querySelectorAll('.catalogo__grid .card');
+      var filmes = getFilmes();
+
+      cards.forEach(function (card, index) {
+        card.addEventListener('click', function () {
+          if (index >= filmes.length) return;
+          var f = filmes[index];
+
+          titleEl.textContent = f.nome || '';
+          descEl.textContent  = f.descCurta || '';
+
+          // Reset video state
+          videoEl.pause();
+          videoEl.removeAttribute('src');
+          videoEl.load();
+          videoEl.classList.remove('active');
+          noVideo.classList.remove('hidden');
+          if (currentObjUrl) { URL.revokeObjectURL(currentObjUrl); currentObjUrl = null; }
+
+          renderChapters(f.capitulos);
+          openOverlay();
+
+          // Auto-play first chapter if it has video
+          if (f.capitulos && f.capitulos.length) {
+            var first = f.capitulos[0];
+            var isObj = typeof first === 'object' && first !== null;
+            if (isObj && first.video) {
+              playChapter(first.video, 0);
+            }
+          }
+        });
+      });
+    }
+
+    attachCardClicks();
+
+    // Re-attach after filter clicks re-show cards (they are the same DOM nodes, but just in case)
+    // We use event delegation as a safety net
+    document.getElementById('grid').addEventListener('click', function (e) {
+      var card = e.target.closest('.card');
+      if (!card) return;
+      // The direct click handler above already handles it; this is a fallback.
+    });
+  })();
+
   // ─── Filtros de Gênero ──────────────────────────────
   var filtros = document.querySelectorAll('.filtro');
 
