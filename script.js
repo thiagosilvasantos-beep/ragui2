@@ -75,9 +75,55 @@
 
   setupScrollReveal();
 
+  // ─── Renderizar Catálogo (dinâmico via localStorage) ──
+  var GENEROS_MAP = {
+    acao: { badge: 'acao', label: 'Ação' },
+    terror: { badge: 'terror', label: 'Terror' },
+    suspense: { badge: 'suspense', label: 'Suspense' },
+    drama: { badge: 'drama', label: 'Drama' },
+    scifi: { badge: 'scifi', label: 'Sci-Fi' }
+  };
+
+  function renderizarCatalogo() {
+    var grid = document.getElementById('grid');
+    if (!grid) return;
+
+    var filmes = [];
+    try { filmes = JSON.parse(localStorage.getItem('ragui_filmes')) || []; } catch(e) {}
+
+    if (!filmes.length) {
+      grid.innerHTML = '<p style="color:#666;text-align:center;padding:40px;grid-column:1/-1">Nenhum filme disponível no momento.</p>';
+      return;
+    }
+
+    grid.innerHTML = filmes.map(function(f) {
+      var g = GENEROS_MAP[f.genero] || GENEROS_MAP.acao;
+      var capaHtml = f.capa
+        ? '<img src="' + f.capa + '" alt="' + f.nome.replace(/"/g,'') + '">'
+        : '';
+      var nCaps = (f.capitulos && f.capitulos.length) || 0;
+
+      return '<article class="card visible" data-genero="' + f.genero + '">'
+        + '<div class="card__poster">'
+        + '<div class="card__img">'
+        + capaHtml
+        + '<div class="card__img-overlay"><span class="card__play">▶</span></div>'
+        + '</div>'
+        + '<span class="card__badge card__badge--' + g.badge + '">' + g.label + '</span>'
+        + '</div>'
+        + '<div class="card__info">'
+        + '<h3 class="card__title">' + f.nome + '</h3>'
+        + '<p class="card__meta">' + (f.duracao || '') + ' &bull; ' + nCaps + ' cap. &bull; T1</p>'
+        + '<p class="card__desc">' + (f.descCurta || '') + '</p>'
+        + '</div>'
+        + '</article>';
+    }).join('');
+  }
+
+  renderizarCatalogo();
+
   // ─── Filtros de Gênero ──────────────────────────────
   var filtros = document.querySelectorAll('.filtro');
-  var todosCards = document.querySelectorAll('.card');
 
   filtros.forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -87,12 +133,12 @@
       filtros.forEach(function (f) { f.classList.remove('filtro--ativo'); });
       btn.classList.add('filtro--ativo');
 
-      // Filtrar cards
+      // Filtrar cards (re-query para pegar os dinâmicos)
+      var todosCards = document.querySelectorAll('.card');
       todosCards.forEach(function (card) {
         var generos = card.getAttribute('data-genero') || '';
         if (genero === 'todos' || generos.indexOf(genero) !== -1) {
           card.classList.remove('hidden-card');
-          // Re-trigger visibility se necessário
           if (!card.classList.contains('visible')) {
             card.classList.add('visible');
           }
