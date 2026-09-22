@@ -84,17 +84,54 @@
     scifi: { badge: 'scifi', label: 'Sci-Fi' }
   };
 
+  // Catálogo padrão (usado quando localStorage está vazio)
+  var FILMES_PADRAO = [
+    { nome:'O Código Final', genero:'acao', duracao:'12 min', capa:'capas/codigo_final.jpg',
+      descCurta:'Quando os números se tornam armas letais, só quem domina a lógica sobrevive.',
+      capitulos:['O Problema Impossível','Sequências Letais','A Prova Final','Progressão Aritmética','Decifrando a Bomba'] },
+    { nome:'Vozes na Escuridão', genero:'terror', duracao:'15 min', capa:'capas/vozes_escuridao.jpg',
+      descCurta:'As partículas observam você. E nesta aula, elas falam de volta.',
+      capitulos:['O Experimento Proibido','Dualidade Onda-Partícula','O Princípio da Incerteza','Emaranhamento','O Colapso da Função'] },
+    { nome:'A Última Variável', genero:'suspense', duracao:'10 min', capa:'capas/ultima_variavel.jpg',
+      descCurta:'Uma equação incompleta. Um segredo mortal. O tempo está acabando.',
+      capitulos:['A Equação do Crime','Variáveis Ocultas','Sistemas Lineares','A Pista Algébrica','O X da Questão'] },
+    { nome:'Império de Fogo', genero:'acao', duracao:'14 min', capa:'capas/imperio_fogo.jpg',
+      descCurta:'Reações em cadeia. Explosões controladas. A química nunca foi tão perigosa.',
+      capitulos:['Tabela Periódica','Reações Exotérmicas','Ligações Químicas','A Cadeia Explosiva','Neutralização'] },
+    { nome:'O Despertar', genero:'drama', duracao:'18 min', capa:'capas/despertar.jpg',
+      descCurta:'Impérios caem. Heróis se erguem. A história que mudou o mundo.',
+      capitulos:['Revolução Francesa','Era Napoleônica','Revolução Industrial','As Grandes Guerras','A Queda do Muro','O Novo Mundo'] },
+    { nome:'Sangue e Algoritmo', genero:'terror', duracao:'16 min', capa:'capas/sangue_algoritmo.jpg',
+      descCurta:'A IA aprendeu demais. Agora ela decide quem passa e quem fica para trás.',
+      capitulos:['Variáveis e Tipos','Condicionais: if/else','Loops Infinitos','Funções Recursivas','O Bug Fatal','Debug ou Morte'] },
+    { nome:'Fronteira Zero', genero:'scifi', duracao:'13 min', capa:'capas/fronteira_zero.jpg',
+      descCurta:'No limite entre o humano e o impossível, o DNA guarda a última fronteira.',
+      capitulos:['A Estrutura do DNA','Mitose e Meiose','Genética Mendeliana','Mutação','Engenharia Genética','A Evolução'] },
+    { nome:'O Pacto', genero:'suspense', duracao:'11 min', capa:'capas/pacto.jpg',
+      descCurta:'Cada palavra é uma sentença. Uma redação pode te salvar — ou te condenar.',
+      capitulos:['Estrutura Dissertativa','Tese e Argumentação','Coesão e Coerência','O Parágrafo Perfeito','A Conclusão que Salva'] },
+    { nome:'Ressonância', genero:'terror', duracao:'12 min', capa:'capas/ressonancia.jpg',
+      descCurta:'Frequências que não deveriam existir. Ondas que destroem por dentro.',
+      capitulos:['Ondas Mecânicas','Frequência e Amplitude','Interferência','Efeito Doppler','Ressonância Destrutiva'] },
+    { nome:'A Ascensão', genero:'drama', duracao:'17 min', capa:'capas/ascensao.jpg',
+      descCurta:'Territórios disputados. Recursos escassos. A geopolítica como campo de batalha.',
+      capitulos:['Geopolítica Mundial','Recursos Naturais','Clima e Biomas','Urbanização','Migrações','O Futuro do Planeta'] },
+    { nome:'Protocolo X', genero:'acao', duracao:'14 min', capa:'capas/protocolo_x.jpg',
+      descCurta:'Um código proibido. Uma corrida contra o tempo. Hackers nunca dormiram tão pouco.',
+      capitulos:['HTML: A Estrutura','CSS: O Disfarce','JavaScript: A Lógica','APIs e Requisições','O Protocolo Secreto','Invasão Final'] },
+    { nome:'O Veredito', genero:'suspense', duracao:'15 min', capa:'capas/veredito.jpg',
+      descCurta:'No tribunal das ideias, a verdade é relativa. E o veredito pode mudar tudo.',
+      capitulos:['Sócrates e a Maiêutica','O Mito da Caverna','Ética Kantiana','Existencialismo','O Tribunal das Ideias'] }
+  ];
+
   function renderizarCatalogo() {
     var grid = document.getElementById('grid');
     if (!grid) return;
 
+    // Usa localStorage se tiver, senão usa padrão
     var filmes = [];
     try { filmes = JSON.parse(localStorage.getItem('ragui_filmes')) || []; } catch(e) {}
-
-    if (!filmes.length) {
-      grid.innerHTML = '<p style="color:#666;text-align:center;padding:40px;grid-column:1/-1">Nenhum filme disponível no momento.</p>';
-      return;
-    }
+    if (!filmes.length) filmes = FILMES_PADRAO;
 
     grid.innerHTML = filmes.map(function(f) {
       var g = GENEROS_MAP[f.genero] || GENEROS_MAP.acao;
