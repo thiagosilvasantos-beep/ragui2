@@ -1,210 +1,251 @@
 /* ============================================================
-   RAGUI Admin — Lógica
-   CRUD de filmes com localStorage + capítulos + capa
+   RAGUI Admin — Lógica v2
    ============================================================ */
-
 (function () {
   'use strict';
 
   var STORAGE_KEY = 'ragui_filmes';
 
-  // ─── Helpers ───────────────────────────────────
-  function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  }
-
-  function carregarFilmes() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    } catch (e) { return []; }
-  }
-
-  function salvarFilmes(filmes) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filmes));
-  }
+  // ─── Utils ─────────────────────────────────────
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function carregarFilmes() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (e) { return []; } }
+  function salvarFilmes(f) { localStorage.setItem(STORAGE_KEY, JSON.stringify(f)); }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
   var GENEROS = {
-    acao: { emoji: '🔥', label: 'Ação', cor: '#e63946' },
-    terror: { emoji: '🔪', label: 'Terror', cor: '#6a0572' },
-    suspense: { emoji: '🕵️', label: 'Suspense', cor: '#533483' },
-    drama: { emoji: '🎭', label: 'Drama', cor: '#c9a027' },
-    scifi: { emoji: '🚀', label: 'Sci-Fi', cor: '#00b4b4' }
+    acao: { emoji: '🔥', label: 'Ação' },
+    terror: { emoji: '🔪', label: 'Terror' },
+    suspense: { emoji: '🕵️', label: 'Suspense' },
+    drama: { emoji: '🎭', label: 'Drama' },
+    scifi: { emoji: '🚀', label: 'Sci-Fi' }
   };
 
-  var GRADIENTES = [
-    'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #e63946 100%)',
-    'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)',
-    'linear-gradient(135deg, #200122 0%, #6f0000 100%)',
-    'linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 40%, #F5B95A 100%)',
-    'linear-gradient(135deg, #141e30 0%, #243b55 50%, #00b4b4 100%)',
-    'linear-gradient(135deg, #1d1d1d 0%, #533483 50%, #e63946 100%)',
-    'linear-gradient(135deg, #0c0c16 0%, #6a0572 60%, #F5B95A 100%)',
-    'linear-gradient(135deg, #16213e 0%, #1a1a2e 50%, #4caf50 100%)'
+  var GRADS = [
+    ['#1a1a2e','#16213e','#e63946'], ['#0f0c29','#302b63','#24243e'],
+    ['#200122','#6f0000','#c9932a'], ['#0a0a0f','#1a1a2e','#F5B95A'],
+    ['#141e30','#243b55','#00b4b4'], ['#1d1d1d','#533483','#e63946'],
+    ['#0c0c16','#6a0572','#F5B95A'], ['#16213e','#1a1a2e','#4caf50']
   ];
 
   // ─── DOM ───────────────────────────────────────
-  var grid = document.getElementById('filmes-grid');
-  var estadoVazio = document.getElementById('estado-vazio');
-  var totalSpan = document.getElementById('total-filmes');
-
-  // Modal Filme
-  var modalFilme = document.getElementById('modal-filme');
-  var formFilme = document.getElementById('form-filme');
-  var modalTitulo = document.getElementById('modal-titulo');
-  var capitulosLista = document.getElementById('capitulos-lista');
-  var capaPreview = document.getElementById('capa-preview');
-  var capaUpload = document.getElementById('capa-upload');
-  var capaDataInput = document.getElementById('filme-capa-data');
-  var btnRemoverCapa = document.getElementById('btn-remover-capa');
+  var paginaFilmes = document.getElementById('pagina-filmes');
+  var paginaForm   = document.getElementById('pagina-form');
+  var vazio        = document.getElementById('vazio');
+  var tabelaWrap   = document.getElementById('tabela-wrap');
+  var tabelaBody   = document.getElementById('tabela-body');
+  var formFilme    = document.getElementById('form-filme');
+  var formTitulo   = document.getElementById('form-titulo');
+  var capsLista    = document.getElementById('caps-lista');
+  var capsVazio    = document.getElementById('caps-vazio');
+  var capaBox      = document.getElementById('capa-box');
+  var capaImg      = document.getElementById('capa-img');
+  var capaPlaceholder = document.getElementById('capa-placeholder');
+  var capaUpload   = document.getElementById('capa-upload');
+  var capaData     = document.getElementById('filme-capa-data');
+  var btnRmCapa    = document.getElementById('btn-rm-capa');
   var descCurtaCount = document.getElementById('desc-curta-count');
 
-  // Modal Detalhes
   var modalDetalhes = document.getElementById('modal-detalhes');
-  var filmeAtualId = null;
+  var filmeAtualId  = null;
 
-  // ─── Renderizar Grid ───────────────────────────
-  function renderizar() {
-    var filmes = carregarFilmes();
-    totalSpan.textContent = filmes.length;
-
-    if (filmes.length === 0) {
-      grid.innerHTML = '';
-      estadoVazio.hidden = false;
-      return;
-    }
-
-    estadoVazio.hidden = true;
-    grid.innerHTML = filmes.map(function (f) {
-      var g = GENEROS[f.genero] || GENEROS.acao;
-      var capaHtml = f.capa
-        ? '<img src="' + f.capa + '" alt="' + f.nome + '">'
-        : '<span class="filme-card__capa-placeholder">🎬</span>';
-
-      return '<div class="filme-card" data-id="' + f.id + '">'
-        + '<div class="filme-card__capa">'
-        + capaHtml
-        + '<span class="filme-card__genero">' + g.emoji + ' ' + g.label + '</span>'
-        + '</div>'
-        + '<div class="filme-card__body">'
-        + '<h3 class="filme-card__titulo">' + esc(f.nome) + '</h3>'
-        + '<p class="filme-card__desc">' + esc(f.descCurta || '') + '</p>'
-        + '</div>'
-        + '<div class="filme-card__footer">'
-        + '<button class="btn btn--ghost btn--sm btn-detalhes" data-id="' + f.id + '">🔍 Detalhes</button>'
-        + '<button class="btn btn--ghost btn--sm btn-editar" data-id="' + f.id + '">✏️ Editar</button>'
-        + '</div>'
-        + '</div>';
-    }).join('');
-
-    // Event listeners nos cards
-    grid.querySelectorAll('.btn-detalhes').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        abrirDetalhes(btn.getAttribute('data-id'));
-      });
-    });
-    grid.querySelectorAll('.btn-editar').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        abrirEdicao(btn.getAttribute('data-id'));
-      });
-    });
-    grid.querySelectorAll('.filme-card').forEach(function (card) {
-      card.addEventListener('click', function () {
-        abrirDetalhes(card.getAttribute('data-id'));
-      });
-    });
+  // ─── Navegação ─────────────────────────────────
+  function mostrarLista() {
+    paginaFilmes.hidden = false;
+    paginaForm.hidden = true;
+    renderizar();
+    window.scrollTo(0, 0);
   }
 
-  function esc(str) {
-    var div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
+  function mostrarForm(filme) {
+    paginaFilmes.hidden = true;
+    paginaForm.hidden = false;
+    formTitulo.textContent = filme ? 'Editar Filme' : 'Novo Filme';
 
-  // ─── Modal Filme (Criar/Editar) ────────────────
-  function abrirModal(filme) {
-    modalTitulo.textContent = filme ? 'Editar Filme' : 'Novo Filme';
     document.getElementById('filme-id').value = filme ? filme.id : '';
     document.getElementById('filme-nome').value = filme ? filme.nome : '';
     document.getElementById('filme-genero').value = filme ? filme.genero : 'acao';
-    document.getElementById('filme-duracao').value = filme ? filme.duracao || '' : '';
-    document.getElementById('filme-desc-curta').value = filme ? filme.descCurta || '' : '';
-    document.getElementById('filme-desc').value = filme ? filme.desc || '' : '';
-    capaDataInput.value = filme ? filme.capa || '' : '';
+    document.getElementById('filme-duracao').value = filme ? (filme.duracao || '') : '';
+    document.getElementById('filme-desc-curta').value = filme ? (filme.descCurta || '') : '';
+    document.getElementById('filme-desc').value = filme ? (filme.desc || '') : '';
+    capaData.value = filme ? (filme.capa || '') : '';
 
-    // Atualizar contagem
-    descCurtaCount.textContent = (filme ? filme.descCurta || '' : '').length;
-
-    // Capa preview
+    atualizarDescCount(filme ? (filme.descCurta || '').length : 0);
     atualizarCapaPreview(filme ? filme.capa : null);
 
-    // Capítulos
-    capitulosLista.innerHTML = '';
-    if (filme && filme.capitulos && filme.capitulos.length > 0) {
-      filme.capitulos.forEach(function (cap, i) {
-        adicionarCapituloItem(i + 1, cap);
-      });
+    capsLista.innerHTML = '';
+    if (filme && filme.capitulos && filme.capitulos.length) {
+      capsVazio.hidden = true;
+      capsLista.appendChild(capsVazio);
+      filme.capitulos.forEach(function (c, i) { addCapItem(i + 1, c); });
+    } else {
+      capsVazio.hidden = false;
+      capsLista.appendChild(capsVazio);
     }
 
-    modalFilme.hidden = false;
+    window.scrollTo(0, 0);
     document.getElementById('filme-nome').focus();
   }
 
-  function fecharModal() {
-    modalFilme.hidden = true;
-    formFilme.reset();
-    capitulosLista.innerHTML = '';
-    atualizarCapaPreview(null);
-  }
+  // ─── Renderizar Lista ──────────────────────────
+  function renderizar() {
+    var filmes = carregarFilmes();
 
-  function atualizarCapaPreview(src) {
-    if (src) {
-      capaPreview.innerHTML = '<img src="' + src + '">';
-      btnRemoverCapa.hidden = false;
-    } else {
-      capaPreview.innerHTML = '<span class="capa-placeholder">📷 Sem capa</span>';
-      btnRemoverCapa.hidden = true;
+    if (!filmes.length) {
+      vazio.hidden = false;
+      tabelaWrap.hidden = true;
+      return;
     }
+
+    vazio.hidden = true;
+    tabelaWrap.hidden = false;
+
+    tabelaBody.innerHTML = filmes.map(function (f) {
+      var g = GENEROS[f.genero] || GENEROS.acao;
+      var capaCell = f.capa
+        ? '<img class="tabela__capa" src="' + f.capa + '">'
+        : '<div class="tabela__capa-vazio">🎬</div>';
+      var nCaps = (f.capitulos && f.capitulos.length) || 0;
+
+      return '<tr data-id="' + f.id + '">'
+        + '<td>' + capaCell + '</td>'
+        + '<td class="tabela__nome">' + esc(f.nome) + '</td>'
+        + '<td><span class="tabela__genero">' + g.emoji + ' ' + g.label + '</span></td>'
+        + '<td>' + nCaps + '</td>'
+        + '<td><div class="tabela__acoes">'
+        + '<button title="Detalhes" data-act="ver" data-id="' + f.id + '">🔍</button>'
+        + '<button title="Editar" data-act="editar" data-id="' + f.id + '">✏️</button>'
+        + '<button title="Excluir" data-act="excluir" data-id="' + f.id + '" class="act-danger">🗑️</button>'
+        + '</div></td>'
+        + '</tr>';
+    }).join('');
+
+    // Eventos
+    tabelaBody.querySelectorAll('button[data-act]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var id = btn.getAttribute('data-id');
+        var act = btn.getAttribute('data-act');
+        if (act === 'ver') abrirDetalhes(id);
+        else if (act === 'editar') editarFilme(id);
+        else if (act === 'excluir') excluirFilme(id);
+      });
+    });
+
+    tabelaBody.querySelectorAll('tr').forEach(function (tr) {
+      tr.style.cursor = 'pointer';
+      tr.addEventListener('click', function () {
+        abrirDetalhes(tr.getAttribute('data-id'));
+      });
+    });
   }
 
-  // Capítulos
-  function adicionarCapituloItem(num, titulo) {
+  // ─── Capítulos ─────────────────────────────────
+  function addCapItem(num, titulo) {
+    capsVazio.hidden = true;
     var div = document.createElement('div');
-    div.className = 'capitulo-item';
-    div.innerHTML = '<span class="capitulo-item__num">' + num + '</span>'
+    div.className = 'cap-item';
+    div.innerHTML = '<span class="cap-num">' + num + '</span>'
       + '<input type="text" placeholder="Título do capítulo ' + num + '" value="' + esc(titulo || '') + '">'
-      + '<button type="button" class="capitulo-item__remover" title="Remover">&times;</button>';
-
-    div.querySelector('.capitulo-item__remover').addEventListener('click', function () {
+      + '<button type="button" class="cap-rm" title="Remover">&times;</button>';
+    div.querySelector('.cap-rm').addEventListener('click', function () {
       div.remove();
-      renumerarCapitulos();
+      renumerar();
+      if (!capsLista.querySelectorAll('.cap-item').length) capsVazio.hidden = false;
     });
-
-    capitulosLista.appendChild(div);
+    capsLista.appendChild(div);
   }
 
-  function renumerarCapitulos() {
-    var items = capitulosLista.querySelectorAll('.capitulo-item');
-    items.forEach(function (item, i) {
-      item.querySelector('.capitulo-item__num').textContent = i + 1;
-      item.querySelector('input').placeholder = 'Título do capítulo ' + (i + 1);
+  function renumerar() {
+    capsLista.querySelectorAll('.cap-item').forEach(function (el, i) {
+      el.querySelector('.cap-num').textContent = i + 1;
     });
   }
 
-  function obterCapitulos() {
+  function getCapitulos() {
     var caps = [];
-    capitulosLista.querySelectorAll('.capitulo-item input').forEach(function (inp) {
-      var val = inp.value.trim();
-      if (val) caps.push(val);
+    capsLista.querySelectorAll('.cap-item input').forEach(function (inp) {
+      if (inp.value.trim()) caps.push(inp.value.trim());
     });
     return caps;
   }
 
-  // ─── Salvar Filme ──────────────────────────────
+  // ─── Capa ──────────────────────────────────────
+  function atualizarCapaPreview(src) {
+    if (src) {
+      capaImg.src = src; capaImg.hidden = false;
+      capaPlaceholder.hidden = true; btnRmCapa.hidden = false;
+    } else {
+      capaImg.hidden = true; capaImg.src = '';
+      capaPlaceholder.hidden = false; btnRmCapa.hidden = true;
+    }
+  }
+
+  function atualizarDescCount(n) {
+    descCurtaCount.textContent = n + '/120';
+  }
+
+  capaBox.addEventListener('click', function () { capaUpload.click(); });
+
+  capaUpload.addEventListener('change', function () {
+    var file = this.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var img = new Image();
+      img.onload = function () {
+        var c = document.createElement('canvas');
+        var s = Math.min(1, 600 / img.width);
+        c.width = img.width * s; c.height = img.height * s;
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        var url = c.toDataURL('image/jpeg', 0.8);
+        capaData.value = url;
+        atualizarCapaPreview(url);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('btn-upload').addEventListener('click', function (e) {
+    e.preventDefault(); capaUpload.click();
+  });
+
+  document.getElementById('btn-gradiente').addEventListener('click', function () {
+    var cores = GRADS[Math.floor(Math.random() * GRADS.length)];
+    var c = document.createElement('canvas'); c.width = 600; c.height = 340;
+    var ctx = c.getContext('2d');
+    var grd = ctx.createLinearGradient(0, 0, c.width, c.height);
+    cores.forEach(function (cor, i) { grd.addColorStop(i / (cores.length - 1), cor); });
+    ctx.fillStyle = grd; ctx.fillRect(0, 0, c.width, c.height);
+    for (var i = 0; i < 150; i++) {
+      ctx.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.04) + ')';
+      ctx.beginPath();
+      ctx.arc(Math.random() * c.width, Math.random() * c.height, Math.random() * 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    var url = c.toDataURL('image/jpeg', 0.85);
+    capaData.value = url;
+    atualizarCapaPreview(url);
+  });
+
+  btnRmCapa.addEventListener('click', function () {
+    capaData.value = ''; capaUpload.value = '';
+    atualizarCapaPreview(null);
+  });
+
+  document.getElementById('filme-desc-curta').addEventListener('input', function () {
+    atualizarDescCount(this.value.length);
+  });
+
+  document.getElementById('btn-add-cap').addEventListener('click', function () {
+    var n = capsLista.querySelectorAll('.cap-item').length + 1;
+    addCapItem(n, '');
+    var inputs = capsLista.querySelectorAll('.cap-item input');
+    inputs[inputs.length - 1].focus();
+  });
+
+  // ─── Salvar ────────────────────────────────────
   formFilme.addEventListener('submit', function (e) {
     e.preventDefault();
-
     var id = document.getElementById('filme-id').value;
     var filmes = carregarFilmes();
 
@@ -215,199 +256,85 @@
       duracao: document.getElementById('filme-duracao').value.trim(),
       descCurta: document.getElementById('filme-desc-curta').value.trim(),
       desc: document.getElementById('filme-desc').value.trim(),
-      capa: capaDataInput.value || '',
-      capitulos: obterCapitulos(),
+      capa: capaData.value || '',
+      capitulos: getCapitulos(),
       atualizado: new Date().toISOString()
     };
 
     if (id) {
-      // Editar
       filmes = filmes.map(function (f) { return f.id === id ? dados : f; });
     } else {
-      // Novo
       dados.criado = new Date().toISOString();
       filmes.unshift(dados);
     }
 
     salvarFilmes(filmes);
-    fecharModal();
+    mostrarLista();
+  });
+
+  // ─── Editar / Excluir ──────────────────────────
+  function editarFilme(id) {
+    var f = carregarFilmes().find(function (x) { return x.id === id; });
+    if (f) { fecharDetalhes(); mostrarForm(f); }
+  }
+
+  function excluirFilme(id) {
+    if (!confirm('Excluir este filme?')) return;
+    salvarFilmes(carregarFilmes().filter(function (f) { return f.id !== id; }));
+    fecharDetalhes();
     renderizar();
-  });
-
-  // ─── Upload Capa ───────────────────────────────
-  capaUpload.addEventListener('change', function () {
-    var file = this.files[0];
-    if (!file) return;
-
-    var reader = new FileReader();
-    reader.onload = function (e) {
-      // Redimensionar para economizar localStorage
-      var img = new Image();
-      img.onload = function () {
-        var canvas = document.createElement('canvas');
-        var maxW = 600;
-        var scale = maxW / img.width;
-        if (scale > 1) scale = 1;
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        var dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        capaDataInput.value = dataUrl;
-        atualizarCapaPreview(dataUrl);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-
-  // Gerar gradiente como capa
-  document.getElementById('btn-gerar-capa').addEventListener('click', function () {
-    var grad = GRADIENTES[Math.floor(Math.random() * GRADIENTES.length)];
-    var canvas = document.createElement('canvas');
-    canvas.width = 600;
-    canvas.height = 340;
-    var ctx = canvas.getContext('2d');
-
-    // Parsear gradiente e aplicar
-    var grd = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    // Extrair cores do gradiente string
-    var cores = grad.match(/#[a-fA-F0-9]{6}/g) || ['#1a1a2e', '#e63946'];
-    cores.forEach(function (cor, i) {
-      grd.addColorStop(i / (cores.length - 1), cor);
-    });
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Adicionar ruído sutil
-    for (var i = 0; i < 200; i++) {
-      ctx.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.05) + ')';
-      ctx.beginPath();
-      ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-    capaDataInput.value = dataUrl;
-    atualizarCapaPreview(dataUrl);
-  });
-
-  // Remover capa
-  btnRemoverCapa.addEventListener('click', function () {
-    capaDataInput.value = '';
-    atualizarCapaPreview(null);
-    capaUpload.value = '';
-  });
-
-  // Contagem de caracteres descrição curta
-  document.getElementById('filme-desc-curta').addEventListener('input', function () {
-    descCurtaCount.textContent = this.value.length;
-  });
+  }
 
   // ─── Modal Detalhes ────────────────────────────
   function abrirDetalhes(id) {
-    var filmes = carregarFilmes();
-    var filme = filmes.find(function (f) { return f.id === id; });
-    if (!filme) return;
-
+    var f = carregarFilmes().find(function (x) { return x.id === id; });
+    if (!f) return;
     filmeAtualId = id;
-    var g = GENEROS[filme.genero] || GENEROS.acao;
+    var g = GENEROS[f.genero] || GENEROS.acao;
 
-    document.getElementById('detalhe-titulo').textContent = filme.nome;
+    document.getElementById('det-titulo').textContent = f.nome;
 
-    // Capa
-    var capaDiv = document.getElementById('detalhe-capa');
-    capaDiv.innerHTML = filme.capa
-      ? '<img src="' + filme.capa + '" alt="' + esc(filme.nome) + '">'
+    var capaDiv = document.getElementById('det-capa');
+    capaDiv.innerHTML = f.capa
+      ? '<img src="' + f.capa + '">'
       : '<span style="font-size:3rem;opacity:0.3">🎬</span>';
 
-    // Meta
-    document.getElementById('detalhe-meta').innerHTML =
+    document.getElementById('det-tags').innerHTML =
       '<span>' + g.emoji + ' ' + g.label + '</span>'
-      + (filme.duracao ? '<span>⏱ ' + esc(filme.duracao) + '</span>' : '')
-      + (filme.capitulos ? '<span>📑 ' + filme.capitulos.length + ' capítulo(s)</span>' : '');
+      + (f.duracao ? '<span>⏱ ' + esc(f.duracao) + '</span>' : '')
+      + '<span>📑 ' + ((f.capitulos && f.capitulos.length) || 0) + ' cap.</span>';
 
-    // Descrição
-    document.getElementById('detalhe-desc').innerHTML =
-      '<p><strong>' + esc(filme.descCurta || '') + '</strong></p>'
-      + '<p style="margin-top:8px">' + esc(filme.desc || 'Sem descrição detalhada.') + '</p>';
+    document.getElementById('det-curta').textContent = f.descCurta || '';
+    document.getElementById('det-desc').textContent = f.desc || 'Sem descrição detalhada.';
 
-    // Capítulos
-    var capsDiv = document.getElementById('detalhe-caps-lista');
-    if (filme.capitulos && filme.capitulos.length > 0) {
-      capsDiv.innerHTML = filme.capitulos.map(function (cap, i) {
-        return '<div class="detalhe-cap">'
-          + '<span class="detalhe-cap__num">' + (i + 1) + '</span>'
-          + '<span>' + esc(cap) + '</span>'
-          + '</div>';
-      }).join('');
+    var capsDiv = document.getElementById('det-caps');
+    if (f.capitulos && f.capitulos.length) {
+      capsDiv.innerHTML = '<h4 class="det-cap-titulo">CAPÍTULOS</h4>'
+        + f.capitulos.map(function (c, i) {
+          return '<div class="det-cap-item"><span class="cap-num">' + (i + 1) + '</span><span>' + esc(c) + '</span></div>';
+        }).join('');
     } else {
-      capsDiv.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem">Nenhum capítulo cadastrado.</p>';
+      capsDiv.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;font-style:italic">Nenhum capítulo.</p>';
     }
 
     modalDetalhes.hidden = false;
   }
 
-  function fecharDetalhes() {
-    modalDetalhes.hidden = true;
-    filmeAtualId = null;
-  }
-
-  // ─── Editar via Detalhes ───────────────────────
-  function abrirEdicao(id) {
-    var filmes = carregarFilmes();
-    var filme = filmes.find(function (f) { return f.id === id; });
-    if (!filme) return;
-    fecharDetalhes();
-    abrirModal(filme);
-  }
-
-  // ─── Excluir ───────────────────────────────────
-  function excluirFilme(id) {
-    if (!confirm('Tem certeza que deseja excluir este filme?')) return;
-    var filmes = carregarFilmes().filter(function (f) { return f.id !== id; });
-    salvarFilmes(filmes);
-    fecharDetalhes();
-    renderizar();
-  }
+  function fecharDetalhes() { modalDetalhes.hidden = true; filmeAtualId = null; }
 
   // ─── Event Listeners ──────────────────────────
-  document.getElementById('btn-novo-filme').addEventListener('click', function () {
-    abrirModal(null);
-  });
+  document.getElementById('btn-novo').addEventListener('click', function () { mostrarForm(null); });
+  document.getElementById('btn-voltar-lista').addEventListener('click', mostrarLista);
+  document.getElementById('btn-cancelar').addEventListener('click', mostrarLista);
 
-  document.getElementById('modal-fechar').addEventListener('click', fecharModal);
-  document.getElementById('btn-cancelar').addEventListener('click', fecharModal);
-  modalFilme.addEventListener('click', function (e) {
-    if (e.target === modalFilme) fecharModal();
-  });
+  document.getElementById('det-fechar').addEventListener('click', fecharDetalhes);
+  document.getElementById('det-fechar-btn').addEventListener('click', fecharDetalhes);
+  document.getElementById('det-editar').addEventListener('click', function () { if (filmeAtualId) editarFilme(filmeAtualId); });
+  document.getElementById('det-excluir').addEventListener('click', function () { if (filmeAtualId) excluirFilme(filmeAtualId); });
+  modalDetalhes.addEventListener('click', function (e) { if (e.target === modalDetalhes) fecharDetalhes(); });
 
-  document.getElementById('detalhe-fechar').addEventListener('click', fecharDetalhes);
-  document.getElementById('detalhe-fechar-btn').addEventListener('click', fecharDetalhes);
-  modalDetalhes.addEventListener('click', function (e) {
-    if (e.target === modalDetalhes) fecharDetalhes();
-  });
-
-  document.getElementById('detalhe-editar').addEventListener('click', function () {
-    if (filmeAtualId) abrirEdicao(filmeAtualId);
-  });
-
-  document.getElementById('detalhe-excluir').addEventListener('click', function () {
-    if (filmeAtualId) excluirFilme(filmeAtualId);
-  });
-
-  document.getElementById('btn-add-capitulo').addEventListener('click', function () {
-    var num = capitulosLista.querySelectorAll('.capitulo-item').length + 1;
-    adicionarCapituloItem(num, '');
-    var inputs = capitulosLista.querySelectorAll('input');
-    inputs[inputs.length - 1].focus();
-  });
-
-  // ESC para fechar modais
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      if (!modalDetalhes.hidden) fecharDetalhes();
-      else if (!modalFilme.hidden) fecharModal();
-    }
+    if (e.key === 'Escape' && !modalDetalhes.hidden) fecharDetalhes();
   });
 
   // ─── Init ──────────────────────────────────────

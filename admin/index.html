@@ -10,148 +10,172 @@
 </head>
 <body>
 
-  <!-- ===================== HEADER ===================== -->
-  <header class="admin-header">
-    <div class="admin-header__inner">
-      <a href="../index.html" class="admin-header__logo">
-        <span class="logo-text">RAG<span class="logo-accent">UI</span></span>
-        <span class="admin-badge">ADMIN</span>
+  <!-- ===================== TOPBAR ===================== -->
+  <header class="topbar">
+    <div class="topbar__left">
+      <a href="../index.html" class="topbar__logo">
+        RAG<span>UI</span>
       </a>
-      <nav class="admin-nav">
-        <button class="btn btn--primary" id="btn-novo-filme">
-          ＋ Cadastrar novo filme
-        </button>
-      </nav>
+      <span class="topbar__badge">ADMIN</span>
     </div>
+    <nav class="topbar__nav">
+      <button class="topbar__item topbar__item--active" data-page="filmes">
+        🎬 Filmes
+      </button>
+    </nav>
   </header>
 
-  <!-- ===================== MAIN ===================== -->
-  <main class="admin-main">
-    <div class="admin-main__header">
-      <h1>Filmes Cadastrados</h1>
-      <p class="admin-main__count">Total: <strong id="total-filmes">0</strong></p>
-    </div>
+  <!-- ===================== CONTEÚDO ===================== -->
+  <main class="conteudo">
 
-    <!-- Grid de filmes -->
-    <div class="filmes-grid" id="filmes-grid">
-      <!-- Cards dinâmicos via JS -->
-    </div>
-
-    <!-- Estado vazio -->
-    <div class="estado-vazio" id="estado-vazio">
-      <div class="estado-vazio__icon">🎬</div>
-      <h2>Nenhum filme cadastrado</h2>
-      <p>Clique em "Cadastrar novo filme" para começar.</p>
-    </div>
-  </main>
-
-  <!-- ===================== MODAL: Cadastro/Edição ===================== -->
-  <div class="modal-overlay" id="modal-filme" hidden>
-    <div class="modal">
-      <div class="modal__header">
-        <h2 id="modal-titulo">Novo Filme</h2>
-        <button class="modal__fechar" id="modal-fechar">&times;</button>
+    <!-- ===== PÁGINA: LISTA DE FILMES ===== -->
+    <section class="pagina" id="pagina-filmes">
+      <div class="pagina__topo">
+        <div>
+          <h1 class="pagina__titulo">Filmes</h1>
+          <p class="pagina__sub">Gerencie seu catálogo de conteúdos</p>
+        </div>
+        <button class="btn btn--primary" id="btn-novo">＋ Novo filme</button>
       </div>
-      <div class="modal__body">
-        <form id="form-filme">
-          <div class="form-group">
-            <label for="filme-nome">Nome do filme *</label>
-            <input type="text" id="filme-nome" placeholder="Ex: O Código Final" required>
-          </div>
 
-          <div class="form-row-2">
-            <div class="form-group">
-              <label for="filme-genero">Gênero</label>
-              <select id="filme-genero">
-                <option value="acao">🔥 Ação</option>
-                <option value="terror">🔪 Terror</option>
-                <option value="suspense">🕵️ Suspense</option>
-                <option value="drama">🎭 Drama</option>
-                <option value="scifi">🚀 Sci-Fi</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="filme-duracao">Duração</label>
-              <input type="text" id="filme-duracao" placeholder="Ex: 12 min">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="filme-desc-curta">Descrição curta *</label>
-            <input type="text" id="filme-desc-curta" placeholder="Uma frase impactante sobre o filme" maxlength="120" required>
-            <span class="char-count"><span id="desc-curta-count">0</span>/120</span>
-          </div>
-
-          <div class="form-group">
-            <label for="filme-desc">Descrição completa</label>
-            <textarea id="filme-desc" rows="4" placeholder="Sinopse detalhada do filme..."></textarea>
-          </div>
-
-          <!-- Capa -->
-          <div class="form-group">
-            <label>Capa do filme</label>
-            <div class="capa-area">
-              <div class="capa-preview" id="capa-preview">
-                <span class="capa-placeholder">📷 Sem capa</span>
-              </div>
-              <div class="capa-actions">
-                <label class="btn btn--ghost btn--sm capa-upload-label">
-                  📁 Upload imagem
-                  <input type="file" id="capa-upload" accept="image/*" hidden>
-                </label>
-                <button type="button" class="btn btn--ghost btn--sm" id="btn-gerar-capa">
-                  🤖 Gerar gradiente
-                </button>
-                <button type="button" class="btn btn--ghost btn--sm btn--danger" id="btn-remover-capa" hidden>
-                  🗑️ Remover
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Capítulos -->
-          <div class="form-group">
-            <label>Capítulos</label>
-            <div class="capitulos-lista" id="capitulos-lista">
-              <!-- Dinâmico -->
-            </div>
-            <button type="button" class="btn btn--ghost btn--sm" id="btn-add-capitulo">
-              ＋ Adicionar capítulo
-            </button>
-          </div>
-
-          <input type="hidden" id="filme-id">
-          <input type="hidden" id="filme-capa-data">
-
-          <div class="modal__footer">
-            <button type="button" class="btn btn--ghost" id="btn-cancelar">Cancelar</button>
-            <button type="submit" class="btn btn--primary">💾 Salvar filme</button>
-          </div>
-        </form>
+      <!-- Lista vazia -->
+      <div class="vazio" id="vazio">
+        <div class="vazio__icon">🎬</div>
+        <h2>Nenhum filme cadastrado</h2>
+        <p>Clique em "Novo filme" para começar.</p>
       </div>
-    </div>
-  </div>
 
-  <!-- ===================== MODAL: Detalhes ===================== -->
-  <div class="modal-overlay" id="modal-detalhes" hidden>
-    <div class="modal modal--detalhes">
-      <div class="modal__header">
-        <h2 id="detalhe-titulo">Detalhes</h2>
-        <button class="modal__fechar" id="detalhe-fechar">&times;</button>
+      <!-- Tabela de filmes -->
+      <div class="tabela-wrap" id="tabela-wrap" hidden>
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th width="60">Capa</th>
+              <th>Nome</th>
+              <th>Gênero</th>
+              <th>Capítulos</th>
+              <th width="140">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-body"></tbody>
+        </table>
       </div>
-      <div class="modal__body">
-        <div class="detalhe-capa" id="detalhe-capa"></div>
-        <div class="detalhe-meta" id="detalhe-meta"></div>
-        <div class="detalhe-desc" id="detalhe-desc"></div>
-        <div class="detalhe-capitulos">
-          <h3>Capítulos</h3>
-          <div id="detalhe-caps-lista"></div>
+    </section>
+
+    <!-- ===== PÁGINA: CADASTRO / EDIÇÃO ===== -->
+    <section class="pagina" id="pagina-form" hidden>
+      <div class="pagina__topo">
+        <div>
+          <button class="btn-voltar" id="btn-voltar-lista">← Voltar</button>
+          <h1 class="pagina__titulo" id="form-titulo">Novo Filme</h1>
         </div>
       </div>
-      <div class="modal__footer">
-        <button type="button" class="btn btn--ghost" id="detalhe-fechar-btn">Fechar</button>
-        <button type="button" class="btn btn--primary" id="detalhe-editar">✏️ Editar</button>
-        <button type="button" class="btn btn--danger" id="detalhe-excluir">🗑️ Excluir</button>
+
+      <form id="form-filme" class="form-filme">
+        <div class="form-layout">
+
+          <!-- COLUNA ESQUERDA: Dados do filme -->
+          <div class="form-col">
+            <div class="card">
+              <h3 class="card__titulo">Informações do filme</h3>
+
+              <div class="campo">
+                <label for="filme-nome">Nome *</label>
+                <input type="text" id="filme-nome" placeholder="Ex: O Código Final" required>
+              </div>
+
+              <div class="campos-row">
+                <div class="campo">
+                  <label for="filme-genero">Gênero</label>
+                  <select id="filme-genero">
+                    <option value="acao">🔥 Ação</option>
+                    <option value="terror">🔪 Terror</option>
+                    <option value="suspense">🕵️ Suspense</option>
+                    <option value="drama">🎭 Drama</option>
+                    <option value="scifi">🚀 Sci-Fi</option>
+                  </select>
+                </div>
+                <div class="campo">
+                  <label for="filme-duracao">Duração</label>
+                  <input type="text" id="filme-duracao" placeholder="Ex: 12 min">
+                </div>
+              </div>
+
+              <div class="campo">
+                <label for="filme-desc-curta">Descrição curta * <small id="desc-curta-count">0/120</small></label>
+                <input type="text" id="filme-desc-curta" placeholder="Uma frase de impacto" maxlength="120" required>
+              </div>
+
+              <div class="campo">
+                <label for="filme-desc">Descrição completa</label>
+                <textarea id="filme-desc" rows="5" placeholder="Sinopse detalhada do filme..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- COLUNA DIREITA: Capa + Capítulos -->
+          <div class="form-col">
+
+            <!-- Capa -->
+            <div class="card">
+              <h3 class="card__titulo">Capa</h3>
+              <div class="capa-box" id="capa-box">
+                <span class="capa-box__placeholder" id="capa-placeholder">📷<br>Clique ou arraste uma imagem</span>
+                <img id="capa-img" src="" alt="" hidden>
+                <input type="file" id="capa-upload" accept="image/*" hidden>
+              </div>
+              <div class="capa-botoes">
+                <button type="button" class="btn btn--ghost btn--sm" id="btn-upload">📁 Upload</button>
+                <button type="button" class="btn btn--ghost btn--sm" id="btn-gradiente">🎨 Gerar gradiente</button>
+                <button type="button" class="btn btn--ghost btn--sm btn--danger" id="btn-rm-capa" hidden>🗑️</button>
+              </div>
+              <input type="hidden" id="filme-capa-data">
+            </div>
+
+            <!-- Capítulos -->
+            <div class="card">
+              <div class="card__titulo-row">
+                <h3 class="card__titulo">Capítulos</h3>
+                <button type="button" class="btn btn--ghost btn--sm" id="btn-add-cap">＋ Adicionar</button>
+              </div>
+              <div id="caps-lista" class="caps-lista">
+                <p class="caps-vazio" id="caps-vazio">Nenhum capítulo. Clique em "Adicionar".</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <input type="hidden" id="filme-id">
+
+        <!-- Barra de ações -->
+        <div class="form-acoes">
+          <button type="button" class="btn btn--ghost" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="btn btn--primary">💾 Salvar filme</button>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- ===================== MODAL DETALHES ===================== -->
+  <div class="modal-overlay" id="modal-detalhes" hidden>
+    <div class="modal">
+      <div class="modal__topo">
+        <h2 id="det-titulo"></h2>
+        <button class="modal__x" id="det-fechar">&times;</button>
+      </div>
+      <div class="modal__corpo">
+        <div class="det-capa" id="det-capa"></div>
+        <div class="det-tags" id="det-tags"></div>
+        <p class="det-curta" id="det-curta"></p>
+        <p class="det-desc" id="det-desc"></p>
+        <div id="det-caps"></div>
+      </div>
+      <div class="modal__rodape">
+        <button class="btn btn--ghost" id="det-fechar-btn">Fechar</button>
+        <button class="btn btn--primary" id="det-editar">✏️ Editar</button>
+        <button class="btn btn--danger" id="det-excluir">🗑️ Excluir</button>
       </div>
     </div>
   </div>
