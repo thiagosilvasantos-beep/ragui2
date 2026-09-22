@@ -135,8 +135,10 @@
 
     grid.innerHTML = filmes.map(function(f) {
       var g = GENEROS_MAP[f.genero] || GENEROS_MAP.acao;
-      var capaHtml = f.capa
-        ? '<img src="' + f.capa + '" alt="' + f.nome.replace(/"/g,'') + '">'
+      // Normalizar caminho: admin salva ../capas/ mas landing precisa capas/
+      var capaSrc = (f.capa || '').replace(/^\.\.\//, '');
+      var capaHtml = capaSrc
+        ? '<img src="' + capaSrc + '" alt="' + f.nome.replace(/"/g,'') + '">'
         : '';
       var nCaps = (f.capitulos && f.capitulos.length) || 0;
 
