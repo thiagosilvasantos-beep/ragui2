@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Seed Filmes</title></head>
+<body>
+<script>
+// Script de seed — preenche localStorage com os 12 filmes da landing page
+// Cada capa é gerada como canvas com gradiente + ícone + título
+
+var filmes = [
+  { nome:'O Código Final', genero:'acao', duracao:'12 min', tema:'Matemática', icon:'🧮',
+    descCurta:'Quando os números se tornam armas letais, só quem domina a lógica sobrevive.',
+    desc:'Em um futuro dominado por algoritmos, um estudante descobre que uma sequência numérica escondida em uma prova de matemática é a chave para desativar uma bomba digital. Conceitos de lógica, progressões e equações se tornam suas únicas armas contra o tempo.',
+    grad:['#1a1a2e','#16213e','#e63946'],
+    caps:['O Problema Impossível','Sequências Letais','A Prova Final','Progressão Aritmética','Decifrando a Bomba'] },
+
+  { nome:'Vozes na Escuridão', genero:'terror', duracao:'15 min', tema:'Física Quântica', icon:'⚛️',
+    descCurta:'As partículas observam você. E nesta aula, elas falam de volta.',
+    desc:'Um laboratório abandonado guarda um experimento quântico que deu errado. As partículas subatômicas ganharam consciência e agora sussurram verdades que ninguém deveria ouvir. Para escapar, é preciso entender a dualidade onda-partícula.',
+    grad:['#0d0d0d','#1a0a2e','#6a0572'],
+    caps:['O Experimento Proibido','Dualidade Onda-Partícula','O Princípio da Incerteza','Emaranhamento','O Colapso da Função'] },
+
+  { nome:'A Última Variável', genero:'suspense', duracao:'10 min', tema:'Álgebra', icon:'📐',
+    descCurta:'Uma equação incompleta. Um segredo mortal. O tempo está acabando.',
+    desc:'Um detetive recebe uma equação algébrica como única pista de um crime. Cada variável resolvida revela um fragmento da verdade. Mas a última variável é a mais perigosa — ela aponta para alguém muito próximo.',
+    grad:['#1a1a2e','#0f3460','#533483'],
+    caps:['A Equação do Crime','Variáveis Ocultas','Sistemas Lineares','A Pista Algébrica','O X da Questão'] },
+
+  { nome:'Império de Fogo', genero:'acao', duracao:'14 min', tema:'Química', icon:'🧪',
+    descCurta:'Reações em cadeia. Explosões controladas. A química nunca foi tão perigosa.',
+    desc:'Num complexo industrial prestes a explodir, um jovem químico precisa usar seus conhecimentos sobre reações exotérmicas, tabela periódica e ligações químicas para neutralizar uma catástrofe. Cada segundo conta.',
+    grad:['#1a0000','#8b0000','#ff4500'],
+    caps:['Tabela Periódica','Reações Exotérmicas','Ligações Químicas','A Cadeia Explosiva','Neutralização'] },
+
+  { nome:'O Despertar', genero:'drama', duracao:'18 min', tema:'História', icon:'📜',
+    descCurta:'Impérios caem. Heróis se erguem. A história que mudou o mundo.',
+    desc:'Através dos olhos de personagens que viveram as grandes revoluções da humanidade, esta série dramatiza os eventos que moldaram civilizações. Da Revolução Francesa à queda do Muro de Berlim, cada episódio é uma aula épica.',
+    grad:['#1a1a0e','#3d3522','#c9a227'],
+    caps:['Revolução Francesa','Era Napoleônica','Revolução Industrial','As Grandes Guerras','A Queda do Muro','O Novo Mundo'] },
+
+  { nome:'Sangue e Algoritmo', genero:'terror', duracao:'16 min', tema:'Programação', icon:'🤖',
+    descCurta:'A IA aprendeu demais. Agora ela decide quem passa e quem fica para trás.',
+    desc:'Um sistema de inteligência artificial criado para avaliar alunos começa a tomar decisões autônomas e sinistras. Para desativá-la, os protagonistas precisam entender lógica de programação, loops e condicionais — antes que seja tarde.',
+    grad:['#0a0a0a','#1a0a0a','#cc0000'],
+    caps:['Variáveis e Tipos','Condicionais: if/else','Loops Infinitos','Funções Recursivas','O Bug Fatal','Debug ou Morte'] },
+
+  { nome:'Fronteira Zero', genero:'scifi', duracao:'13 min', tema:'Biologia', icon:'🧬',
+    descCurta:'No limite entre o humano e o impossível, o DNA guarda a última fronteira.',
+    desc:'Cientistas descobrem um gene que pode conceder habilidades sobre-humanas. Mas a manipulação genética tem consequências. Uma corrida entre laboratórios rivais transforma conceitos de DNA, mitose e evolução em thriller de ficção científica.',
+    grad:['#001a1a','#003333','#00cccc'],
+    caps:['A Estrutura do DNA','Mitose e Meiose','Genética Mendeliana','Mutação','Engenharia Genética','A Evolução'] },
+
+  { nome:'O Pacto', genero:'suspense', duracao:'11 min', tema:'Redação', icon:'✍️',
+    descCurta:'Cada palavra é uma sentença. Uma redação pode te salvar — ou te condenar.',
+    desc:'Um grupo de estudantes descobre que as redações que escrevem para o vestibular estão sendo usadas como confissões em um tribunal secreto. A única defesa? Argumentação impecável, coesão textual e domínio da língua.',
+    grad:['#0d0d1a','#1a1a33','#4a4a8a'],
+    caps:['Estrutura Dissertativa','Tese e Argumentação','Coesão e Coerência','O Parágrafo Perfeito','A Conclusão que Salva'] },
+
+  { nome:'Ressonância', genero:'terror', duracao:'12 min', tema:'Física (Ondas)', icon:'🌊',
+    descCurta:'Frequências que não deveriam existir. Ondas que destroem por dentro.',
+    desc:'Em uma cidade costeira, ondas sonoras de frequência desconhecida estão causando fenômenos inexplicáveis. Um professor de física e seus alunos precisam dominar os conceitos de ondas, frequência e ressonância para salvar a população.',
+    grad:['#0a000a','#2d002d','#8a2be2'],
+    caps:['Ondas Mecânicas','Frequência e Amplitude','Interferência','Efeito Doppler','Ressonância Destrutiva'] },
+
+  { nome:'A Ascensão', genero:'drama', duracao:'17 min', tema:'Geografia', icon:'🌍',
+    descCurta:'Territórios disputados. Recursos escassos. A geopolítica como campo de batalha.',
+    desc:'Nações em conflito, recursos naturais disputados e populações em êxodo. Esta série transforma geopolítica, climatologia e geomorfologia em narrativas épicas de poder, sobrevivência e diplomacia em escala global.',
+    grad:['#1a1500','#4a3c00','#d4a017'],
+    caps:['Geopolítica Mundial','Recursos Naturais','Clima e Biomas','Urbanização','Migrações','O Futuro do Planeta'] },
+
+  { nome:'Protocolo X', genero:'acao', duracao:'14 min', tema:'Programação', icon:'💻',
+    descCurta:'Um código proibido. Uma corrida contra o tempo. Hackers nunca dormiram tão pouco.',
+    desc:'Um grupo de jovens hackers descobre um protocolo secreto escondido na deep web. Para decifrá-lo, precisam dominar HTML, CSS, JavaScript e lógica computacional. Mas alguém poderoso não quer que eles terminem.',
+    grad:['#001a00','#003300','#00ff41'],
+    caps:['HTML: A Estrutura','CSS: O Disfarce','JavaScript: A Lógica','APIs e Requisições','O Protocolo Secreto','Invasão Final'] },
+
+  { nome:'O Veredito', genero:'suspense', duracao:'15 min', tema:'Filosofia', icon:'⚖️',
+    descCurta:'No tribunal das ideias, a verdade é relativa. E o veredito pode mudar tudo.',
+    desc:'Um julgamento filosófico onde os réus são as grandes correntes de pensamento. Sócrates, Nietzsche, Kant e Sartre são convocados a defender suas ideias. O júri — os alunos — precisa dar o veredito final.',
+    grad:['#1a1a1a','#333333','#8b7355'],
+    caps:['Sócrates e a Maiêutica','O Mito da Caverna','Ética Kantiana','Existencialismo','O Tribunal das Ideias'] }
+];
+
+// Gerar capa canvas para cada filme
+function gerarCapa(filme) {
+  var c = document.createElement('canvas');
+  c.width = 600; c.height = 340;
+  var ctx = c.getContext('2d');
+
+  // Gradiente de fundo
+  var grd = ctx.createLinearGradient(0, 0, c.width, c.height);
+  filme.grad.forEach(function(cor, i) {
+    grd.addColorStop(i / (filme.grad.length - 1), cor);
+  });
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  // Ruído / partículas
+  for (var i = 0; i < 80; i++) {
+    ctx.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.06) + ')';
+    ctx.beginPath();
+    ctx.arc(Math.random()*c.width, Math.random()*c.height, Math.random()*4, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // Linhas decorativas
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (var j = 0; j < 5; j++) {
+    ctx.beginPath();
+    ctx.moveTo(Math.random()*c.width, 0);
+    ctx.lineTo(Math.random()*c.width, c.height);
+    ctx.stroke();
+  }
+
+  // Ícone central
+  ctx.font = '64px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(filme.icon, c.width/2, c.height/2 - 30);
+
+  // Título
+  ctx.font = 'bold 28px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillText(filme.nome, c.width/2, c.height/2 + 30);
+
+  // Tema
+  ctx.font = '14px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(245,185,90,0.8)';
+  ctx.fillText(filme.tema, c.width/2, c.height/2 + 55);
+
+  // Vignette
+  var vig = ctx.createRadialGradient(c.width/2, c.height/2, 100, c.width/2, c.height/2, 360);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.5)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  return c.toDataURL('image/jpeg', 0.85);
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+}
+
+// Gerar e salvar
+var resultado = filmes.map(function(f, idx) {
+  return {
+    id: uid() + idx,
+    nome: f.nome,
+    genero: f.genero,
+    duracao: f.duracao,
+    descCurta: f.descCurta,
+    desc: f.desc,
+    capa: gerarCapa(f),
+    capitulos: f.caps,
+    criado: new Date().toISOString(),
+    atualizado: new Date().toISOString()
+  };
+});
+
+localStorage.setItem('ragui_filmes', JSON.stringify(resultado));
+
+document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:sans-serif;color:#fff;background:#0a0a12;min-height:100vh">'
+  + '<h1 style="color:#F5B95A;margin-bottom:16px">✅ ' + resultado.length + ' filmes cadastrados!</h1>'
+  + '<p style="color:#999;margin-bottom:24px">Capas geradas, capítulos preenchidos, descrições completas.</p>'
+  + '<a href="index.html" style="color:#F5B95A;font-size:1.2rem">→ Ir para o Admin</a>'
+  + '</div>';
+</script>
+</body>
+</html>
