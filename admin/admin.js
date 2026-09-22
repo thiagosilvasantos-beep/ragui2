@@ -5,7 +5,68 @@
   var expandido = null; // id do filme expandido
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { return []; } }
+
+  var FILMES_PADRAO = [
+    { id:uid()+'0', nome:'O Código Final', genero:'acao', duracao:'12 min', capa:'../capas/codigo_final.jpg',
+      descCurta:'Quando os números se tornam armas letais, só quem domina a lógica sobrevive.',
+      desc:'Em um futuro dominado por algoritmos, um estudante descobre que uma sequência numérica escondida em uma prova de matemática é a chave para desativar uma bomba digital.',
+      capitulos:['O Problema Impossível','Sequências Letais','A Prova Final','Progressão Aritmética','Decifrando a Bomba'] },
+    { id:uid()+'1', nome:'Vozes na Escuridão', genero:'terror', duracao:'15 min', capa:'../capas/vozes_escuridao.jpg',
+      descCurta:'As partículas observam você. E nesta aula, elas falam de volta.',
+      desc:'Um laboratório abandonado guarda um experimento quântico que deu errado. As partículas subatômicas ganharam consciência e sussurram verdades que ninguém deveria ouvir.',
+      capitulos:['O Experimento Proibido','Dualidade Onda-Partícula','O Princípio da Incerteza','Emaranhamento','O Colapso da Função'] },
+    { id:uid()+'2', nome:'A Última Variável', genero:'suspense', duracao:'10 min', capa:'../capas/ultima_variavel.jpg',
+      descCurta:'Uma equação incompleta. Um segredo mortal. O tempo está acabando.',
+      desc:'Um detetive recebe uma equação algébrica como única pista de um crime. Cada variável resolvida revela um fragmento da verdade.',
+      capitulos:['A Equação do Crime','Variáveis Ocultas','Sistemas Lineares','A Pista Algébrica','O X da Questão'] },
+    { id:uid()+'3', nome:'Império de Fogo', genero:'acao', duracao:'14 min', capa:'../capas/imperio_fogo.jpg',
+      descCurta:'Reações em cadeia. Explosões controladas. A química nunca foi tão perigosa.',
+      desc:'Num complexo industrial prestes a explodir, um jovem químico precisa usar seus conhecimentos sobre reações exotérmicas para neutralizar uma catástrofe.',
+      capitulos:['Tabela Periódica','Reações Exotérmicas','Ligações Químicas','A Cadeia Explosiva','Neutralização'] },
+    { id:uid()+'4', nome:'O Despertar', genero:'drama', duracao:'18 min', capa:'../capas/despertar.jpg',
+      descCurta:'Impérios caem. Heróis se erguem. A história que mudou o mundo.',
+      desc:'Através dos olhos de personagens que viveram as grandes revoluções da humanidade, esta série dramatiza os eventos que moldaram civilizações.',
+      capitulos:['Revolução Francesa','Era Napoleônica','Revolução Industrial','As Grandes Guerras','A Queda do Muro','O Novo Mundo'] },
+    { id:uid()+'5', nome:'Sangue e Algoritmo', genero:'terror', duracao:'16 min', capa:'../capas/sangue_algoritmo.jpg',
+      descCurta:'A IA aprendeu demais. Agora ela decide quem passa e quem fica para trás.',
+      desc:'Um sistema de IA criado para avaliar alunos começa a tomar decisões autônomas e sinistras. Para desativá-la, é preciso entender lógica de programação.',
+      capitulos:['Variáveis e Tipos','Condicionais: if/else','Loops Infinitos','Funções Recursivas','O Bug Fatal','Debug ou Morte'] },
+    { id:uid()+'6', nome:'Fronteira Zero', genero:'scifi', duracao:'13 min', capa:'../capas/fronteira_zero.jpg',
+      descCurta:'No limite entre o humano e o impossível, o DNA guarda a última fronteira.',
+      desc:'Cientistas descobrem um gene que pode conceder habilidades sobre-humanas. Uma corrida entre laboratórios rivais transforma conceitos de DNA em thriller de ficção científica.',
+      capitulos:['A Estrutura do DNA','Mitose e Meiose','Genética Mendeliana','Mutação','Engenharia Genética','A Evolução'] },
+    { id:uid()+'7', nome:'O Pacto', genero:'suspense', duracao:'11 min', capa:'../capas/pacto.jpg',
+      descCurta:'Cada palavra é uma sentença. Uma redação pode te salvar — ou te condenar.',
+      desc:'Estudantes descobrem que suas redações estão sendo usadas como confissões em um tribunal secreto. A única defesa? Argumentação impecável.',
+      capitulos:['Estrutura Dissertativa','Tese e Argumentação','Coesão e Coerência','O Parágrafo Perfeito','A Conclusão que Salva'] },
+    { id:uid()+'8', nome:'Ressonância', genero:'terror', duracao:'12 min', capa:'../capas/ressonancia.jpg',
+      descCurta:'Frequências que não deveriam existir. Ondas que destroem por dentro.',
+      desc:'Ondas sonoras de frequência desconhecida causam fenômenos inexplicáveis. Um professor de física e seus alunos precisam dominar os conceitos de ondas e ressonância.',
+      capitulos:['Ondas Mecânicas','Frequência e Amplitude','Interferência','Efeito Doppler','Ressonância Destrutiva'] },
+    { id:uid()+'9', nome:'A Ascensão', genero:'drama', duracao:'17 min', capa:'../capas/ascensao.jpg',
+      descCurta:'Territórios disputados. Recursos escassos. A geopolítica como campo de batalha.',
+      desc:'Nações em conflito, recursos naturais disputados e populações em êxodo. Geopolítica e geomorfologia em narrativas épicas de poder e sobrevivência.',
+      capitulos:['Geopolítica Mundial','Recursos Naturais','Clima e Biomas','Urbanização','Migrações','O Futuro do Planeta'] },
+    { id:uid()+'10', nome:'Protocolo X', genero:'acao', duracao:'14 min', capa:'../capas/protocolo_x.jpg',
+      descCurta:'Um código proibido. Uma corrida contra o tempo. Hackers nunca dormiram tão pouco.',
+      desc:'Jovens hackers descobrem um protocolo secreto na deep web. Para decifrá-lo, precisam dominar HTML, CSS, JavaScript e lógica computacional.',
+      capitulos:['HTML: A Estrutura','CSS: O Disfarce','JavaScript: A Lógica','APIs e Requisições','O Protocolo Secreto','Invasão Final'] },
+    { id:uid()+'11', nome:'O Veredito', genero:'suspense', duracao:'15 min', capa:'../capas/veredito.jpg',
+      descCurta:'No tribunal das ideias, a verdade é relativa. E o veredito pode mudar tudo.',
+      desc:'Um julgamento filosófico onde Sócrates, Nietzsche, Kant e Sartre são convocados a defender suas ideias. O júri — os alunos — precisa dar o veredito final.',
+      capitulos:['Sócrates e a Maiêutica','O Mito da Caverna','Ética Kantiana','Existencialismo','O Tribunal das Ideias'] }
+  ];
+
+  function load() {
+    try {
+      var data = JSON.parse(localStorage.getItem(KEY));
+      if (data && data.length) return data;
+    } catch(e) {}
+    // Primeira vez: popular com dados padrão
+    localStorage.setItem(KEY, JSON.stringify(FILMES_PADRAO));
+    return FILMES_PADRAO;
+  }
+
   function save(f) { localStorage.setItem(KEY, JSON.stringify(f)); }
   function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
