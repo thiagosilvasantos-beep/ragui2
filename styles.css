@@ -148,18 +148,18 @@ img, video { max-width: 100%; display: block; }
 .header__logo { text-decoration: none; }
 
 .logo-img {
-  height: 78px;
-  max-height: 78px;
+  height: 55px;
+  max-height: 55px;
   width: auto;
-  max-width: 210px;
+  max-width: 150px;
   display: block;
   object-fit: contain;
 }
 
 .logo-img--footer {
-  height: 90px;
-  max-height: 90px;
-  max-width: 240px;
+  height: 63px;
+  max-height: 63px;
+  max-width: 170px;
 }
 
 .logo-text {
