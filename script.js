@@ -173,8 +173,18 @@
     var titleEl      = document.getElementById('player-title');
     var descEl       = document.getElementById('player-desc');
     var chaptersEl   = document.getElementById('player-chapters');
+    var drawer       = document.getElementById('player-drawer');
+    var drawerToggle = document.getElementById('drawer-toggle');
+    var drawerLabel  = document.getElementById('drawer-label');
 
     if (!overlay) return;
+
+    // ── Drawer toggle ──
+    if (drawerToggle) {
+      drawerToggle.addEventListener('click', function () {
+        drawer.classList.toggle('open');
+      });
+    }
 
     function normalizePath(p) {
       if (!p) return p;
@@ -197,6 +207,7 @@
       videoEl.load();
       videoEl.classList.remove('active');
       noVideo.classList.remove('hidden');
+      if (drawer) drawer.classList.remove('open');
     }
 
     btnClose.addEventListener('click', closeOverlay);

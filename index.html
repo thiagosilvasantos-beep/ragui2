@@ -210,16 +210,24 @@
   <!-- ===================== PLAYER OVERLAY ===================== -->
   <div class="player-overlay" id="player-overlay">
     <div class="player-overlay__bg"></div>
-    <div class="player-overlay__content">
-      <button class="player-overlay__close" id="player-close">&times;</button>
-      <div class="player-overlay__video">
-        <video id="player-video" controls playsinline></video>
-        <div id="player-no-video" class="player-overlay__placeholder">
-          <span>🎬</span>
-          <p>Selecione um capítulo para assistir</p>
-        </div>
+    <!-- Fechar -->
+    <button class="player-overlay__close" id="player-close">&times;</button>
+    <!-- Vídeo maximizado -->
+    <div class="player-overlay__video">
+      <video id="player-video" controls playsinline></video>
+      <div id="player-no-video" class="player-overlay__placeholder">
+        <span>🎬</span>
+        <p>Selecione um capítulo para assistir</p>
       </div>
-      <div class="player-overlay__info">
+    </div>
+    <!-- Gaveta de capítulos (bottom drawer) -->
+    <div class="player-drawer" id="player-drawer">
+      <button class="player-drawer__toggle" id="drawer-toggle">
+        <span class="player-drawer__icon">🎬</span>
+        <span class="player-drawer__label" id="drawer-label">Capítulos</span>
+        <span class="player-drawer__arrow">▲</span>
+      </button>
+      <div class="player-drawer__content" id="drawer-content">
         <h2 id="player-title"></h2>
         <p id="player-desc"></p>
         <div class="player-overlay__chapters" id="player-chapters"></div>
