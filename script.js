@@ -167,7 +167,7 @@
       var hasFree = f.capitulos && f.capitulos.some(function(cap) {
         return typeof cap === 'object' && cap !== null && cap.gratis === true;
       });
-      var freeBadge = hasFree ? '<span class="card__badge-free">🆓 GRÁTIS</span>' : '';
+      var freeBadge = hasFree ? '<span class="card__badge-free">GRÁTIS</span>' : '';
 
       return '<article class="card visible" data-genero="' + f.genero + '">'
         + '<div class="card__poster">'
@@ -388,12 +388,16 @@
 
           trackClick(f.nome, null, 'abrir_filme');
 
-          // Se não tem capítulos, enviar direto para cadastro
-          if (!f.capitulos || !f.capitulos.length) {
+          // Se não tem capítulos OU nenhum capítulo é grátis, enviar direto para cadastro
+          var temCapGratis = f.capitulos && f.capitulos.some(function(cap) {
+            return typeof cap === 'object' && cap !== null && cap.gratis === true;
+          });
+
+          if (!f.capitulos || !f.capitulos.length || !temCapGratis) {
             if (localStorage.getItem('ragui_lead_registered') !== 'true') {
               openLeadPopup(f.nome, 'Acesso ao filme', null, null);
+              return;
             }
-            return;
           }
 
           titleEl.textContent = f.nome || '';
