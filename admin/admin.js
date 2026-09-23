@@ -413,44 +413,44 @@
             
             if (ev.type === 'lead') {
               icon = '✅';
-              text = \`<strong>Cadastrou-se</strong> — \${ev.nome || 'Sem nome'}\`;
+              text = `<strong>Cadastrou-se</strong> — ${ev.nome || 'Sem nome'}`;
               cls += ' journey-step--lead';
             } else {
               if (ev.acao === 'abrir_filme') {
                 icon = '🎬';
-                text = \`Abriu <strong>\${ev.filme || 'Filme'}</strong>\`;
+                text = `Abriu <strong>${ev.filme || 'Filme'}</strong>`;
               } else if (ev.acao === 'play_capitulo') {
                 icon = '▶️';
-                text = \`Play <strong>\${ev.capitulo || 'Capítulo'}</strong> em <strong>\${ev.filme || 'Filme'}</strong>\`;
+                text = `Play <strong>${ev.capitulo || 'Capítulo'}</strong> em <strong>${ev.filme || 'Filme'}</strong>`;
               } else {
                 icon = '🔹';
                 text = ev.acao || 'Ação';
               }
             }
             
-            stepsHtml += \`
-              <div class="\${cls}">
-                <span class="journey-time">\${ev.hora || '--:--'}</span>
-                <span class="journey-icon">\${icon}</span>
-                <span class="journey-text">\${text}</span>
+            stepsHtml += `
+              <div class="${cls}">
+                <span class="journey-time">${ev.hora || '--:--'}</span>
+                <span class="journey-icon">${icon}</span>
+                <span class="journey-text">${text}</span>
               </div>
-            \`;
+            `;
           });
           
-          const leadBadge = v.lead ? \`<span class="journey-badge">\${v.lead.nome || ''} \${v.lead.telefone ? '— ' + v.lead.telefone : ''}</span>\` : '';
+          const leadBadge = v.lead ? `<span class="journey-badge">${v.lead.nome || ''} ${v.lead.telefone ? '— ' + v.lead.telefone : ''}</span>` : '';
           
-          journeyContainer.innerHTML += \`
+          journeyContainer.innerHTML += `
             <div class="journey-card">
               <div class="journey-header">
-                <span class="journey-visitor">👤 \${vid.substring(0,12)}...</span>
-                \${leadBadge}
-                <span class="journey-count">\${v.events.length} ações</span>
+                <span class="journey-visitor">👤 ${vid.substring(0,12)}...</span>
+                ${leadBadge}
+                <span class="journey-count">${v.events.length} ações</span>
               </div>
               <div class="journey-timeline">
-                \${stepsHtml}
+                ${stepsHtml}
               </div>
             </div>
-          \`;
+          `;
         });
       }
     }
