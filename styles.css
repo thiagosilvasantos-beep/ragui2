@@ -1337,16 +1337,16 @@ img, video { max-width: 100%; display: block; }
 /* ─── Free Badge ───────────────────────────────────────── */
 .card__badge-free {
   position: absolute;
-  top: 40px;
-  left: 12px;
-  padding: 4px 8px;
-  border-radius: 4px;
+  top: 12px;
+  right: 12px;
+  padding: 4px 12px;
+  border-radius: 50px;
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  background: #22c55e;
-  color: #fff;
+  background: rgba(245, 185, 90, 0.95);
+  color: #0a0a0f;
   z-index: 2;
 }
 

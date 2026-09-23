@@ -388,6 +388,14 @@
 
           trackClick(f.nome, null, 'abrir_filme');
 
+          // Se não tem capítulos, enviar direto para cadastro
+          if (!f.capitulos || !f.capitulos.length) {
+            if (localStorage.getItem('ragui_lead_registered') !== 'true') {
+              openLeadPopup(f.nome, 'Acesso ao filme', null, null);
+            }
+            return;
+          }
+
           titleEl.textContent = f.nome || '';
           descEl.textContent  = f.descCurta || '';
 
