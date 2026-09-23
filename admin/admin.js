@@ -313,6 +313,147 @@
         }
       }
     });
+
+    // NEW SECTION 1: Visitor Stats
+    const visitorsMap = {};
+    clicks.forEach(c => {
+      const vid = c.visitor_id || 'Sem ID';
+      if (!visitorsMap[vid]) {
+        visitorsMap[vid] = { clicks: 0, movies: new Set(), chapters: new Set(), latestTimestamp: 0, events: [] };
+      }
+      visitorsMap[vid].clicks++;
+      if (c.acao === 'abrir_filme' && c.filme) visitorsMap[vid].movies.add(c.filme);
+      if (c.acao === 'play_capitulo' && c.capitulo) visitorsMap[vid].chapters.add(c.capitulo);
+      
+      const ts = getTimestampFromData(c);
+      if (ts > visitorsMap[vid].latestTimestamp) visitorsMap[vid].latestTimestamp = ts;
+      
+      visitorsMap[vid].events.push({ ...c, type: 'click', ts });
+    });
+
+    leads.forEach(l => {
+      const vid = l.visitor_id || 'Sem ID';
+      if (visitorsMap[vid]) {
+        visitorsMap[vid].lead = l;
+        const ts = getTimestampFromData(l);
+        visitorsMap[vid].events.push({ ...l, type: 'lead', ts });
+        if (ts > visitorsMap[vid].latestTimestamp) visitorsMap[vid].latestTimestamp = ts;
+      }
+    });
+
+    const visitorIds = Object.keys(visitorsMap);
+    const totalVisitors = visitorIds.length;
+    let maxClicksVisitor = 0;
+    visitorIds.forEach(vid => {
+      if (visitorsMap[vid].clicks > maxClicksVisitor) maxClicksVisitor = visitorsMap[vid].clicks;
+    });
+    const avgClicks = totalVisitors > 0 ? (totalClicks / totalVisitors).toFixed(1) : 0;
+
+    const visitorStatsContainer = document.getElementById('visitor-stats');
+    if(visitorStatsContainer) {
+      visitorStatsContainer.innerHTML = `
+        <div class="stat-card" style="border-top-color: #f43f5e">
+          <div class="stat-label">Visitantes Únicos</div>
+          <div class="stat-value">${totalVisitors}</div>
+        </div>
+        <div class="stat-card" style="border-top-color: #eab308">
+          <div class="stat-label">Média Cliques/Vis.</div>
+          <div class="stat-value">${avgClicks}</div>
+        </div>
+        <div class="stat-card" style="border-top-color: #06b6d4">
+          <div class="stat-label">Máx. Cliques</div>
+          <div class="stat-value">${maxClicksVisitor}</div>
+        </div>
+      `;
+    }
+
+    const visitorsSortedByClicks = visitorIds.sort((a,b) => visitorsMap[b].clicks - visitorsMap[a].clicks).slice(0, 20);
+    const tableVisitorsTbody = document.querySelector('#table-visitors tbody');
+    if(tableVisitorsTbody) {
+      tableVisitorsTbody.innerHTML = '';
+      if (visitorsSortedByClicks.length === 0) {
+        tableVisitorsTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--dim)">Nenhum dado</td></tr>';
+      } else {
+        visitorsSortedByClicks.forEach(vid => {
+          const v = visitorsMap[vid];
+          const displayId = vid === 'Sem ID' ? vid : vid.substring(0,12) + '...';
+          const leadName = v.lead ? v.lead.nome : '—';
+          tableVisitorsTbody.innerHTML += `<tr>
+            <td style="font-family:monospace;color:var(--gold)">${displayId}</td>
+            <td>${v.clicks}</td>
+            <td>${v.movies.size}</td>
+            <td>${v.chapters.size}</td>
+            <td>${leadName}</td>
+          </tr>`;
+        });
+      }
+    }
+
+    // NEW SECTION 2: Customer Journey
+    const visitorsSortedByTime = visitorIds
+      .filter(vid => vid !== 'Sem ID')
+      .sort((a,b) => visitorsMap[b].latestTimestamp - visitorsMap[a].latestTimestamp)
+      .slice(0, 10);
+      
+    const journeyContainer = document.getElementById('journey-container');
+    if(journeyContainer) {
+      journeyContainer.innerHTML = '';
+      if (visitorsSortedByTime.length === 0) {
+        journeyContainer.innerHTML = '<div style="text-align:center;color:var(--dim);padding:20px;">Nenhuma jornada recente</div>';
+      } else {
+        visitorsSortedByTime.forEach(vid => {
+          const v = visitorsMap[vid];
+          v.events.sort((a,b) => a.ts - b.ts);
+          
+          let stepsHtml = '';
+          v.events.forEach(ev => {
+            let icon = '';
+            let text = '';
+            let cls = 'journey-step';
+            
+            if (ev.type === 'lead') {
+              icon = '✅';
+              text = \`<strong>Cadastrou-se</strong> — \${ev.nome || 'Sem nome'}\`;
+              cls += ' journey-step--lead';
+            } else {
+              if (ev.acao === 'abrir_filme') {
+                icon = '🎬';
+                text = \`Abriu <strong>\${ev.filme || 'Filme'}</strong>\`;
+              } else if (ev.acao === 'play_capitulo') {
+                icon = '▶️';
+                text = \`Play <strong>\${ev.capitulo || 'Capítulo'}</strong> em <strong>\${ev.filme || 'Filme'}</strong>\`;
+              } else {
+                icon = '🔹';
+                text = ev.acao || 'Ação';
+              }
+            }
+            
+            stepsHtml += \`
+              <div class="\${cls}">
+                <span class="journey-time">\${ev.hora || '--:--'}</span>
+                <span class="journey-icon">\${icon}</span>
+                <span class="journey-text">\${text}</span>
+              </div>
+            \`;
+          });
+          
+          const leadBadge = v.lead ? \`<span class="journey-badge">\${v.lead.nome || ''} \${v.lead.telefone ? '— ' + v.lead.telefone : ''}</span>\` : '';
+          
+          journeyContainer.innerHTML += \`
+            <div class="journey-card">
+              <div class="journey-header">
+                <span class="journey-visitor">👤 \${vid.substring(0,12)}...</span>
+                \${leadBadge}
+                <span class="journey-count">\${v.events.length} ações</span>
+              </div>
+              <div class="journey-timeline">
+                \${stepsHtml}
+              </div>
+            </div>
+          \`;
+        });
+      }
+    }
   }
 
   var expandido = null; // id do filme expandido

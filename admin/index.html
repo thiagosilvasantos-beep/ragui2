@@ -218,6 +218,33 @@
             </table>
           </div>
         </div>
+
+        <div class="chart-card" style="margin-top: 24px;">
+          <h3>👥 Visitantes Únicos</h3>
+          <div class="stats-grid" id="visitor-stats"></div>
+          <div class="chart-actions">
+            <button class="btn btn--sm" onclick="document.getElementById('table-visitors-container').hidden = !document.getElementById('table-visitors-container').hidden">📋 Detalhes</button>
+          </div>
+          <div class="table-responsive" id="table-visitors-container" hidden>
+            <table class="data-table" id="table-visitors">
+              <thead>
+                <tr>
+                  <th>Visitor ID</th>
+                  <th>Cliques</th>
+                  <th>Filmes</th>
+                  <th>Capítulos</th>
+                  <th>Cadastro</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="chart-card" style="margin-top: 24px;">
+          <h3>🗺️ Jornada dos Últimos 10 Visitantes</h3>
+          <div id="journey-container"></div>
+        </div>
       </div>
     </main>
   </div>
