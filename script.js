@@ -11,6 +11,27 @@
 (function () {
   'use strict';
 
+  // ─── Visitor & Session IDs ───────────────────────────
+  function gerarId() {
+    return 'xxxx-xxxx-xxxx'.replace(/x/g, function() {
+      return Math.floor(Math.random() * 16).toString(16);
+    }) + '-' + Date.now().toString(36);
+  }
+
+  // Visitor ID: persiste entre visitas (localStorage)
+  var visitorId = localStorage.getItem('ragui_visitor_id');
+  if (!visitorId) {
+    visitorId = 'v_' + gerarId();
+    localStorage.setItem('ragui_visitor_id', visitorId);
+  }
+
+  // Session ID: novo a cada aba/sessão (sessionStorage)
+  var sessionId = sessionStorage.getItem('ragui_session_id');
+  if (!sessionId) {
+    sessionId = 's_' + gerarId();
+    sessionStorage.setItem('ragui_session_id', sessionId);
+  }
+
   // ─── Click Tracking ────────────────────────────────
   function trackClick(filme, capitulo, acao) {
     try {
@@ -19,6 +40,8 @@
           filme: filme || '',
           capitulo: capitulo || null,
           acao: acao,
+          visitor_id: visitorId,
+          session_id: sessionId,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           data: new Date().toLocaleDateString('pt-BR'),
           hora: new Date().toLocaleTimeString('pt-BR')
@@ -309,6 +332,8 @@
               telefone: tel,
               filme: filme,
               capitulo: capitulo,
+              visitor_id: visitorId,
+              session_id: sessionId,
               timestamp: firebase.firestore.FieldValue.serverTimestamp(),
               data: new Date().toLocaleDateString('pt-BR'),
               hora: new Date().toLocaleTimeString('pt-BR')
