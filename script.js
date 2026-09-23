@@ -75,7 +75,7 @@
 
   setupScrollReveal();
 
-  // ─── Renderizar Catálogo (dinâmico via localStorage) ──
+  // ─── Renderizar Catálogo (dinâmico via Firestore) ───
   var GENEROS_MAP = {
     acao: { badge: 'acao', label: 'Ação' },
     terror: { badge: 'terror', label: 'Terror' },
@@ -124,19 +124,22 @@
       capitulos:['Sócrates e a Maiêutica','O Mito da Caverna','Ética Kantiana','Existencialismo','O Tribunal das Ideias'] }
   ];
 
-  function renderizarCatalogo() {
+  // Currently active film list (starts with FILMES_PADRAO, updated by Firestore)
+  var filmesAtivos = FILMES_PADRAO;
+
+  function renderizarCatalogo(filmes) {
     var grid = document.getElementById('grid');
     if (!grid) return;
 
-    // Usa localStorage se tiver, senão usa padrão
-    var filmes = [];
-    try { filmes = JSON.parse(localStorage.getItem('ragui_filmes')) || []; } catch(e) {}
-    if (!filmes.length) filmes = FILMES_PADRAO;
+    if (filmes) filmesAtivos = filmes;
 
-    grid.innerHTML = filmes.map(function(f) {
+    grid.innerHTML = filmesAtivos.map(function(f) {
       var g = GENEROS_MAP[f.genero] || GENEROS_MAP.acao;
-      // Normalizar caminho: admin salva ../capas/ mas landing precisa capas/
-      var capaSrc = (f.capa || '').replace(/^\.\.\//, '');
+      // Suporta URLs completas (Firebase Storage) e caminhos relativos
+      var capaSrc = (f.capa || '');
+      if (capaSrc && capaSrc.indexOf('http') !== 0) {
+        capaSrc = capaSrc.replace(/^\.\.\//, '');
+      }
       var capaHtml = capaSrc
         ? '<img src="' + capaSrc + '" alt="' + f.nome.replace(/"/g,'') + '">'
         : '';
@@ -173,10 +176,10 @@
 
     if (!overlay) return;
 
-    var currentObjUrl = null; // track blob URL for cleanup
-
     function normalizePath(p) {
       if (!p) return p;
+      // HTTPS URLs (Firebase Storage) — use as-is
+      if (p.indexOf('http') === 0) return p;
       return p.replace(/^\.\.\/capas\//, 'capas/').replace(/^\.\.\/videos\//, 'videos/');
     }
 
@@ -194,7 +197,6 @@
       videoEl.load();
       videoEl.classList.remove('active');
       noVideo.classList.remove('hidden');
-      if (currentObjUrl) { URL.revokeObjectURL(currentObjUrl); currentObjUrl = null; }
     }
 
     btnClose.addEventListener('click', closeOverlay);
@@ -202,26 +204,6 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && overlay.classList.contains('open')) closeOverlay();
     });
-
-    // ── Load video from IndexedDB ──
-    function loadFromIDB(key, cb) {
-      var req = indexedDB.open('ragui_videos', 1);
-      req.onupgradeneeded = function (e) {
-        var db = e.target.result;
-        if (!db.objectStoreNames.contains('videos')) db.createObjectStore('videos');
-      };
-      req.onsuccess = function (e) {
-        var db = e.target.result;
-        try {
-          var tx = db.transaction('videos', 'readonly');
-          var store = tx.objectStore('videos');
-          var get = store.get(key);
-          get.onsuccess = function () { cb(get.result || null); };
-          get.onerror   = function () { cb(null); };
-        } catch (err) { cb(null); }
-      };
-      req.onerror = function () { cb(null); };
-    }
 
     // ── Play a chapter ──
     function playChapter(videoSrc, chapterIndex) {
@@ -240,29 +222,10 @@
       }
 
       var src = normalizePath(videoSrc);
-
-      if (src.indexOf('idb://') === 0) {
-        var idbKey = src.replace('idb://', '');
-        loadFromIDB(idbKey, function (blob) {
-          if (!blob) {
-            videoEl.classList.remove('active');
-            noVideo.classList.remove('hidden');
-            return;
-          }
-          if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
-          currentObjUrl = URL.createObjectURL(blob);
-          videoEl.src = currentObjUrl;
-          videoEl.classList.add('active');
-          noVideo.classList.add('hidden');
-          videoEl.play().catch(function () {});
-        });
-      } else {
-        if (currentObjUrl) { URL.revokeObjectURL(currentObjUrl); currentObjUrl = null; }
-        videoEl.src = src;
-        videoEl.classList.add('active');
-        noVideo.classList.add('hidden');
-        videoEl.play().catch(function () {});
-      }
+      videoEl.src = src;
+      videoEl.classList.add('active');
+      noVideo.classList.add('hidden');
+      videoEl.play().catch(function () {});
     }
 
     // ── Build chapter list ──
@@ -298,23 +261,14 @@
       });
     }
 
-    // ── Get film data from localStorage matching the card ──
-    function getFilmes() {
-      var filmes = [];
-      try { filmes = JSON.parse(localStorage.getItem('ragui_filmes')) || []; } catch(e) {}
-      if (!filmes.length) filmes = FILMES_PADRAO;
-      return filmes;
-    }
-
     // ── Attach click on cards ──
     function attachCardClicks() {
       var cards = document.querySelectorAll('.catalogo__grid .card');
-      var filmes = getFilmes();
 
       cards.forEach(function (card, index) {
         card.addEventListener('click', function () {
-          if (index >= filmes.length) return;
-          var f = filmes[index];
+          if (index >= filmesAtivos.length) return;
+          var f = filmesAtivos[index];
 
           titleEl.textContent = f.nome || '';
           descEl.textContent  = f.descCurta || '';
@@ -325,7 +279,6 @@
           videoEl.load();
           videoEl.classList.remove('active');
           noVideo.classList.remove('hidden');
-          if (currentObjUrl) { URL.revokeObjectURL(currentObjUrl); currentObjUrl = null; }
 
           renderChapters(f.capitulos);
           openOverlay();
@@ -343,6 +296,9 @@
     }
 
     attachCardClicks();
+
+    // Expose attachCardClicks so Firestore re-render can re-bind clicks
+    window._ragui_attachCardClicks = attachCardClicks;
 
     // Re-attach after filter clicks re-show cards (they are the same DOM nodes, but just in case)
     // We use event delegation as a safety net
@@ -384,6 +340,35 @@
       }
     });
   });
+
+  // ─── Firestore: carregar filmes ─────────────────────
+  (function carregarFirestore() {
+    if (!window.RAGUI_DB || !window.RAGUI_COLLECTION) return;
+
+    window.RAGUI_DB.collection(window.RAGUI_COLLECTION)
+      .orderBy('ordem', 'asc')
+      .get()
+      .then(function (snapshot) {
+        if (snapshot.empty) return; // mantém FILMES_PADRAO
+
+        var filmes = [];
+        snapshot.forEach(function (doc) {
+          var d = doc.data();
+          d.id = doc.id;
+          filmes.push(d);
+        });
+
+        if (filmes.length) {
+          renderizarCatalogo(filmes);
+          setupScrollReveal();
+          if (window._ragui_attachCardClicks) window._ragui_attachCardClicks();
+        }
+      })
+      .catch(function (err) {
+        if (window.console) console.warn('Firestore erro:', err && err.message);
+        // mantém FILMES_PADRAO — já renderizado
+      });
+  })();
 
   // ─── Máscara de Telefone ────────────────────────────
   var campoTelefone = document.getElementById('telefone');

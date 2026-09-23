@@ -1,45 +1,8 @@
 (function () {
   'use strict';
 
-  var KEY = 'ragui_filmes';
   var expandido = null; // id do filme expandido
-
-  var IDB_NAME = 'ragui_videos';
-  var IDB_STORE = 'videos';
-
-  function openDB() {
-    return new Promise(function(resolve, reject) {
-      var req = indexedDB.open(IDB_NAME, 1);
-      req.onupgradeneeded = function(e) {
-        e.target.result.createObjectStore(IDB_STORE);
-      };
-      req.onsuccess = function() { resolve(req.result); };
-      req.onerror = function() { reject(req.error); };
-    });
-  }
-
-  function saveVideoToDB(key, file) {
-    return openDB().then(function(db) {
-      return new Promise(function(resolve, reject) {
-        var tx = db.transaction(IDB_STORE, 'readwrite');
-        tx.objectStore(IDB_STORE).put(file, key);
-        tx.oncomplete = function() { resolve(); };
-        tx.onerror = function() { reject(tx.error); };
-      });
-    });
-  }
-
-  function getVideoFromDB(key) {
-    return openDB().then(function(db) {
-      return new Promise(function(resolve, reject) {
-        var tx = db.transaction(IDB_STORE, 'readonly');
-        var req = tx.objectStore(IDB_STORE).get(key);
-        req.onsuccess = function() { resolve(req.result); };
-        req.onerror = function() { reject(req.error); };
-      });
-    });
-  }
-
+  var filmesCache = [];
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
@@ -94,17 +57,64 @@
       capitulos:[{nome:'Sócrates e a Maiêutica',video:''},{nome:'O Mito da Caverna',video:''},{nome:'Ética Kantiana',video:''},{nome:'Existencialismo',video:''},{nome:'O Tribunal das Ideias',video:''}] }
   ];
 
-  function load() {
+  async function checkAndSeed() {
     try {
-      var data = JSON.parse(localStorage.getItem(KEY));
-      if (data && data.length) return data;
-    } catch(e) {}
-    // Primeira vez: popular com dados padrão
-    localStorage.setItem(KEY, JSON.stringify(FILMES_PADRAO));
-    return FILMES_PADRAO;
+      var snap = await window.RAGUI_DB.collection(window.RAGUI_COLLECTION).limit(1).get();
+      if (snap.empty) {
+        console.log('Seeding data...');
+        var batch = window.RAGUI_DB.batch();
+        FILMES_PADRAO.forEach(function(f, i) {
+          f.ordem = i;
+          var ref = window.RAGUI_DB.collection(window.RAGUI_COLLECTION).doc(f.id);
+          batch.set(ref, f);
+        });
+        await batch.commit();
+      }
+    } catch(e) { console.error('Seed error:', e); }
   }
 
-  function save(f) { localStorage.setItem(KEY, JSON.stringify(f)); }
+  async function load() {
+    try {
+      await checkAndSeed();
+      var snap = await window.RAGUI_DB.collection(window.RAGUI_COLLECTION).orderBy('ordem', 'asc').get();
+      var filmes = [];
+      snap.forEach(function(doc) { filmes.push(Object.assign({id: doc.id}, doc.data())); });
+      filmesCache = filmes;
+      return filmes;
+    } catch(e) {
+      console.error(e);
+      alert('Erro ao carregar do Firestore');
+      return filmesCache;
+    }
+  }
+
+  async function saveFilme(data) {
+    try {
+      await window.RAGUI_DB.collection(window.RAGUI_COLLECTION).doc(data.id).set(data);
+    } catch(e) {
+      console.error(e);
+      alert('Erro ao salvar no banco de dados');
+      throw e;
+    }
+  }
+
+  async function deleteFilme(id) {
+    try {
+      await window.RAGUI_DB.collection(window.RAGUI_COLLECTION).doc(id).delete();
+      try { await window.RAGUI_STORAGE.ref('capas/' + id + '.jpg').delete(); } catch(e){}
+      var f = filmesCache.find(function(x) { return x.id === id; });
+      if (f && f.capitulos) {
+        f.capitulos.forEach(function(c, i) {
+          try { window.RAGUI_STORAGE.ref('videos/' + id + '_' + i + '.mp4').delete(); } catch(e){}
+        });
+      }
+    } catch(e) {
+      console.error(e);
+      alert('Erro ao deletar filme');
+      throw e;
+    }
+  }
+
   function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
   var GEN = {
@@ -131,8 +141,9 @@
   var btnRmCapa = document.getElementById('btn-rm-capa');
 
   // ─── RENDERIZAR LISTA ─────────────────────────
-  function render() {
-    var filmes = load();
+  async function render() {
+    lista.innerHTML = '<div style="text-align:center;padding:20px;">Carregando...</div>';
+    var filmes = await load();
     contador.textContent = filmes.length ? '(' + filmes.length + ')' : '';
 
     if (!filmes.length) {
@@ -177,13 +188,13 @@
           f.capitulos.forEach(function (c, i) {
             var cap = typeof c === 'string' ? { nome: c, video: '' } : c;
             var temVideo = !!cap.video;
-            var vidNome = cap.video ? (cap.video.startsWith('idb://') ? cap.video : cap.video.split('/').pop()) : '';
+            var vidNome = cap.video ? cap.video.split('/').pop().split('?')[0] : '';
             
             html += '<div class="cap-wrapper" data-cap-idx="' + i + '">'
               + '<div class="cap-line">'
               + '<span class="num">' + (i + 1) + '</span>'
               + '<input value="' + esc(cap.nome) + '" placeholder="Título do capítulo" data-cap-input="' + f.id + '" data-idx="' + i + '">'
-              + '<input class="vid-input" value="' + esc(cap.video) + '" placeholder="Video URL / idb" data-cap-video="' + f.id + '" data-idx="' + i + '">'
+              + '<input class="vid-input" value="' + esc(cap.video) + '" placeholder="Video URL" data-cap-video="' + f.id + '" data-idx="' + i + '">'
               + '<button class="btn-icon" title="Upload Video" data-cap-upload="' + f.id + '" data-idx="' + i + '">📹</button>'
               + (temVideo ? '<button class="btn-icon" title="Play Preview" data-cap-play="' + f.id + '" data-idx="' + i + '">▶️</button><span class="cap-video-info"><span class="ok" title="'+esc(vidNome)+'">✅</span></span>' : '')
               + '<button class="rm" data-cap-rm="' + f.id + '" data-idx="' + i + '">&times;</button>'
@@ -224,7 +235,7 @@
     lista.querySelectorAll('[data-edit]').forEach(function (btn) {
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
-        var f = load().find(function (x) { return x.id === btn.getAttribute('data-edit'); });
+        var f = filmesCache.find(function (x) { return x.id === btn.getAttribute('data-edit'); });
         if (f) abrirForm(f);
       });
     });
@@ -235,9 +246,14 @@
         e.stopPropagation();
         if (!confirm('Excluir este filme?')) return;
         var id = btn.getAttribute('data-del');
-        save(load().filter(function (f) { return f.id !== id; }));
-        if (expandido === id) expandido = null;
-        render();
+        var oldHtml = btn.innerHTML;
+        btn.innerHTML = '⏳';
+        deleteFilme(id).then(function() {
+          if (expandido === id) expandido = null;
+          render();
+        }).catch(function() {
+          btn.innerHTML = oldHtml;
+        });
       });
     });
 
@@ -247,7 +263,6 @@
         var id = btn.getAttribute('data-cap-add');
         var container = document.getElementById('caps-' + id);
         var n = container.querySelectorAll('.cap-line').length + 1;
-        // Remove mensagem "nenhum capítulo"
         var vazioMsg = container.querySelector('div[style]');
         if (vazioMsg) vazioMsg.remove();
 
@@ -257,20 +272,23 @@
         div.innerHTML = '<div class="cap-line">'
           + '<span class="num">' + n + '</span>'
           + '<input placeholder="Título do capítulo ' + n + '" data-cap-input="' + id + '" data-idx="' + (n-1) + '">'
-          + '<input class="vid-input" placeholder="Video URL / idb" data-cap-video="' + id + '" data-idx="' + (n-1) + '">'
+          + '<input class="vid-input" placeholder="Video URL" data-cap-video="' + id + '" data-idx="' + (n-1) + '">'
           + '<button class="btn-icon" title="Upload Video" data-cap-upload="' + id + '" data-idx="' + (n-1) + '">📹</button>'
           + '<button class="rm" data-cap-rm="' + id + '" data-idx="' + (n-1) + '">&times;</button>'
           + '</div>'
           + '<video class="cap-preview" controls data-cap-preview="' + id + '" data-idx="' + (n-1) + '"></video>';
         div.querySelector('.rm').addEventListener('click', function () {
           div.remove();
-          // Renumerar
           container.querySelectorAll('.cap-wrapper').forEach(function (el, i) {
             el.querySelector('.num').textContent = i + 1;
           });
         });
         container.appendChild(div);
         div.querySelector('input').focus();
+        
+        // rebind upload after adding
+        var uploadBtn = div.querySelector('[data-cap-upload]');
+        bindUploadBtn(uploadBtn);
       });
     });
 
@@ -299,17 +317,25 @@
             caps.push({ nome: inp.value.trim(), video: vid ? vid.value.trim() : '' });
           }
         });
-        var filmes = load().map(function (f) {
-          if (f.id === id) f.capitulos = caps;
-          return f;
-        });
-        save(filmes);
-        render();
+        
+        var f = filmesCache.find(function(x) { return x.id === id; });
+        if (f) {
+          f.capitulos = caps;
+          var oldText = btn.textContent;
+          btn.textContent = 'Salvando...';
+          btn.disabled = true;
+          saveFilme(f).then(function() {
+            alert('Capítulos salvos!');
+            render();
+          }).catch(function() {
+            btn.textContent = oldText;
+            btn.disabled = false;
+          });
+        }
       });
     });
 
-    // Upload de video do capítulo
-    lista.querySelectorAll('[data-cap-upload]').forEach(function (btn) {
+    function bindUploadBtn(btn) {
       btn.addEventListener('click', function () {
         var id = btn.getAttribute('data-cap-upload');
         var idx = btn.getAttribute('data-idx');
@@ -319,19 +345,36 @@
         input.onchange = function(e) {
           var file = e.target.files[0];
           if(!file) return;
-          var key = id + '_' + idx;
-          saveVideoToDB(key, file).then(function() {
-            var vidInp = document.querySelector('[data-cap-video="' + id + '"][data-idx="' + idx + '"]');
-            if (vidInp) vidInp.value = 'idb://' + key;
-            // Opcional: auto-salvar para atualizar visual
-          }).catch(function(err) {
-            console.error('Erro ao salvar video', err);
-            alert('Erro ao salvar vídeo localmente.');
+          var key = id + '_' + idx + '.mp4';
+          
+          var vidInp = document.querySelector('[data-cap-video="' + id + '"][data-idx="' + idx + '"]');
+          var oldPh = vidInp.placeholder;
+          vidInp.placeholder = 'Upload: 0%';
+          vidInp.value = '';
+          
+          var ref = window.RAGUI_STORAGE.ref('videos/' + key);
+          var uploadTask = ref.put(file);
+          
+          uploadTask.on('state_changed', function(snapshot) {
+            var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            vidInp.placeholder = 'Upload: ' + Math.round(progress) + '%';
+          }, function(error) {
+            console.error(error);
+            alert('Erro no upload');
+            vidInp.placeholder = oldPh;
+          }, function() {
+            uploadTask.snapshot.ref.getDownloadURL().then(function(url) {
+              vidInp.value = url;
+              vidInp.placeholder = oldPh;
+              alert('Vídeo enviado. Não esqueça de Salvar Capítulos!');
+            });
           });
         };
         input.click();
       });
-    });
+    }
+
+    lista.querySelectorAll('[data-cap-upload]').forEach(bindUploadBtn);
 
     // Preview do video do capítulo
     lista.querySelectorAll('[data-cap-play]').forEach(function (btn) {
@@ -348,22 +391,9 @@
           return;
         }
         
-        if (vidInp.value.startsWith('idb://')) {
-          var key = vidInp.value.replace('idb://', '');
-          getVideoFromDB(key).then(function(file) {
-            if (file) {
-              videoEl.src = URL.createObjectURL(file);
-              videoEl.classList.add('active');
-              videoEl.play();
-            } else {
-              alert('Vídeo não encontrado no banco de dados local.');
-            }
-          });
-        } else {
-          videoEl.src = '../' + vidInp.value; // Assuming relative to root if it's a URL like videos/myvideo.mp4
-          videoEl.classList.add('active');
-          videoEl.play();
-        }
+        videoEl.src = vidInp.value.startsWith('http') ? vidInp.value : '../' + vidInp.value;
+        videoEl.classList.add('active');
+        videoEl.play();
       });
     });
 
@@ -401,10 +431,14 @@
     }
   }
 
-  formEl.addEventListener('submit', function (e) {
+  formEl.addEventListener('submit', async function (e) {
     e.preventDefault();
     var id = document.getElementById('f-id').value;
-    var filmes = load();
+    var btnSalvar = formEl.querySelector('button[type="submit"]');
+    var originalText = btnSalvar.textContent;
+    btnSalvar.textContent = 'Salvando...';
+    btnSalvar.disabled = true;
+
     var dados = {
       id: id || uid(),
       nome: document.getElementById('f-nome').value.trim(),
@@ -418,39 +452,56 @@
     };
 
     if (id) {
-      // Manter capítulos existentes
-      var existente = filmes.find(function (f) { return f.id === id; });
-      if (existente) dados.capitulos = existente.capitulos || [];
-      filmes = filmes.map(function (f) { return f.id === id ? dados : f; });
+      var existente = filmesCache.find(function (f) { return f.id === id; });
+      if (existente) {
+        dados.capitulos = existente.capitulos || [];
+        dados.ordem = existente.ordem !== undefined ? existente.ordem : filmesCache.length;
+      }
     } else {
       dados.criado = new Date().toISOString();
-      filmes.unshift(dados);
+      dados.ordem = filmesCache.length;
     }
 
-    save(filmes);
-    fecharForm();
-    expandido = dados.id;
-    render();
+    try {
+      await saveFilme(dados);
+      fecharForm();
+      expandido = dados.id;
+      render();
+    } catch(e) {
+      alert('Falha ao salvar filme');
+    } finally {
+      btnSalvar.textContent = originalText;
+      btnSalvar.disabled = false;
+    }
   });
 
   // Capa upload
   document.getElementById('btn-upload-capa').addEventListener('click', function () { capaFile.click(); });
-  capaFile.addEventListener('change', function () {
+  capaFile.addEventListener('change', async function () {
     var file = this.files[0]; if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function (e) {
-      var img = new Image();
-      img.onload = function () {
-        var c = document.createElement('canvas');
-        var s = Math.min(1, 600/img.width);
-        c.width = img.width*s; c.height = img.height*s;
-        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        var url = c.toDataURL('image/jpeg', 0.8);
-        capaData.value = url; setCapa(url);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    
+    var id = document.getElementById('f-id').value || uid();
+    document.getElementById('f-id').value = id;
+    
+    var btn = document.getElementById('btn-upload-capa');
+    var originalText = btn.textContent;
+    btn.textContent = 'Enviando...';
+    btn.disabled = true;
+
+    try {
+      var ref = window.RAGUI_STORAGE.ref('capas/' + id + '.jpg');
+      await ref.put(file);
+      var url = await ref.getDownloadURL();
+      capaData.value = url; 
+      setCapa(url);
+    } catch(e) {
+      console.error(e);
+      alert('Erro no upload da capa');
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+      capaFile.value = '';
+    }
   });
 
   // Capa gradiente
@@ -465,8 +516,29 @@
       ctx.fillStyle='rgba(255,255,255,'+(Math.random()*.04)+')';
       ctx.beginPath(); ctx.arc(Math.random()*c.width,Math.random()*c.height,Math.random()*3,0,Math.PI*2); ctx.fill();
     }
-    var url = c.toDataURL('image/jpeg',.85);
-    capaData.value = url; setCapa(url);
+    
+    var btn = document.getElementById('btn-gerar-capa');
+    var originalText = btn.textContent;
+    btn.textContent = 'Gerando...';
+    btn.disabled = true;
+
+    c.toBlob(async function(blob) {
+      var id = document.getElementById('f-id').value || uid();
+      document.getElementById('f-id').value = id;
+      try {
+        var ref = window.RAGUI_STORAGE.ref('capas/' + id + '.jpg');
+        await ref.put(blob);
+        var url = await ref.getDownloadURL();
+        capaData.value = url; 
+        setCapa(url);
+      } catch(e) {
+        console.error(e);
+        alert('Erro ao salvar gradiente');
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }, 'image/jpeg', 0.85);
   });
 
   btnRmCapa.addEventListener('click', function () {
