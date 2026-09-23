@@ -1226,3 +1226,127 @@ img, video { max-width: 100%; display: block; }
   }
 }
 
+/* ─── Lead Capture Overlay ─────────────────────────────── */
+.lead-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.lead-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lead-overlay__bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+.lead-overlay__card {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(245, 185, 90, 0.1);
+  transform: translateY(20px);
+  transition: transform 0.3s;
+}
+
+.lead-overlay.open .lead-overlay__card {
+  transform: translateY(0);
+}
+
+.lead-overlay__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.lead-overlay__close:hover {
+  color: var(--red);
+}
+
+.lead-overlay__icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 10px rgba(245, 185, 90, 0.3));
+}
+
+.lead-overlay__card h3 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  letter-spacing: 1px;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.lead-overlay__card p {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+}
+
+#lead-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#lead-form input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 1rem;
+  font-family: var(--font-body);
+  transition: border-color 0.3s, box-shadow 0.3s;
+  outline: none;
+}
+
+#lead-form input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245, 185, 90, 0.15);
+}
+
+#lead-form .btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* ─── Free Badge ───────────────────────────────────────── */
+.card__badge-free {
+  position: absolute;
+  top: 40px;
+  left: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: #22c55e;
+  color: #fff;
+  z-index: 2;
+}
+

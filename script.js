@@ -11,6 +11,25 @@
 (function () {
   'use strict';
 
+  // ─── Click Tracking ────────────────────────────────
+  function trackClick(filme, capitulo, acao) {
+    try {
+      if (window.RAGUI_DB) {
+        window.RAGUI_DB.collection('clicks').add({
+          filme: filme || '',
+          capitulo: capitulo || null,
+          acao: acao,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          data: new Date().toLocaleDateString('pt-BR'),
+          hora: new Date().toLocaleTimeString('pt-BR')
+        });
+      }
+    } catch (e) {
+      // fire and forget, do not break UX
+    }
+  }
+
+
   // ─── Particles (Hero Background) ────────────────────
   function criarParticulas() {
     var container = document.getElementById('particles');
@@ -145,13 +164,20 @@
         : '';
       var nCaps = (f.capitulos && f.capitulos.length) || 0;
 
+      var hasFree = f.capitulos && f.capitulos.some(function(cap) {
+        return typeof cap === 'object' && cap !== null && cap.gratis === true;
+      });
+      var freeBadge = hasFree ? '<span class="card__badge-free">🆓 GRÁTIS</span>' : '';
+
       return '<article class="card visible" data-genero="' + f.genero + '">'
         + '<div class="card__poster">'
         + '<div class="card__img">'
         + capaHtml
         + '<div class="card__img-overlay"><span class="card__play">▶</span></div>'
         + '</div>'
+        + freeBadge
         + '<span class="card__badge card__badge--' + g.badge + '">' + g.label + '</span>'
+
         + '</div>'
         + '<div class="card__info">'
         + '<h3 class="card__title">' + f.nome + '</h3>'
@@ -239,6 +265,65 @@
       videoEl.play().catch(function () {});
     }
 
+    // ── Lead Capture Logic ──
+    var leadOverlay = document.getElementById('lead-overlay');
+    var leadClose = document.getElementById('lead-close');
+    var leadForm = document.getElementById('lead-form');
+    var currentLeadVideoSrc = null;
+    var currentLeadChapterIndex = null;
+
+    function openLeadPopup(filme, capitulo, videoSrc, idx) {
+      if (!leadOverlay) return;
+      currentLeadVideoSrc = videoSrc;
+      currentLeadChapterIndex = idx;
+      leadOverlay.classList.add('open');
+      if (leadForm) {
+        leadForm.setAttribute('data-filme', filme || '');
+        leadForm.setAttribute('data-capitulo', capitulo || '');
+      }
+    }
+
+    function closeLeadPopup() {
+      if (!leadOverlay) return;
+      leadOverlay.classList.remove('open');
+    }
+
+    if (leadClose) leadClose.addEventListener('click', closeLeadPopup);
+    if (leadOverlay) {
+      var lbg = leadOverlay.querySelector('.lead-overlay__bg');
+      if (lbg) lbg.addEventListener('click', closeLeadPopup);
+    }
+
+    if (leadForm) {
+      leadForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var nome = document.getElementById('lead-nome').value.trim();
+        var tel = document.getElementById('lead-tel').value.trim();
+        var filme = this.getAttribute('data-filme');
+        var capitulo = this.getAttribute('data-capitulo');
+
+        try {
+          if (window.RAGUI_DB) {
+            window.RAGUI_DB.collection('leads').add({
+              nome: nome,
+              telefone: tel,
+              filme: filme,
+              capitulo: capitulo,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR')
+            });
+          }
+        } catch (err) {}
+
+        localStorage.setItem('ragui_lead_registered', 'true');
+        closeLeadPopup();
+        if (currentLeadVideoSrc !== null && currentLeadChapterIndex !== null) {
+          playChapter(currentLeadVideoSrc, currentLeadChapterIndex);
+        }
+      });
+    }
+
     // ── Build chapter list ──
     function renderChapters(capitulos) {
       if (!capitulos || !capitulos.length) {
@@ -250,12 +335,22 @@
         var isObj    = typeof cap === 'object' && cap !== null;
         var nome     = isObj ? (cap.nome || 'Capítulo ' + (i + 1)) : cap;
         var hasVideo = isObj && cap.video;
+        var isFree   = isObj && cap.gratis === true;
         var extraCls = hasVideo ? '' : ' chapter-item--no-video';
+
+        var icon;
+        if (!hasVideo) {
+          icon = '—';
+        } else if (isFree) {
+          icon = '🆓 GRÁTIS';
+        } else {
+          icon = '🔒';
+        }
 
         return '<div class="chapter-item' + extraCls + '" data-index="' + i + '">'
           + '<span class="chapter-item__number">' + (i + 1) + '</span>'
           + '<span class="chapter-item__name">' + nome + '</span>'
-          + '<span class="chapter-item__play">' + (hasVideo ? '▶' : '—') + '</span>'
+          + '<span class="chapter-item__play">' + icon + '</span>'
           + '</div>';
       }).join('');
 
@@ -267,6 +362,16 @@
           var cap = capitulos[idx];
           var isObj = typeof cap === 'object' && cap !== null;
           var videoSrc = isObj ? (cap.video || null) : null;
+          var isFree = isObj && cap.gratis === true;
+          var capName = isObj ? (cap.nome || 'Capítulo ' + (idx + 1)) : cap;
+
+          trackClick(titleEl.textContent, capName, 'play_capitulo');
+
+          if (!isFree && localStorage.getItem('ragui_lead_registered') !== 'true') {
+            openLeadPopup(titleEl.textContent, capName, videoSrc, idx);
+            return;
+          }
+
           playChapter(videoSrc, idx);
         });
       });
@@ -280,6 +385,8 @@
         card.addEventListener('click', function () {
           if (index >= filmesAtivos.length) return;
           var f = filmesAtivos[index];
+
+          trackClick(f.nome, null, 'abrir_filme');
 
           titleEl.textContent = f.nome || '';
           descEl.textContent  = f.descCurta || '';
@@ -299,7 +406,15 @@
             var first = f.capitulos[0];
             var isObj = typeof first === 'object' && first !== null;
             if (isObj && first.video) {
-              playChapter(first.video, 0);
+              var isFree = first.gratis === true;
+              var capName = first.nome || 'Capítulo 1';
+              trackClick(f.nome, capName, 'play_capitulo');
+
+              if (!isFree && localStorage.getItem('ragui_lead_registered') !== 'true') {
+                openLeadPopup(f.nome, capName, first.video, 0);
+              } else {
+                playChapter(first.video, 0);
+              }
             }
           }
         });

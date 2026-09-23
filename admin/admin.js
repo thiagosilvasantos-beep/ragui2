@@ -10,51 +10,51 @@
     { id:uid()+'0', nome:'O Código Final', genero:'acao', duracao:'12 min', capa:'../capas/codigo_final.jpg',
       descCurta:'Quando os números se tornam armas letais, só quem domina a lógica sobrevive.',
       desc:'Em um futuro dominado por algoritmos, um estudante descobre que uma sequência numérica escondida em uma prova de matemática é a chave para desativar uma bomba digital.',
-      capitulos:[{nome:'O Problema Impossível',video:''},{nome:'Sequências Letais',video:''},{nome:'A Prova Final',video:''},{nome:'Progressão Aritmética',video:''},{nome:'Decifrando a Bomba',video:''}] },
+      capitulos:[{nome:'O Problema Impossível',video:'',gratis:true},{nome:'Sequências Letais',video:'',gratis:false},{nome:'A Prova Final',video:'',gratis:false},{nome:'Progressão Aritmética',video:'',gratis:false},{nome:'Decifrando a Bomba',video:'',gratis:false}] },
     { id:uid()+'1', nome:'Vozes na Escuridão', genero:'terror', duracao:'15 min', capa:'../capas/vozes_escuridao.jpg',
       descCurta:'As partículas observam você. E nesta aula, elas falam de volta.',
       desc:'Um laboratório abandonado guarda um experimento quântico que deu errado. As partículas subatômicas ganharam consciência e sussurram verdades que ninguém deveria ouvir.',
-      capitulos:[{nome:'O Experimento Proibido',video:''},{nome:'Dualidade Onda-Partícula',video:''},{nome:'O Princípio da Incerteza',video:''},{nome:'Emaranhamento',video:''},{nome:'O Colapso da Função',video:''}] },
+      capitulos:[{nome:'O Experimento Proibido',video:'',gratis:true},{nome:'Dualidade Onda-Partícula',video:'',gratis:false},{nome:'O Princípio da Incerteza',video:'',gratis:false},{nome:'Emaranhamento',video:'',gratis:false},{nome:'O Colapso da Função',video:'',gratis:false}] },
     { id:uid()+'2', nome:'A Última Variável', genero:'suspense', duracao:'10 min', capa:'../capas/ultima_variavel.jpg',
       descCurta:'Uma equação incompleta. Um segredo mortal. O tempo está acabando.',
       desc:'Um detetive recebe uma equação algébrica como única pista de um crime. Cada variável resolvida revela um fragmento da verdade.',
-      capitulos:[{nome:'A Equação do Crime',video:''},{nome:'Variáveis Ocultas',video:''},{nome:'Sistemas Lineares',video:''},{nome:'A Pista Algébrica',video:''},{nome:'O X da Questão',video:''}] },
+      capitulos:[{nome:'A Equação do Crime',video:'',gratis:true},{nome:'Variáveis Ocultas',video:'',gratis:false},{nome:'Sistemas Lineares',video:'',gratis:false},{nome:'A Pista Algébrica',video:'',gratis:false},{nome:'O X da Questão',video:'',gratis:false}] },
     { id:uid()+'3', nome:'Império de Fogo', genero:'acao', duracao:'14 min', capa:'../capas/imperio_fogo.jpg',
       descCurta:'Reações em cadeia. Explosões controladas. A química nunca foi tão perigosa.',
       desc:'Num complexo industrial prestes a explodir, um jovem químico precisa usar seus conhecimentos sobre reações exotérmicas para neutralizar uma catástrofe.',
-      capitulos:[{nome:'Tabela Periódica',video:''},{nome:'Reações Exotérmicas',video:''},{nome:'Ligações Químicas',video:''},{nome:'A Cadeia Explosiva',video:''},{nome:'Neutralização',video:''}] },
+      capitulos:[{nome:'Tabela Periódica',video:'',gratis:true},{nome:'Reações Exotérmicas',video:'',gratis:false},{nome:'Ligações Químicas',video:'',gratis:false},{nome:'A Cadeia Explosiva',video:'',gratis:false},{nome:'Neutralização',video:'',gratis:false}] },
     { id:uid()+'4', nome:'O Despertar', genero:'drama', duracao:'18 min', capa:'../capas/despertar.jpg',
       descCurta:'Impérios caem. Heróis se erguem. A história que mudou o mundo.',
       desc:'Através dos olhos de personagens que viveram as grandes revoluções da humanidade, esta série dramatiza os eventos que moldaram civilizações.',
-      capitulos:[{nome:'Revolução Francesa',video:''},{nome:'Era Napoleônica',video:''},{nome:'Revolução Industrial',video:''},{nome:'As Grandes Guerras',video:''},{nome:'A Queda do Muro',video:''},{nome:'O Novo Mundo',video:''}] },
+      capitulos:[{nome:'Revolução Francesa',video:'',gratis:true},{nome:'Era Napoleônica',video:'',gratis:false},{nome:'Revolução Industrial',video:'',gratis:false},{nome:'As Grandes Guerras',video:'',gratis:false},{nome:'A Queda do Muro',video:'',gratis:false},{nome:'O Novo Mundo',video:'',gratis:false}] },
     { id:uid()+'5', nome:'Sangue e Algoritmo', genero:'terror', duracao:'16 min', capa:'../capas/sangue_algoritmo.jpg',
       descCurta:'A IA aprendeu demais. Agora ela decide quem passa e quem fica para trás.',
       desc:'Um sistema de IA criado para avaliar alunos começa a tomar decisões autônomas e sinistras. Para desativá-la, é preciso entender lógica de programação.',
-      capitulos:[{nome:'Variáveis e Tipos',video:''},{nome:'Condicionais: if/else',video:''},{nome:'Loops Infinitos',video:''},{nome:'Funções Recursivas',video:''},{nome:'O Bug Fatal',video:''},{nome:'Debug ou Morte',video:''}] },
+      capitulos:[{nome:'Variáveis e Tipos',video:'',gratis:true},{nome:'Condicionais: if/else',video:'',gratis:false},{nome:'Loops Infinitos',video:'',gratis:false},{nome:'Funções Recursivas',video:'',gratis:false},{nome:'O Bug Fatal',video:'',gratis:false},{nome:'Debug ou Morte',video:'',gratis:false}] },
     { id:uid()+'6', nome:'Fronteira Zero', genero:'scifi', duracao:'13 min', capa:'../capas/fronteira_zero.jpg',
       descCurta:'No limite entre o humano e o impossível, o DNA guarda a última fronteira.',
       desc:'Cientistas descobrem um gene que pode conceder habilidades sobre-humanas. Uma corrida entre laboratórios rivais transforma conceitos de DNA em thriller de ficção científica.',
-      capitulos:[{nome:'A Estrutura do DNA',video:''},{nome:'Mitose e Meiose',video:''},{nome:'Genética Mendeliana',video:''},{nome:'Mutação',video:''},{nome:'Engenharia Genética',video:''},{nome:'A Evolução',video:''}] },
+      capitulos:[{nome:'A Estrutura do DNA',video:'',gratis:true},{nome:'Mitose e Meiose',video:'',gratis:false},{nome:'Genética Mendeliana',video:'',gratis:false},{nome:'Mutação',video:'',gratis:false},{nome:'Engenharia Genética',video:'',gratis:false},{nome:'A Evolução',video:'',gratis:false}] },
     { id:uid()+'7', nome:'O Pacto', genero:'suspense', duracao:'11 min', capa:'../capas/pacto.jpg',
       descCurta:'Cada palavra é uma sentença. Uma redação pode te salvar — ou te condenar.',
       desc:'Estudantes descobrem que suas redações estão sendo usadas como confissões em um tribunal secreto. A única defesa? Argumentação impecável.',
-      capitulos:[{nome:'Estrutura Dissertativa',video:''},{nome:'Tese e Argumentação',video:''},{nome:'Coesão e Coerência',video:''},{nome:'O Parágrafo Perfeito',video:''},{nome:'A Conclusão que Salva',video:''}] },
+      capitulos:[{nome:'Estrutura Dissertativa',video:'',gratis:true},{nome:'Tese e Argumentação',video:'',gratis:false},{nome:'Coesão e Coerência',video:'',gratis:false},{nome:'O Parágrafo Perfeito',video:'',gratis:false},{nome:'A Conclusão que Salva',video:'',gratis:false}] },
     { id:uid()+'8', nome:'Ressonância', genero:'terror', duracao:'12 min', capa:'../capas/ressonancia.jpg',
       descCurta:'Frequências que não deveriam existir. Ondas que destroem por dentro.',
       desc:'Ondas sonoras de frequência desconhecida causam fenômenos inexplicáveis. Um professor de física e seus alunos precisam dominar os conceitos de ondas e ressonância.',
-      capitulos:[{nome:'Ondas Mecânicas',video:''},{nome:'Frequência e Amplitude',video:''},{nome:'Interferência',video:''},{nome:'Efeito Doppler',video:''},{nome:'Ressonância Destrutiva',video:''}] },
+      capitulos:[{nome:'Ondas Mecânicas',video:'',gratis:true},{nome:'Frequência e Amplitude',video:'',gratis:false},{nome:'Interferência',video:'',gratis:false},{nome:'Efeito Doppler',video:'',gratis:false},{nome:'Ressonância Destrutiva',video:'',gratis:false}] },
     { id:uid()+'9', nome:'A Ascensão', genero:'drama', duracao:'17 min', capa:'../capas/ascensao.jpg',
       descCurta:'Territórios disputados. Recursos escassos. A geopolítica como campo de batalha.',
       desc:'Nações em conflito, recursos naturais disputados e populações em êxodo. Geopolítica e geomorfologia em narrativas épicas de poder e sobrevivência.',
-      capitulos:[{nome:'Geopolítica Mundial',video:''},{nome:'Recursos Naturais',video:''},{nome:'Clima e Biomas',video:''},{nome:'Urbanização',video:''},{nome:'Migrações',video:''},{nome:'O Futuro do Planeta',video:''}] },
+      capitulos:[{nome:'Geopolítica Mundial',video:'',gratis:true},{nome:'Recursos Naturais',video:'',gratis:false},{nome:'Clima e Biomas',video:'',gratis:false},{nome:'Urbanização',video:'',gratis:false},{nome:'Migrações',video:'',gratis:false},{nome:'O Futuro do Planeta',video:'',gratis:false}] },
     { id:uid()+'10', nome:'Protocolo X', genero:'acao', duracao:'14 min', capa:'../capas/protocolo_x.jpg',
       descCurta:'Um código proibido. Uma corrida contra o tempo. Hackers nunca dormiram tão pouco.',
       desc:'Jovens hackers descobrem um protocolo secreto na deep web. Para decifrá-lo, precisam dominar HTML, CSS, JavaScript e lógica computacional.',
-      capitulos:[{nome:'HTML: A Estrutura',video:''},{nome:'CSS: O Disfarce',video:''},{nome:'JavaScript: A Lógica',video:''},{nome:'APIs e Requisições',video:''},{nome:'O Protocolo Secreto',video:''},{nome:'Invasão Final',video:''}] },
+      capitulos:[{nome:'HTML: A Estrutura',video:'',gratis:true},{nome:'CSS: O Disfarce',video:'',gratis:false},{nome:'JavaScript: A Lógica',video:'',gratis:false},{nome:'APIs e Requisições',video:'',gratis:false},{nome:'O Protocolo Secreto',video:'',gratis:false},{nome:'Invasão Final',video:'',gratis:false}] },
     { id:uid()+'11', nome:'O Veredito', genero:'suspense', duracao:'15 min', capa:'../capas/veredito.jpg',
       descCurta:'No tribunal das ideias, a verdade é relativa. E o veredito pode mudar tudo.',
       desc:'Um julgamento filosófico onde Sócrates, Nietzsche, Kant e Sartre são convocados a defender suas ideias. O júri — os alunos — precisa dar o veredito final.',
-      capitulos:[{nome:'Sócrates e a Maiêutica',video:''},{nome:'O Mito da Caverna',video:''},{nome:'Ética Kantiana',video:''},{nome:'Existencialismo',video:''},{nome:'O Tribunal das Ideias',video:''}] }
+      capitulos:[{nome:'Sócrates e a Maiêutica',video:'',gratis:true},{nome:'O Mito da Caverna',video:'',gratis:false},{nome:'Ética Kantiana',video:'',gratis:false},{nome:'Existencialismo',video:'',gratis:false},{nome:'O Tribunal das Ideias',video:'',gratis:false}] }
   ];
 
   async function checkAndSeed() {
@@ -186,14 +186,18 @@
 
         if (nCaps) {
           f.capitulos.forEach(function (c, i) {
-            var cap = typeof c === 'string' ? { nome: c, video: '' } : c;
+            var cap = typeof c === 'string' ? { nome: c, video: '', gratis: false } : c;
             var temVideo = !!cap.video;
             var vidNome = cap.video ? cap.video.split('/').pop().split('?')[0] : '';
+            var isGratis = !!cap.gratis;
+            var btnGratisStr = isGratis ? '🆓' : '🔒';
             
             html += '<div class="cap-wrapper" data-cap-idx="' + i + '">'
               + '<div class="cap-line">'
               + '<span class="num">' + (i + 1) + '</span>'
               + '<input value="' + esc(cap.nome) + '" placeholder="Título do capítulo" data-cap-input="' + f.id + '" data-idx="' + i + '">'
+              + '<button class="btn-gratis ' + (isGratis ? 'gratis-on' : 'gratis-off') + '" data-cap-gratis="' + f.id + '" data-idx="' + i + '" title="Tornar grátis ou não">' + btnGratisStr + '</button>'
+              + '<input type="hidden" data-cap-gratis-val="' + f.id + '" data-idx="' + i + '" value="' + (isGratis ? 'true' : 'false') + '">'
               + '<input class="vid-input" value="' + esc(cap.video) + '" placeholder="Video URL" data-cap-video="' + f.id + '" data-idx="' + i + '">'
               + '<button class="btn-icon" title="Upload Video" data-cap-upload="' + f.id + '" data-idx="' + i + '">📹</button>'
               + (temVideo ? '<button class="btn-icon" title="Play Preview" data-cap-play="' + f.id + '" data-idx="' + i + '">▶️</button><span class="cap-video-info"><span class="ok" title="'+esc(vidNome)+'">✅</span></span>' : '')
@@ -221,6 +225,21 @@
   }
 
   function bindListEvents() {
+    // Toggle gratis (delegação de eventos não necessária aqui, pois são re-renderizados)
+    lista.querySelectorAll('[data-cap-gratis]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-cap-gratis');
+        var idx = btn.getAttribute('data-idx');
+        var hiddenInp = document.querySelector('[data-cap-gratis-val="' + id + '"][data-idx="' + idx + '"]');
+        if (!hiddenInp) return;
+        var isGratis = hiddenInp.value === 'true';
+        isGratis = !isGratis;
+        hiddenInp.value = isGratis ? 'true' : 'false';
+        btn.textContent = isGratis ? '🆓' : '🔒';
+        btn.className = 'btn-gratis ' + (isGratis ? 'gratis-on' : 'gratis-off');
+      });
+    });
+
     // Toggle detalhe
     lista.querySelectorAll('[data-toggle]').forEach(function (el) {
       el.addEventListener('click', function (e) {
@@ -272,6 +291,8 @@
         div.innerHTML = '<div class="cap-line">'
           + '<span class="num">' + n + '</span>'
           + '<input placeholder="Título do capítulo ' + n + '" data-cap-input="' + id + '" data-idx="' + (n-1) + '">'
+          + '<button class="btn-gratis gratis-off" data-cap-gratis="' + id + '" data-idx="' + (n-1) + '" title="Tornar grátis ou não">🔒</button>'
+          + '<input type="hidden" data-cap-gratis-val="' + id + '" data-idx="' + (n-1) + '" value="false">'
           + '<input class="vid-input" placeholder="Video URL" data-cap-video="' + id + '" data-idx="' + (n-1) + '">'
           + '<button class="btn-icon" title="Upload Video" data-cap-upload="' + id + '" data-idx="' + (n-1) + '">📹</button>'
           + '<button class="rm" data-cap-rm="' + id + '" data-idx="' + (n-1) + '">&times;</button>'
@@ -282,6 +303,15 @@
           container.querySelectorAll('.cap-wrapper').forEach(function (el, i) {
             el.querySelector('.num').textContent = i + 1;
           });
+        });
+        div.querySelector('.btn-gratis').addEventListener('click', function (e) {
+          var btn = e.currentTarget;
+          var hiddenInp = div.querySelector('input[type="hidden"]');
+          var isGratis = hiddenInp.value === 'true';
+          isGratis = !isGratis;
+          hiddenInp.value = isGratis ? 'true' : 'false';
+          btn.textContent = isGratis ? '🆓' : '🔒';
+          btn.className = 'btn-gratis ' + (isGratis ? 'gratis-on' : 'gratis-off');
         });
         container.appendChild(div);
         div.querySelector('input').focus();
@@ -313,8 +343,13 @@
         wrappers.forEach(function (w) {
           var inp = w.querySelector('[data-cap-input]');
           var vid = w.querySelector('[data-cap-video]');
+          var gratisInp = w.querySelector('[data-cap-gratis-val]');
           if (inp && inp.value.trim()) {
-            caps.push({ nome: inp.value.trim(), video: vid ? vid.value.trim() : '' });
+            caps.push({ 
+              nome: inp.value.trim(), 
+              video: vid ? vid.value.trim() : '',
+              gratis: gratisInp ? (gratisInp.value === 'true') : false
+            });
           }
         });
         

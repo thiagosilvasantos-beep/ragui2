@@ -149,6 +149,10 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
 .cap-line .vid-input { flex:0.7; font-size:.75rem; color:var(--gold); }
 .btn-icon { background:none; border:none; cursor:pointer; font-size:1.1rem; filter:grayscale(1); transition:0.2s; padding:0 4px; }
 .btn-icon:hover { filter:grayscale(0); transform:scale(1.1); }
+.btn-gratis { background:none; border:none; cursor:pointer; font-size:1.1rem; padding:0 4px; transition:0.2s; }
+.btn-gratis:hover { transform:scale(1.1); }
+.gratis-off { filter: grayscale(1); opacity: 0.5; }
+.gratis-on { filter: none; opacity: 1; }
 .cap-video-info { display:flex; align-items:center; }
 .cap-video-info .ok { color:var(--green); font-size:.9rem; }
 .cap-preview { width:100%; max-height:200px; margin-top:4px; border-radius:5px; background:#000; display:none; object-fit:contain; }
