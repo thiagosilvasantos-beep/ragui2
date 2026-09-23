@@ -10,94 +10,192 @@
 </head>
 <body>
 
-  <!-- MENU SUPERIOR -->
-  <header class="topbar">
-    <a href="../index.html" class="topbar__logo">
-      <img src="../logo.png" alt="RAGUI" style="height:15px;width:auto">
-    </a>
-    <span class="topbar__badge">ADMIN</span>
-    <nav class="topbar__nav">
-      <a href="#" class="topbar__link topbar__link--ativo">🎬 Filmes</a>
-    </nav>
-  </header>
-
-  <!-- CONTEÚDO -->
-  <main class="main">
-
-    <!-- Topo: título + botão novo -->
-    <div class="topo">
-      <h1>Filmes <span id="contador"></span></h1>
-      <button class="btn btn--gold" id="btn-novo">＋ Novo filme</button>
-    </div>
-
-    <!-- Formulário de novo/edição (escondido por padrão) -->
-    <div class="form-card" id="form-card" hidden>
-      <div class="form-card__header">
-        <h2 id="form-label">Novo Filme</h2>
-        <button class="btn-x" id="form-fechar">&times;</button>
-      </div>
-      <form id="form-filme">
-        <div class="grid-2">
-          <div class="campo">
-            <label>Nome *</label>
-            <input type="text" id="f-nome" required placeholder="Ex: O Código Final">
-          </div>
-          <div class="grid-2-inner">
-            <div class="campo">
-              <label>Gênero</label>
-              <select id="f-genero">
-                <option value="acao">🔥 Ação</option>
-                <option value="terror">🔪 Terror</option>
-                <option value="suspense">🕵️ Suspense</option>
-                <option value="drama">🎭 Drama</option>
-                <option value="scifi">🚀 Sci-Fi</option>
-              </select>
-            </div>
-            <div class="campo">
-              <label>Duração</label>
-              <input type="text" id="f-duracao" placeholder="12 min">
-            </div>
-          </div>
-        </div>
-
-        <div class="campo">
-          <label>Descrição curta *</label>
-          <input type="text" id="f-desc-curta" required placeholder="Uma frase de impacto" maxlength="120">
-        </div>
-
-        <div class="campo">
-          <label>Descrição completa</label>
-          <textarea id="f-desc" rows="3" placeholder="Sinopse detalhada..."></textarea>
-        </div>
-
-        <div class="campo">
-          <label>Capa</label>
-          <div class="capa-row">
-            <div class="capa-thumb" id="capa-thumb">
-              <span id="capa-ph">📷</span>
-              <img id="capa-img" hidden>
-            </div>
-            <input type="file" id="capa-file" accept="image/*" hidden>
-            <button type="button" class="btn btn--sm" id="btn-upload-capa">📁 Upload</button>
-            <button type="button" class="btn btn--sm" id="btn-gerar-capa">🎨 Gradiente</button>
-            <button type="button" class="btn btn--sm btn--danger" id="btn-rm-capa" hidden>🗑️</button>
-          </div>
-        </div>
-
-        <input type="hidden" id="f-id">
-        <input type="hidden" id="f-capa-data">
-
-        <div class="form-btns">
-          <button type="button" class="btn" id="btn-cancelar">Cancelar</button>
-          <button type="submit" class="btn btn--gold">💾 Salvar</button>
-        </div>
+  <div class="login-screen" id="login-screen">
+    <div class="login-card">
+      <img src="../logo.png" alt="RAGUI" style="height:40px;margin-bottom:24px">
+      <h2>Área Administrativa</h2>
+      <p>Digite a senha de acesso</p>
+      <form id="login-form">
+        <input type="password" id="login-pass" placeholder="Senha" autocomplete="off" required>
+        <div class="login-error" id="login-error">Senha incorreta</div>
+        <button type="submit">Entrar</button>
       </form>
     </div>
+  </div>
 
-    <!-- Lista de filmes -->
-    <div id="lista"></div>
+  <div id="admin-app" style="display: none;">
+    <!-- MENU SUPERIOR -->
+    <header class="topbar">
+      <a href="../index.html" class="topbar__logo">
+        <img src="../logo.png" alt="RAGUI" style="height:15px;width:auto">
+      </a>
+      <span class="topbar__badge">ADMIN</span>
+      <nav class="topbar__nav">
+        <a href="#" class="topbar__link topbar__link--ativo" id="nav-filmes">🎬 Filmes</a>
+        <a href="#" class="topbar__link" id="nav-monitor">📊 Monitor</a>
+      </nav>
+    </header>
 
-  </main>
+    <!-- CONTEÚDO -->
+    <main class="main">
+      <div id="page-filmes">
+        <!-- Topo: título + botão novo -->
+        <div class="topo">
+          <h1>Filmes <span id="contador"></span></h1>
+          <button class="btn btn--gold" id="btn-novo">＋ Novo filme</button>
+        </div>
+
+        <!-- Formulário de novo/edição (escondido por padrão) -->
+        <div class="form-card" id="form-card" hidden>
+          <div class="form-card__header">
+            <h2 id="form-label">Novo Filme</h2>
+            <button class="btn-x" id="form-fechar">&times;</button>
+          </div>
+          <form id="form-filme">
+            <div class="grid-2">
+              <div class="campo">
+                <label>Nome *</label>
+                <input type="text" id="f-nome" required placeholder="Ex: O Código Final">
+              </div>
+              <div class="grid-2-inner">
+                <div class="campo">
+                  <label>Gênero</label>
+                  <select id="f-genero">
+                    <option value="acao">🔥 Ação</option>
+                    <option value="terror">🔪 Terror</option>
+                    <option value="suspense">🕵️ Suspense</option>
+                    <option value="drama">🎭 Drama</option>
+                    <option value="scifi">🚀 Sci-Fi</option>
+                  </select>
+                </div>
+                <div class="campo">
+                  <label>Duração</label>
+                  <input type="text" id="f-duracao" placeholder="12 min">
+                </div>
+              </div>
+            </div>
+
+            <div class="campo">
+              <label>Descrição curta *</label>
+              <input type="text" id="f-desc-curta" required placeholder="Uma frase de impacto" maxlength="120">
+            </div>
+
+            <div class="campo">
+              <label>Descrição completa</label>
+              <textarea id="f-desc" rows="3" placeholder="Sinopse detalhada..."></textarea>
+            </div>
+
+            <div class="campo">
+              <label>Capa</label>
+              <div class="capa-row">
+                <div class="capa-thumb" id="capa-thumb">
+                  <span id="capa-ph">📷</span>
+                  <img id="capa-img" hidden>
+                </div>
+                <input type="file" id="capa-file" accept="image/*" hidden>
+                <button type="button" class="btn btn--sm" id="btn-upload-capa">📁 Upload</button>
+                <button type="button" class="btn btn--sm" id="btn-gerar-capa">🎨 Gradiente</button>
+                <button type="button" class="btn btn--sm btn--danger" id="btn-rm-capa" hidden>🗑️</button>
+              </div>
+            </div>
+
+            <input type="hidden" id="f-id">
+            <input type="hidden" id="f-capa-data">
+
+            <div class="form-btns">
+              <button type="button" class="btn" id="btn-cancelar">Cancelar</button>
+              <button type="submit" class="btn btn--gold">💾 Salvar</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Lista de filmes -->
+        <div id="lista"></div>
+      </div>
+
+      <div id="page-monitor" style="display: none;">
+        <div class="topo">
+          <h1>Monitor de Analytics</h1>
+          <button class="btn" id="btn-refresh-monitor">🔄 Atualizar</button>
+        </div>
+        
+        <div class="stats-grid">
+          <div class="stat-card" style="border-top-color: var(--gold)">
+            <div class="stat-label">Total de Cliques</div>
+            <div class="stat-value" id="stat-clicks">-</div>
+          </div>
+          <div class="stat-card" style="border-top-color: #3b82f6">
+            <div class="stat-label">Filmes Abertos</div>
+            <div class="stat-value" id="stat-movies">-</div>
+          </div>
+          <div class="stat-card" style="border-top-color: #10b981">
+            <div class="stat-label">Capítulos Assistidos</div>
+            <div class="stat-value" id="stat-chapters">-</div>
+          </div>
+          <div class="stat-card" style="border-top-color: #8b5cf6">
+            <div class="stat-label">Leads Cadastrados</div>
+            <div class="stat-value" id="stat-leads">-</div>
+          </div>
+        </div>
+
+        <div class="tables-grid">
+          <div class="table-card">
+            <h3>🏆 Top Filmes</h3>
+            <div class="table-responsive">
+              <table class="data-table" id="table-top-movies">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Filme</th>
+                    <th>Cliques</th>
+                    <th>Cap. Assistidos</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div class="table-card">
+            <h3>⚡ Últimos Cliques</h3>
+            <div class="table-responsive">
+              <table class="data-table" id="table-recent-clicks">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Hora</th>
+                    <th>Ação</th>
+                    <th>Filme</th>
+                    <th>Capítulo</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-top: 24px;">
+          <h3>👥 Leads Cadastrados</h3>
+          <div class="table-responsive">
+            <table class="data-table" id="table-leads">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Hora</th>
+                  <th>Nome</th>
+                  <th>Telefone</th>
+                  <th>Filme</th>
+                  <th>Capítulo</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>

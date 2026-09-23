@@ -1,6 +1,173 @@
 (function () {
   'use strict';
 
+  // --- AUTH ---
+  const loginScreen = document.getElementById('login-screen');
+  const loginForm = document.getElementById('login-form');
+  const loginPass = document.getElementById('login-pass');
+  const loginError = document.getElementById('login-error');
+  const adminApp = document.getElementById('admin-app');
+
+  if (sessionStorage.getItem('ragui_admin_auth') === 'true') {
+    loginScreen.style.display = 'none';
+    adminApp.style.display = 'block';
+  }
+
+  loginForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (loginPass.value === '329874') {
+      sessionStorage.setItem('ragui_admin_auth', 'true');
+      loginScreen.style.display = 'none';
+      adminApp.style.display = 'block';
+    } else {
+      loginError.classList.remove('show');
+      void loginError.offsetWidth; // trigger reflow
+      loginError.classList.add('show');
+      loginPass.value = '';
+    }
+  });
+
+  // --- NAV ---
+  const navFilmes = document.getElementById('nav-filmes');
+  const navMonitor = document.getElementById('nav-monitor');
+  const pageFilmes = document.getElementById('page-filmes');
+  const pageMonitor = document.getElementById('page-monitor');
+
+  navFilmes.addEventListener('click', function(e) {
+    e.preventDefault();
+    navFilmes.classList.add('topbar__link--ativo');
+    navMonitor.classList.remove('topbar__link--ativo');
+    pageFilmes.style.display = 'block';
+    pageMonitor.style.display = 'none';
+  });
+
+  navMonitor.addEventListener('click', function(e) {
+    e.preventDefault();
+    navMonitor.classList.add('topbar__link--ativo');
+    navFilmes.classList.remove('topbar__link--ativo');
+    pageMonitor.style.display = 'block';
+    pageFilmes.style.display = 'none';
+    loadMonitorData();
+  });
+
+  document.getElementById('btn-refresh-monitor').addEventListener('click', loadMonitorData);
+
+  // --- MONITOR DASHBOARD ---
+  async function loadMonitorData() {
+    const btnRefresh = document.getElementById('btn-refresh-monitor');
+    const oldText = btnRefresh.textContent;
+    btnRefresh.textContent = 'Carregando...';
+    btnRefresh.disabled = true;
+
+    try {
+      const clicksSnap = await window.RAGUI_DB.collection('clicks').orderBy('timestamp','desc').limit(500).get();
+      const leadsSnap = await window.RAGUI_DB.collection('leads').orderBy('timestamp','desc').get();
+      
+      let totalClicks = 0;
+      let filmesAbertos = 0;
+      let capAssistidos = 0;
+      let totalLeads = leadsSnap.size;
+
+      const clicks = [];
+      clicksSnap.forEach(doc => {
+        const data = doc.data();
+        clicks.push(data);
+        totalClicks++;
+        if (data.acao === 'abrir_filme') filmesAbertos++;
+        if (data.acao === 'play_capitulo') capAssistidos++;
+      });
+
+      const leads = [];
+      leadsSnap.forEach(doc => {
+        leads.push(doc.data());
+      });
+
+      // Update Stats
+      document.getElementById('stat-clicks').textContent = totalClicks;
+      document.getElementById('stat-movies').textContent = filmesAbertos;
+      document.getElementById('stat-chapters').textContent = capAssistidos;
+      document.getElementById('stat-leads').textContent = totalLeads;
+
+      // Process Top Filmes
+      const filmeStats = {};
+      clicks.forEach(c => {
+        if (!c.filme) return;
+        if (!filmeStats[c.filme]) filmeStats[c.filme] = { cliques: 0, capAssistidos: 0 };
+        if (c.acao === 'abrir_filme' || c.acao === 'play_capitulo') filmeStats[c.filme].cliques++;
+        if (c.acao === 'play_capitulo') filmeStats[c.filme].capAssistidos++;
+      });
+
+      const topFilmes = Object.keys(filmeStats).map(name => ({
+        nome: name,
+        cliques: filmeStats[name].cliques,
+        capAssistidos: filmeStats[name].capAssistidos
+      })).sort((a,b) => b.cliques - a.cliques).slice(0, 10);
+
+      // Render Top Filmes
+      const topMoviesTbody = document.querySelector('#table-top-movies tbody');
+      topMoviesTbody.innerHTML = '';
+      if (topFilmes.length === 0) {
+        topMoviesTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--dim)">Nenhum dado encontrado</td></tr>';
+      } else {
+        topFilmes.forEach((f, i) => {
+          topMoviesTbody.innerHTML += `<tr>
+            <td>${i+1}</td>
+            <td style="font-weight:600">${f.nome}</td>
+            <td>${f.cliques}</td>
+            <td>${f.capAssistidos}</td>
+          </tr>`;
+        });
+      }
+
+      // Render Recent Clicks
+      const recentClicksTbody = document.querySelector('#table-recent-clicks tbody');
+      recentClicksTbody.innerHTML = '';
+      const recentClicks = clicks.slice(0, 20);
+      if (recentClicks.length === 0) {
+        recentClicksTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--dim)">Nenhum clique registrado</td></tr>';
+      } else {
+        recentClicks.forEach(c => {
+          let acaoFmt = c.acao;
+          if (c.acao === 'abrir_filme') acaoFmt = '🎬 Abriu filme';
+          if (c.acao === 'play_capitulo') acaoFmt = '▶️ Play capítulo';
+          
+          recentClicksTbody.innerHTML += `<tr>
+            <td>${c.data || '-'}</td>
+            <td>${c.hora || '-'}</td>
+            <td>${acaoFmt}</td>
+            <td>${c.filme || '-'}</td>
+            <td>${c.capitulo || '-'}</td>
+          </tr>`;
+        });
+      }
+
+      // Render Leads
+      const leadsTbody = document.querySelector('#table-leads tbody');
+      leadsTbody.innerHTML = '';
+      if (leads.length === 0) {
+        leadsTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--dim)">Nenhum lead cadastrado</td></tr>';
+      } else {
+        leads.forEach(l => {
+          leadsTbody.innerHTML += `<tr>
+            <td>${l.data || '-'}</td>
+            <td>${l.hora || '-'}</td>
+            <td style="font-weight:600">${l.nome || '-'}</td>
+            <td>${l.telefone || '-'}</td>
+            <td>${l.filme || '-'}</td>
+            <td>${l.capitulo || '-'}</td>
+          </tr>`;
+        });
+      }
+
+    } catch (err) {
+      console.error('Erro ao carregar monitor:', err);
+      alert('Falha ao carregar dados do monitor.');
+    } finally {
+      btnRefresh.textContent = oldText;
+      btnRefresh.disabled = false;
+    }
+  }
+
   var expandido = null; // id do filme expandido
   var filmesCache = [];
 
