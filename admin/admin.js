@@ -53,6 +53,34 @@
   document.getElementById('btn-refresh-monitor').addEventListener('click', loadMonitorData);
 
   // --- MONITOR DASHBOARD ---
+  let monitorRawClicks = [];
+  let monitorRawLeads = [];
+  let currentMonitorFilter = 30; // default 30 days
+  let chartTopMovies = null;
+  let chartHourlyClicks = null;
+  let chartHourlyLeads = null;
+
+  // Setup Chart.js defaults
+  if (typeof Chart !== 'undefined') {
+    Chart.defaults.color = '#ccc';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+    Chart.defaults.plugins.tooltip.backgroundColor = '#10101c';
+    Chart.defaults.plugins.tooltip.titleColor = '#fff';
+    Chart.defaults.plugins.tooltip.bodyColor = '#ccc';
+    Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,0.1)';
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+  }
+
+  // Bind filter buttons
+  document.querySelectorAll('.date-filters button').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.date-filters button').forEach(b => b.classList.remove('btn--gold'));
+      this.classList.add('btn--gold');
+      currentMonitorFilter = parseInt(this.getAttribute('data-filter'), 10);
+      buildMonitorDashboard();
+    });
+  });
+
   async function loadMonitorData() {
     const btnRefresh = document.getElementById('btn-refresh-monitor');
     const oldText = btnRefresh.textContent;
@@ -60,105 +88,16 @@
     btnRefresh.disabled = true;
 
     try {
-      const clicksSnap = await window.RAGUI_DB.collection('clicks').orderBy('timestamp','desc').limit(500).get();
-      const leadsSnap = await window.RAGUI_DB.collection('leads').orderBy('timestamp','desc').get();
+      const clicksSnap = await window.RAGUI_DB.collection('clicks').orderBy('timestamp','desc').limit(2000).get();
+      const leadsSnap = await window.RAGUI_DB.collection('leads').orderBy('timestamp','desc').limit(2000).get();
       
-      let totalClicks = 0;
-      let filmesAbertos = 0;
-      let capAssistidos = 0;
-      let totalLeads = leadsSnap.size;
-
-      const clicks = [];
-      clicksSnap.forEach(doc => {
-        const data = doc.data();
-        clicks.push(data);
-        totalClicks++;
-        if (data.acao === 'abrir_filme') filmesAbertos++;
-        if (data.acao === 'play_capitulo') capAssistidos++;
-      });
-
-      const leads = [];
-      leadsSnap.forEach(doc => {
-        leads.push(doc.data());
-      });
-
-      // Update Stats
-      document.getElementById('stat-clicks').textContent = totalClicks;
-      document.getElementById('stat-movies').textContent = filmesAbertos;
-      document.getElementById('stat-chapters').textContent = capAssistidos;
-      document.getElementById('stat-leads').textContent = totalLeads;
-
-      // Process Top Filmes
-      const filmeStats = {};
-      clicks.forEach(c => {
-        if (!c.filme) return;
-        if (!filmeStats[c.filme]) filmeStats[c.filme] = { cliques: 0, capAssistidos: 0 };
-        if (c.acao === 'abrir_filme' || c.acao === 'play_capitulo') filmeStats[c.filme].cliques++;
-        if (c.acao === 'play_capitulo') filmeStats[c.filme].capAssistidos++;
-      });
-
-      const topFilmes = Object.keys(filmeStats).map(name => ({
-        nome: name,
-        cliques: filmeStats[name].cliques,
-        capAssistidos: filmeStats[name].capAssistidos
-      })).sort((a,b) => b.cliques - a.cliques).slice(0, 10);
-
-      // Render Top Filmes
-      const topMoviesTbody = document.querySelector('#table-top-movies tbody');
-      topMoviesTbody.innerHTML = '';
-      if (topFilmes.length === 0) {
-        topMoviesTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--dim)">Nenhum dado encontrado</td></tr>';
-      } else {
-        topFilmes.forEach((f, i) => {
-          topMoviesTbody.innerHTML += `<tr>
-            <td>${i+1}</td>
-            <td style="font-weight:600">${f.nome}</td>
-            <td>${f.cliques}</td>
-            <td>${f.capAssistidos}</td>
-          </tr>`;
-        });
-      }
-
-      // Render Recent Clicks
-      const recentClicksTbody = document.querySelector('#table-recent-clicks tbody');
-      recentClicksTbody.innerHTML = '';
-      const recentClicks = clicks.slice(0, 20);
-      if (recentClicks.length === 0) {
-        recentClicksTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--dim)">Nenhum clique registrado</td></tr>';
-      } else {
-        recentClicks.forEach(c => {
-          let acaoFmt = c.acao;
-          if (c.acao === 'abrir_filme') acaoFmt = '🎬 Abriu filme';
-          if (c.acao === 'play_capitulo') acaoFmt = '▶️ Play capítulo';
-          
-          recentClicksTbody.innerHTML += `<tr>
-            <td>${c.data || '-'}</td>
-            <td>${c.hora || '-'}</td>
-            <td>${acaoFmt}</td>
-            <td>${c.filme || '-'}</td>
-            <td>${c.capitulo || '-'}</td>
-          </tr>`;
-        });
-      }
-
-      // Render Leads
-      const leadsTbody = document.querySelector('#table-leads tbody');
-      leadsTbody.innerHTML = '';
-      if (leads.length === 0) {
-        leadsTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--dim)">Nenhum lead cadastrado</td></tr>';
-      } else {
-        leads.forEach(l => {
-          leadsTbody.innerHTML += `<tr>
-            <td>${l.data || '-'}</td>
-            <td>${l.hora || '-'}</td>
-            <td style="font-weight:600">${l.nome || '-'}</td>
-            <td>${l.telefone || '-'}</td>
-            <td>${l.filme || '-'}</td>
-            <td>${l.capitulo || '-'}</td>
-          </tr>`;
-        });
-      }
-
+      monitorRawClicks = [];
+      clicksSnap.forEach(doc => monitorRawClicks.push(doc.data()));
+      
+      monitorRawLeads = [];
+      leadsSnap.forEach(doc => monitorRawLeads.push(doc.data()));
+      
+      buildMonitorDashboard();
     } catch (err) {
       console.error('Erro ao carregar monitor:', err);
       alert('Falha ao carregar dados do monitor.');
@@ -166,6 +105,214 @@
       btnRefresh.textContent = oldText;
       btnRefresh.disabled = false;
     }
+  }
+
+  function getTimestampFromData(item) {
+    if (item.timestamp) {
+      return item.timestamp.toMillis ? item.timestamp.toMillis() : new Date(item.timestamp).getTime();
+    }
+    if (item.data) {
+      // Fallback format DD/MM/YYYY
+      const parts = item.data.split('/');
+      if (parts.length === 3) {
+        const h = item.hora ? item.hora.split(':') : [0,0,0];
+        const d = new Date(parts[2], parts[1] - 1, parts[0], h[0]||0, h[1]||0, h[2]||0);
+        return d.getTime();
+      }
+    }
+    return 0;
+  }
+
+  function buildMonitorDashboard() {
+    const now = Date.now();
+    const cutoff = now - (currentMonitorFilter * 24 * 60 * 60 * 1000);
+
+    const clicks = monitorRawClicks.filter(c => getTimestampFromData(c) >= cutoff);
+    const leads = monitorRawLeads.filter(l => getTimestampFromData(l) >= cutoff);
+
+    let totalClicks = clicks.length;
+    let filmesAbertos = 0;
+    let capAssistidos = 0;
+    let totalLeads = leads.length;
+
+    const filmeStats = {};
+    const clicksByHour = new Array(24).fill(0);
+    const leadsByHour = new Array(24).fill(0);
+
+    clicks.forEach(c => {
+      if (c.acao === 'abrir_filme') filmesAbertos++;
+      if (c.acao === 'play_capitulo') capAssistidos++;
+
+      if (c.filme) {
+        if (!filmeStats[c.filme]) filmeStats[c.filme] = { cliques: 0, capAssistidos: 0 };
+        if (c.acao === 'abrir_filme' || c.acao === 'play_capitulo') filmeStats[c.filme].cliques++;
+        if (c.acao === 'play_capitulo') filmeStats[c.filme].capAssistidos++;
+      }
+
+      if (c.hora) {
+        const hour = parseInt(c.hora.split(':')[0], 10);
+        if (!isNaN(hour) && hour >= 0 && hour <= 23) {
+          clicksByHour[hour]++;
+        }
+      }
+    });
+
+    leads.forEach(l => {
+      if (l.hora) {
+        const hour = parseInt(l.hora.split(':')[0], 10);
+        if (!isNaN(hour) && hour >= 0 && hour <= 23) {
+          leadsByHour[hour]++;
+        }
+      }
+    });
+
+    // Update Stats
+    document.getElementById('stat-clicks').textContent = totalClicks;
+    document.getElementById('stat-movies').textContent = filmesAbertos;
+    document.getElementById('stat-chapters').textContent = capAssistidos;
+    document.getElementById('stat-leads').textContent = totalLeads;
+
+    // Process Top Filmes
+    const topFilmes = Object.keys(filmeStats).map(name => ({
+      nome: name,
+      cliques: filmeStats[name].cliques,
+      capAssistidos: filmeStats[name].capAssistidos
+    })).sort((a,b) => b.cliques - a.cliques).slice(0, 10);
+
+    // Render Top Filmes Table
+    const topMoviesTbody = document.querySelector('#table-top-movies tbody');
+    topMoviesTbody.innerHTML = '';
+    if (topFilmes.length === 0) {
+      topMoviesTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--dim)">Nenhum dado encontrado</td></tr>';
+    } else {
+      topFilmes.forEach((f, i) => {
+        topMoviesTbody.innerHTML += `<tr>
+          <td>${i+1}</td>
+          <td style="font-weight:600">${f.nome}</td>
+          <td>${f.cliques}</td>
+          <td>${f.capAssistidos}</td>
+        </tr>`;
+      });
+    }
+
+    // Render Recent Clicks Table
+    const recentClicksTbody = document.querySelector('#table-recent-clicks tbody');
+    recentClicksTbody.innerHTML = '';
+    const recentClicks = clicks.slice(0, 50); // last 50
+    if (recentClicks.length === 0) {
+      recentClicksTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--dim)">Nenhum clique registrado</td></tr>';
+    } else {
+      recentClicks.forEach(c => {
+        let acaoFmt = c.acao;
+        if (c.acao === 'abrir_filme') acaoFmt = '🎬 Abriu filme';
+        if (c.acao === 'play_capitulo') acaoFmt = '▶️ Play capítulo';
+        
+        recentClicksTbody.innerHTML += `<tr>
+          <td>${c.data || '-'}</td>
+          <td>${c.hora || '-'}</td>
+          <td>${acaoFmt}</td>
+          <td>${c.filme || '-'}</td>
+          <td>${c.capitulo || '-'}</td>
+        </tr>`;
+      });
+    }
+
+    // Render Leads Table
+    const leadsTbody = document.querySelector('#table-leads tbody');
+    leadsTbody.innerHTML = '';
+    if (leads.length === 0) {
+      leadsTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--dim)">Nenhum lead cadastrado</td></tr>';
+    } else {
+      leads.forEach(l => {
+        leadsTbody.innerHTML += `<tr>
+          <td>${l.data || '-'}</td>
+          <td>${l.hora || '-'}</td>
+          <td style="font-weight:600">${l.nome || '-'}</td>
+          <td>${l.telefone || '-'}</td>
+          <td>${l.filme || '-'}</td>
+          <td>${l.capitulo || '-'}</td>
+        </tr>`;
+      });
+    }
+
+    // Charts
+    if (!window.Chart) return;
+
+    if (chartTopMovies) chartTopMovies.destroy();
+    chartTopMovies = new Chart(document.getElementById('chart-top-movies'), {
+      type: 'bar',
+      data: {
+        labels: topFilmes.map(f => f.nome.length > 20 ? f.nome.substring(0,20)+'...' : f.nome),
+        datasets: [{
+          label: 'Cliques',
+          data: topFilmes.map(f => f.cliques),
+          backgroundColor: '#F5B95A',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+
+    if (chartHourlyClicks) chartHourlyClicks.destroy();
+    chartHourlyClicks = new Chart(document.getElementById('chart-hourly-clicks'), {
+      type: 'bar',
+      data: {
+        labels: Array.from({length: 24}, (_, i) => i + 'h'),
+        datasets: [{
+          label: 'Cliques',
+          data: clicksByHour,
+          backgroundColor: '#3b82f6',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    if (chartHourlyLeads) chartHourlyLeads.destroy();
+    chartHourlyLeads = new Chart(document.getElementById('chart-hourly-leads'), {
+      type: 'bar',
+      data: {
+        labels: Array.from({length: 24}, (_, i) => i + 'h'),
+        datasets: [{
+          label: 'Cadastros',
+          data: leadsByHour,
+          backgroundColor: '#22c55e',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 1 } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
   }
 
   var expandido = null; // id do filme expandido

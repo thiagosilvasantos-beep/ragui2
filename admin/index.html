@@ -116,7 +116,14 @@
       <div id="page-monitor" style="display: none;">
         <div class="topo">
           <h1>Monitor de Analytics</h1>
-          <button class="btn" id="btn-refresh-monitor">🔄 Atualizar</button>
+          <div class="monitor-actions">
+            <div class="date-filters">
+              <button class="btn btn--sm" data-filter="1">Hoje</button>
+              <button class="btn btn--sm" data-filter="7">7 dias</button>
+              <button class="btn btn--sm btn--gold" data-filter="30">30 dias</button>
+            </div>
+            <button class="btn" id="btn-refresh-monitor">🔄 Atualizar</button>
+          </div>
         </div>
         
         <div class="stats-grid">
@@ -138,10 +145,16 @@
           </div>
         </div>
 
-        <div class="tables-grid">
-          <div class="table-card">
+        <div class="charts-grid">
+          <div class="chart-card">
             <h3>🏆 Top Filmes</h3>
-            <div class="table-responsive">
+            <div class="chart-container">
+              <canvas id="chart-top-movies"></canvas>
+            </div>
+            <div class="chart-actions">
+              <button class="btn btn--sm" onclick="document.getElementById('table-top-movies-container').hidden = !document.getElementById('table-top-movies-container').hidden">📋 Detalhes</button>
+            </div>
+            <div class="table-responsive" id="table-top-movies-container" hidden>
               <table class="data-table" id="table-top-movies">
                 <thead>
                   <tr>
@@ -156,9 +169,15 @@
             </div>
           </div>
           
-          <div class="table-card">
-            <h3>⚡ Últimos Cliques</h3>
-            <div class="table-responsive">
+          <div class="chart-card">
+            <h3>⚡ Navegação por Hora</h3>
+            <div class="chart-container">
+              <canvas id="chart-hourly-clicks"></canvas>
+            </div>
+            <div class="chart-actions">
+              <button class="btn btn--sm" onclick="document.getElementById('table-recent-clicks-container').hidden = !document.getElementById('table-recent-clicks-container').hidden">📋 Detalhes</button>
+            </div>
+            <div class="table-responsive" id="table-recent-clicks-container" hidden>
               <table class="data-table" id="table-recent-clicks">
                 <thead>
                   <tr>
@@ -175,9 +194,15 @@
           </div>
         </div>
 
-        <div class="table-card" style="margin-top: 24px;">
-          <h3>👥 Leads Cadastrados</h3>
-          <div class="table-responsive">
+        <div class="chart-card" style="margin-top: 24px;">
+          <h3>👥 Cadastros por Hora</h3>
+          <div class="chart-container">
+            <canvas id="chart-hourly-leads"></canvas>
+          </div>
+          <div class="chart-actions">
+            <button class="btn btn--sm" onclick="document.getElementById('table-leads-container').hidden = !document.getElementById('table-leads-container').hidden">📋 Detalhes</button>
+          </div>
+          <div class="table-responsive" id="table-leads-container" hidden>
             <table class="data-table" id="table-leads">
               <thead>
                 <tr>
@@ -201,6 +226,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
   <script src="../firebase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>
