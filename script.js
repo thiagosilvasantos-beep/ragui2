@@ -341,6 +341,9 @@
           }
         } catch (err) {}
 
+        // Meta Pixel — evento de cadastro
+        try { if (typeof fbq === 'function') fbq('track', 'Lead'); } catch(e) {}
+
         localStorage.setItem('ragui_lead_registered', 'true');
         closeLeadPopup();
         if (currentLeadVideoSrc !== null && currentLeadChapterIndex !== null) {
