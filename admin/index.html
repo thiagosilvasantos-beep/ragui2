@@ -31,11 +31,12 @@
     <div class="login-card">
       <img src="../logo.png" alt="RAGUI" style="height:40px;margin-bottom:24px">
       <h2>Área Administrativa</h2>
-      <p>Digite a senha de acesso</p>
+      <p>Digite seu e-mail e senha de acesso</p>
       <form id="login-form">
-        <input type="password" id="login-pass" placeholder="Senha" autocomplete="off" required>
-        <div class="login-error" id="login-error">Senha incorreta</div>
-        <button type="submit">Entrar</button>
+        <input type="email" id="login-email" placeholder="E-mail" autocomplete="username" required style="margin-bottom: 12px;">
+        <input type="password" id="login-pass" placeholder="Senha" autocomplete="current-password" required>
+        <div class="login-error" id="login-error">E-mail ou senha inválidos</div>
+        <button type="submit" id="btn-login-submit">Entrar</button>
       </form>
     </div>
   </div>
@@ -50,6 +51,7 @@
       <nav class="topbar__nav">
         <a href="#" class="topbar__link topbar__link--ativo" id="nav-filmes">🎬 Filmes</a>
         <a href="#" class="topbar__link" id="nav-monitor">📊 Monitor</a>
+        <button id="btn-logout" class="btn btn--sm" style="margin-left: 12px; color: var(--red); border-color: rgba(230, 57, 70, 0.3);" type="button">🚪 Sair</button>
       </nav>
     </header>
 
@@ -317,6 +319,7 @@
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
   <script src="../firebase-config.js"></script>

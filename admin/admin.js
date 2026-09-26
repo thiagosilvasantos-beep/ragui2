@@ -1,38 +1,87 @@
 (function () {
   'use strict';
 
-  // --- AUTH ---
-  const loginScreen = document.getElementById('login-screen');
-  const loginForm = document.getElementById('login-form');
-  const loginPass = document.getElementById('login-pass');
-  const loginError = document.getElementById('login-error');
-  const adminApp = document.getElementById('admin-app');
-
-  if (sessionStorage.getItem('ragui_admin_auth') === 'true') {
-    loginScreen.style.display = 'none';
-    adminApp.style.display = 'block';
-  }
-
-  loginForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    if (loginPass.value === '329874') {
-      sessionStorage.setItem('ragui_admin_auth', 'true');
-      loginScreen.style.display = 'none';
-      adminApp.style.display = 'block';
-    } else {
-      loginError.classList.remove('show');
-      void loginError.offsetWidth; // trigger reflow
-      loginError.classList.add('show');
-      loginPass.value = '';
-    }
-  });
-
-  // --- NAV ---
+  // --- NAV ELEMENTS ---
   const navFilmes = document.getElementById('nav-filmes');
   const navMonitor = document.getElementById('nav-monitor');
   const pageFilmes = document.getElementById('page-filmes');
   const pageMonitor = document.getElementById('page-monitor');
 
+  // --- AUTH (FIREBASE AUTH OFICIAL) ---
+  const auth = firebase.auth();
+  const loginScreen = document.getElementById('login-screen');
+  const loginForm = document.getElementById('login-form');
+  const loginEmail = document.getElementById('login-email');
+  const loginPass = document.getElementById('login-pass');
+  const loginError = document.getElementById('login-error');
+  const btnLoginSubmit = document.getElementById('btn-login-submit');
+  const adminApp = document.getElementById('admin-app');
+  const btnLogout = document.getElementById('btn-logout');
+
+  let appInitialized = false;
+
+  auth.onAuthStateChanged(function (user) {
+    if (user) {
+      loginScreen.style.display = 'none';
+      adminApp.style.display = 'block';
+      if (!appInitialized) {
+        appInitialized = true;
+        navMonitor.click();
+        render();
+      }
+    } else {
+      loginScreen.style.display = 'flex';
+      adminApp.style.display = 'none';
+      appInitialized = false;
+      if (btnLoginSubmit) {
+        btnLoginSubmit.disabled = false;
+        btnLoginSubmit.textContent = 'Entrar';
+      }
+    }
+  });
+
+  loginForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const email = loginEmail ? loginEmail.value.trim() : '';
+    const pass = loginPass ? loginPass.value : '';
+
+    if (!email || !pass) return;
+
+    if (btnLoginSubmit) {
+      btnLoginSubmit.disabled = true;
+      btnLoginSubmit.textContent = 'Entrando...';
+    }
+    loginError.classList.remove('show');
+
+    auth.signInWithEmailAndPassword(email, pass)
+      .catch(function (err) {
+        if (btnLoginSubmit) {
+          btnLoginSubmit.disabled = false;
+          btnLoginSubmit.textContent = 'Entrar';
+        }
+        let msg = 'E-mail ou senha incorretos.';
+        if (err.code === 'auth/too-many-requests') {
+          msg = 'Muitas tentativas. Aguarde alguns instantes.';
+        } else if (err.code === 'auth/network-request-failed') {
+          msg = 'Falha de conexão com o Firebase.';
+        } else if (err.message) {
+          msg = err.message;
+        }
+        loginError.textContent = msg;
+        loginError.classList.remove('show');
+        void loginError.offsetWidth; // trigger reflow
+        loginError.classList.add('show');
+      });
+  });
+
+  if (btnLogout) {
+    btnLogout.addEventListener('click', function (e) {
+      e.preventDefault();
+      auth.signOut();
+    });
+  }
+
+  // --- NAV LISTENERS ---
   navFilmes.addEventListener('click', function(e) {
     e.preventDefault();
     navFilmes.classList.add('topbar__link--ativo');
@@ -49,9 +98,6 @@
     pageFilmes.style.display = 'none';
     loadMonitorData();
   });
-
-  // Abrir direto no Monitor
-  navMonitor.click();
 
   document.getElementById('btn-refresh-monitor').addEventListener('click', loadMonitorData);
 
@@ -1247,6 +1293,5 @@
   document.getElementById('form-fechar').addEventListener('click', fecharForm);
   document.getElementById('btn-cancelar').addEventListener('click', fecharForm);
 
-  // Init
-  render();
+  // Init é gerenciado pelo auth.onAuthStateChanged
 })();

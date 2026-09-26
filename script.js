@@ -204,6 +204,15 @@
 
   // Catálogo padrão (usado quando localStorage está vazio)
   var FILMES_PADRAO = [
+    { nome:'Caindo na Real', genero:'acao', duracao:'12 min', capa:'https://firebasestorage.googleapis.com/v0/b/ragui-84c9e.firebasestorage.app/o/capas%2Fmudktdbrwg7ng0.jpg?alt=media&token=cfafcd38-5954-4203-a8c0-9b41166de791',
+      descCurta:'As leis da Física nunca foram tão úteis para mantê-lo vivo.',
+      capitulos:[
+        { nome:'O Problema Impossível', gratis:true, video:'https://firebasestorage.googleapis.com/v0/b/ragui-84c9e.firebasestorage.app/o/videos%2Fmudktdbrwg7ng0_0.mp4?alt=media&token=722ce0df-b02d-412c-b622-863ce83a51dd' },
+        { nome:'Sequências Letais', gratis:false, video:'' },
+        { nome:'A Prova Final', gratis:false, video:'' },
+        { nome:'Progressão Aritmética', gratis:false, video:'' },
+        { nome:'Decifrando a Bomba', gratis:false, video:'' }
+      ] },
     { nome:'O Código Final', genero:'acao', duracao:'12 min', capa:'capas/codigo_final.jpg',
       descCurta:'Quando os números se tornam armas letais, só quem domina a lógica sobrevive.',
       capitulos:['O Problema Impossível','Sequências Letais','A Prova Final','Progressão Aritmética','Decifrando a Bomba'] },
@@ -244,6 +253,33 @@
 
   // Currently active film list (starts with FILMES_PADRAO, updated by Firestore)
   var filmesAtivos = FILMES_PADRAO;
+  var filmeDestaqueGlobal = null;
+  var outrosFilmesAtivos = [];
+
+  function atualizarDestaqueUI(f) {
+    if (!f) return;
+    var imgEl = document.getElementById('destaque-img');
+    var titleEl = document.getElementById('destaque-title');
+    var descEl = document.getElementById('destaque-desc');
+    var durEl = document.getElementById('destaque-duracao');
+    var capsEl = document.getElementById('destaque-caps');
+    var genEl = document.getElementById('destaque-genero');
+
+    if (imgEl && f.capa) {
+      var src = f.capa.indexOf('http') !== 0 ? f.capa.replace(/^\.\.\//, '') : f.capa;
+      imgEl.src = src;
+      imgEl.alt = f.nome || 'Caindo na Real';
+    }
+    if (titleEl) titleEl.textContent = f.nome || 'Caindo na Real';
+    if (descEl) descEl.textContent = f.descCurta || f.desc || '';
+    if (durEl) durEl.textContent = f.duracao || '12 min';
+    if (capsEl && f.capitulos) capsEl.textContent = f.capitulos.length + ' Capítulos';
+    if (genEl && f.genero) {
+      var g = GENEROS_MAP[f.genero] || GENEROS_MAP.acao;
+      genEl.className = 'card__badge card__badge--' + g.badge;
+      genEl.textContent = g.label;
+    }
+  }
 
   function renderizarCatalogo(filmes) {
     var grid = document.getElementById('grid');
@@ -251,7 +287,19 @@
 
     if (filmes) filmesAtivos = filmes;
 
-    grid.innerHTML = filmesAtivos.map(function(f, i) {
+    // Identificar o filme em destaque (Caindo na Real ou primeiro da lista)
+    var destaque = filmesAtivos.find(function(f) {
+      return f.nome && /caindo na real/i.test(f.nome);
+    }) || filmesAtivos[0];
+    filmeDestaqueGlobal = destaque;
+    atualizarDestaqueUI(destaque);
+
+    // O carrossel mostra os demais títulos de filme
+    outrosFilmesAtivos = filmesAtivos.filter(function(f) {
+      return f !== destaque;
+    });
+
+    grid.innerHTML = outrosFilmesAtivos.map(function(f, i) {
       var g = GENEROS_MAP[f.genero] || GENEROS_MAP.acao;
       // Suporta URLs completas (Firebase Storage) e caminhos relativos
       var capaSrc = (f.capa || '');
@@ -277,7 +325,6 @@
         + '</div>'
         + freeBadge
         + '<span class="card__badge card__badge--' + g.badge + '">' + g.label + '</span>'
-
         + '</div>'
         + '<div class="card__info">'
         + '<h3 class="card__title">' + f.nome + '</h3>'
@@ -502,59 +549,70 @@
       });
     }
 
-    // ── Attach click on cards ──
-    function attachCardClicks() {
-      var cards = document.querySelectorAll('.catalogo__grid .card');
+    function abrirFilmeModal(f) {
+      if (!f) return;
+      trackClick(f.nome, null, 'abrir_filme');
 
+      // Se não tem capítulos OU nenhum capítulo é grátis, enviar direto para cadastro
+      var temCapGratis = f.capitulos && f.capitulos.some(function(cap) {
+        return typeof cap === 'object' && cap !== null && cap.gratis === true;
+      });
+
+      if (!f.capitulos || !f.capitulos.length || !temCapGratis) {
+        if (localStorage.getItem('ragui_lead_registered') !== 'true') {
+          openLeadPopup(f.nome, 'Acesso ao filme', null, null);
+          return;
+        }
+      }
+
+      titleEl.textContent = f.nome || '';
+      descEl.textContent  = f.descCurta || f.desc || '';
+
+      // Reset video state
+      videoEl.pause();
+      videoEl.removeAttribute('src');
+      videoEl.load();
+      videoEl.classList.remove('active');
+      noVideo.classList.remove('hidden');
+
+      renderChapters(f.capitulos);
+      openOverlay();
+
+      // Auto-play first chapter if it has video
+      if (f.capitulos && f.capitulos.length) {
+        var first = f.capitulos[0];
+        var isObj = typeof first === 'object' && first !== null;
+        if (isObj && first.video) {
+          var isFree = first.gratis === true;
+          var capName = first.nome || 'Capítulo 1';
+          trackClick(f.nome, capName, 'play_capitulo');
+          try { if (typeof fbq === 'function') fbq('trackCustom', 'PlayClick', {filme: f.nome, capitulo: capName}); } catch(e) {}
+
+          if (!isFree && localStorage.getItem('ragui_lead_registered') !== 'true') {
+            openLeadPopup(f.nome, capName, first.video, 0);
+          } else {
+            playChapter(first.video, 0);
+          }
+        }
+      }
+    }
+
+    // ── Attach click on cards and spotlight ──
+    function attachCardClicks() {
+      // 1. Destaque (Caindo na Real)
+      var btnDestaque = document.getElementById('btn-play-destaque');
+      if (btnDestaque) {
+        btnDestaque.onclick = function () {
+          if (filmeDestaqueGlobal) abrirFilmeModal(filmeDestaqueGlobal);
+        };
+      }
+
+      // 2. Cards do carrossel
+      var cards = document.querySelectorAll('.catalogo__grid .card');
       cards.forEach(function (card, index) {
         card.addEventListener('click', function () {
-          if (index >= filmesAtivos.length) return;
-          var f = filmesAtivos[index];
-
-          trackClick(f.nome, null, 'abrir_filme');
-
-          // Se não tem capítulos OU nenhum capítulo é grátis, enviar direto para cadastro
-          var temCapGratis = f.capitulos && f.capitulos.some(function(cap) {
-            return typeof cap === 'object' && cap !== null && cap.gratis === true;
-          });
-
-          if (!f.capitulos || !f.capitulos.length || !temCapGratis) {
-            if (localStorage.getItem('ragui_lead_registered') !== 'true') {
-              openLeadPopup(f.nome, 'Acesso ao filme', null, null);
-              return;
-            }
-          }
-
-          titleEl.textContent = f.nome || '';
-          descEl.textContent  = f.descCurta || '';
-
-          // Reset video state
-          videoEl.pause();
-          videoEl.removeAttribute('src');
-          videoEl.load();
-          videoEl.classList.remove('active');
-          noVideo.classList.remove('hidden');
-
-          renderChapters(f.capitulos);
-          openOverlay();
-
-          // Auto-play first chapter if it has video
-          if (f.capitulos && f.capitulos.length) {
-            var first = f.capitulos[0];
-            var isObj = typeof first === 'object' && first !== null;
-            if (isObj && first.video) {
-              var isFree = first.gratis === true;
-              var capName = first.nome || 'Capítulo 1';
-              trackClick(f.nome, capName, 'play_capitulo');
-              try { if (typeof fbq === 'function') fbq('trackCustom', 'PlayClick', {filme: f.nome, capitulo: capName}); } catch(e) {}
-
-              if (!isFree && localStorage.getItem('ragui_lead_registered') !== 'true') {
-                openLeadPopup(f.nome, capName, first.video, 0);
-              } else {
-                playChapter(first.video, 0);
-              }
-            }
-          }
+          if (index >= outrosFilmesAtivos.length) return;
+          abrirFilmeModal(outrosFilmesAtivos[index]);
         });
       });
     }

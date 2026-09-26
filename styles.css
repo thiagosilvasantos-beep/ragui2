@@ -260,6 +260,196 @@ img, video { max-width: 100%; display: block; }
   max-width: 500px;
 }
 
+/* ─── Filme em Destaque (Spotlight) ─── */
+.destaque {
+  margin-top: 24px;
+  width: 100%;
+  max-width: 740px;
+  margin-left: auto;
+  margin-right: auto;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 0.8s 0.7s forwards;
+}
+
+.destaque__card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: linear-gradient(135deg, rgba(22, 22, 38, 0.9) 0%, rgba(14, 14, 24, 0.98) 100%);
+  border: 1px solid rgba(245, 185, 90, 0.35);
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(245, 185, 90, 0.12);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.destaque__card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.7), 0 0 40px rgba(245, 185, 90, 0.25);
+}
+
+.destaque__poster-wrapper {
+  position: relative;
+  width: 160px;
+  height: 250px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  background: var(--bg-card);
+}
+
+.destaque__poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.destaque__card:hover .destaque__poster {
+  transform: scale(1.05);
+}
+
+.destaque__play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.destaque__play-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #0a0a0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  padding-left: 3px;
+  box-shadow: 0 4px 20px rgba(245, 185, 90, 0.5);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
+}
+
+.destaque__card:hover .destaque__play-btn {
+  transform: scale(1.2);
+  background: #fff;
+}
+
+.destaque__badge-free {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+}
+
+.destaque__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.destaque__tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.destaque__title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.5vw, 2.5rem);
+  letter-spacing: 1.5px;
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.destaque__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.destaque__highlight {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.destaque__desc {
+  font-size: 0.92rem;
+  color: #c4c4d4;
+  line-height: 1.5;
+  margin-bottom: 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.destaque__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.destaque__cta {
+  padding: 10px 22px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.destaque__hint {
+  font-size: 0.76rem;
+  color: var(--text-dim);
+}
+
+@media (max-width: 640px) {
+  .destaque {
+    margin-top: 18px;
+  }
+  .destaque__card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 18px 16px;
+    gap: 14px;
+  }
+  .destaque__poster-wrapper {
+    width: 140px;
+    height: 220px;
+  }
+  .destaque__meta {
+    justify-content: center;
+  }
+  .destaque__actions {
+    justify-content: center;
+  }
+  .destaque__desc {
+    -webkit-line-clamp: 2;
+    font-size: 0.86rem;
+    margin-bottom: 14px;
+  }
+}
+
 .hero__actions {
   display: flex;
   gap: 16px;

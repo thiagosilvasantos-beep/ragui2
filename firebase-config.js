@@ -14,5 +14,6 @@
 
   window.RAGUI_DB = firebase.firestore();
   window.RAGUI_STORAGE = firebase.storage();
+  window.RAGUI_AUTH = typeof firebase.auth === 'function' ? firebase.auth() : null;
   window.RAGUI_COLLECTION = 'filmes';
 })();

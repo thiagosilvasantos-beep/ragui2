@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Catálogo de Filmes:
+    // Leitura pública (necessário para os visitantes assistirem e navegarem).
+    // Escrita (criar, editar, excluir filmes) permitida apenas para administradores logados.
+    match /filmes/{filmeId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 2. Leads (Cadastros de Alunos):
+    // Visitantes podem apenas criar novos cadastros (não conseguem ler dados de outros alunos).
+    // Apenas administradores autenticados podem ler a lista de leads.
+    match /leads/{leadId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // 3. Cliques e Interações:
+    // Criação pública para permitir registro de plays e cliques.
+    // Leitura e gerenciamento restritos a administradores autenticados.
+    match /clicks/{clickId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // 4. Pageviews:
+    // Criação pública.
+    // Leitura restrita a administradores autenticados.
+    match /pageviews/{pageviewId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // 5. Visitas (Beacon imediato, tempo de sessão e geolocalização):
+    // Criação pública para o tracking silencioso.
+    // Leitura restrita a administradores autenticados no painel monitor.
+    match /visitas/{visitaId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // Bloqueia qualquer outra rota por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
