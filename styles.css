@@ -1255,6 +1255,111 @@ img, video { max-width: 100%; display: block; }
   }
 }
 
+/* Tela de Fim do Filme (Call to Action para Cadastro) */
+.player-end-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 8, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 24px;
+  animation: fadeInEndScreen 0.35s ease forwards;
+}
+
+.player-end-screen.hidden {
+  display: none !important;
+}
+
+.player-end-screen__card {
+  max-width: 460px;
+  width: 100%;
+  background: rgba(18, 18, 24, 0.95);
+  border: 1.5px solid rgba(245, 185, 90, 0.35);
+  border-radius: 20px;
+  padding: 34px 28px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(245, 185, 90, 0.15);
+  animation: scaleUpEndCard 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.player-end-screen__badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--gold);
+  background: rgba(245, 185, 90, 0.12);
+  border: 1px solid rgba(245, 185, 90, 0.3);
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+
+.player-end-screen__card h3 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 12px;
+  line-height: 1.25;
+}
+
+.player-end-screen__card p {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.55;
+  margin-bottom: 24px;
+}
+
+.player-end-screen__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn--end-cta {
+  width: 100%;
+  padding: 16px 28px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 6px 25px rgba(245, 185, 90, 0.4);
+  cursor: pointer;
+}
+
+.btn--end-cta:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 30px rgba(245, 185, 90, 0.6);
+}
+
+@keyframes fadeInEndScreen {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUpEndCard {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 600px) {
+  .player-end-screen__card {
+    padding: 24px 18px;
+  }
+  .player-end-screen__card h3 {
+    font-size: 1.35rem;
+  }
+  .player-end-screen__card p {
+    font-size: 0.88rem;
+    margin-bottom: 20px;
+  }
+}
+
 /* Placeholder */
 .player-overlay__placeholder {
   display: flex;

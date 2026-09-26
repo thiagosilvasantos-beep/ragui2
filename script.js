@@ -420,10 +420,73 @@
       }
     });
 
+    // ── End Screen (Fim do Filme / Assistir mais filmes) ──
+    var endScreen = document.getElementById('player-end-screen');
+    var btnEndAssistirMais = document.getElementById('btn-end-assistir-mais');
+    var btnEndReplay = document.getElementById('btn-end-replay');
+
+    function mostrarTelaFimDoFilme() {
+      if (endScreen) {
+        endScreen.classList.remove('hidden');
+      }
+      esconderBotaoUnmute();
+    }
+
+    function esconderTelaFimDoFilme() {
+      if (endScreen) {
+        endScreen.classList.add('hidden');
+      }
+    }
+
+    if (btnEndAssistirMais) {
+      btnEndAssistirMais.addEventListener('click', function () {
+        var filmeAtual = titleEl ? titleEl.textContent : 'Filme';
+        trackClick(filmeAtual, 'Fim do Filme', 'assistir_mais_filmes');
+        try {
+          if (typeof fbq === 'function') {
+            fbq('trackCustom', 'AssistirMaisClick', { filme: filmeAtual });
+          }
+        } catch (e) {}
+
+        esconderTelaFimDoFilme();
+        closeOverlay();
+
+        // Rolar suavemente até o formulário de cadastro
+        var secCadastro = document.getElementById('cadastro');
+        if (secCadastro) {
+          secCadastro.scrollIntoView({ behavior: 'smooth' });
+          var inputNome = document.getElementById('nome');
+          if (inputNome) {
+            setTimeout(function () { inputNome.focus(); }, 600);
+          }
+        }
+      });
+    }
+
+    if (btnEndReplay) {
+      btnEndReplay.addEventListener('click', function () {
+        esconderTelaFimDoFilme();
+        videoEl.currentTime = 0;
+        videoEl.play().catch(function () {});
+      });
+    }
+
+    // Evento disparado quando o vídeo chega ao fim
+    videoEl.addEventListener('ended', function () {
+      mostrarTelaFimDoFilme();
+      trackClick(titleEl.textContent, '', 'video_concluido');
+      try {
+        if (typeof fbq === 'function') {
+          fbq('trackCustom', 'VideoComplete', { filme: titleEl.textContent });
+        }
+      } catch (e) {}
+    });
+
     function closeOverlay() {
       overlay.classList.remove('open');
       document.body.style.overflow = '';
       esconderBotaoUnmute();
+      esconderTelaFimDoFilme();
       videoEl.pause();
       videoEl.removeAttribute('src');
       videoEl.load();
@@ -453,6 +516,7 @@
         videoEl.classList.remove('active');
         noVideo.classList.remove('hidden');
         esconderBotaoUnmute();
+        esconderTelaFimDoFilme();
         return;
       }
 
@@ -464,6 +528,7 @@
       // Tenta SEMPRE reproduzir com áudio ativo
       videoEl.muted = false;
       esconderBotaoUnmute();
+      esconderTelaFimDoFilme();
 
       var playPromise = videoEl.play();
       if (playPromise !== undefined) {
@@ -643,6 +708,7 @@
       videoEl.load();
       videoEl.classList.remove('active');
       noVideo.classList.remove('hidden');
+      esconderTelaFimDoFilme();
 
       renderChapters(f.capitulos);
       openOverlay();
