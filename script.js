@@ -258,12 +258,9 @@
       if (capaSrc && capaSrc.indexOf('http') !== 0) {
         capaSrc = capaSrc.replace(/^\.\.\//, '');
       }
-      // WebP com fallback JPG (só para arquivos locais, não URLs Firebase)
-      var isLocal = capaSrc && capaSrc.indexOf('http') !== 0 && /\.jpg$/i.test(capaSrc);
-      var capaWebp = isLocal ? capaSrc.replace(/\.jpg$/i, '.webp') : capaSrc;
-      var lazyAttr = i < 2 ? 'loading="eager"' : 'loading="lazy"';
+      var lazyAttr = i < 2 ? '' : ' loading="lazy"';
       var capaHtml = capaSrc
-        ? '<img src="' + capaWebp + '"' + (isLocal ? ' onerror="this.onerror=null;this.src=\'' + capaSrc + '\'"' : '') + ' alt="' + f.nome.replace(/"/g,'') + '" ' + lazyAttr + '>'
+        ? '<img src="' + capaSrc + '" alt="' + f.nome.replace(/"/g,'') + '"' + lazyAttr + '>'
         : '';
       var nCaps = (f.capitulos && f.capitulos.length) || 0;
 
