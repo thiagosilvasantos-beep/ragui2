@@ -56,6 +56,7 @@
   let monitorRawClicks = [];
   let monitorRawLeads = [];
   let monitorRawPageviews = [];
+  let monitorRawVisitas = [];
   let currentMonitorFilter = 30; // default 30 days
   let chartTopMovies = null;
   let chartHourlyClicks = null;
@@ -101,6 +102,16 @@
 
       monitorRawPageviews = [];
       pvSnap.forEach(doc => monitorRawPageviews.push(doc.data()));
+
+      // Beacon visitas (REST API, sem timestamp do server)
+      let visitasSnap;
+      try {
+        visitasSnap = await window.RAGUI_DB.collection('visitas').orderBy('data','desc').limit(2000).get();
+      } catch(e) {
+        visitasSnap = await window.RAGUI_DB.collection('visitas').limit(2000).get();
+      }
+      monitorRawVisitas = [];
+      visitasSnap.forEach(doc => monitorRawVisitas.push(doc.data()));
       
       buildMonitorDashboard();
     } catch (err) {
@@ -174,11 +185,108 @@
     });
 
     // Update Stats
-    document.getElementById('stat-pageviews').textContent = totalPageviews;
     document.getElementById('stat-clicks').textContent = totalClicks;
     document.getElementById('stat-movies').textContent = filmesAbertos;
     document.getElementById('stat-chapters').textContent = capAssistidos;
     document.getElementById('stat-leads').textContent = totalLeads;
+
+    // --- Beacon Visitas Analytics ---
+    const visitas = monitorRawVisitas.filter(v => {
+      if (!v.data) return true;
+      try {
+        const parts = v.data.split('/');
+        if (parts.length === 3) {
+          const h = v.hora ? v.hora.split(':') : [0,0,0];
+          const d = new Date(parts[2], parts[1]-1, parts[0], h[0]||0, h[1]||0, h[2]||0);
+          return d.getTime() >= cutoff;
+        }
+      } catch(e) {}
+      return true;
+    });
+
+    const beaconPageviews = visitas.filter(v => v.tipo === 'pageview');
+    const beaconSaidas = visitas.filter(v => v.tipo === 'saida');
+    
+    // Associar saída com pageview pelo session_id
+    const saidaMap = {};
+    beaconSaidas.forEach(s => { saidaMap[s.session_id] = s; });
+
+    let totalVisitas = beaconPageviews.length;
+    let tempoTotal = 0;
+    let tempoCount = 0;
+    let bounces = 0;
+    let mobileCount = 0;
+    let desktopCount = 0;
+    let viuCatalogo = 0;
+    let viuCadastro = 0;
+
+    beaconPageviews.forEach(pv => {
+      if (pv.dispositivo === 'mobile') mobileCount++;
+      else desktopCount++;
+
+      const saida = saidaMap[pv.session_id];
+      if (saida) {
+        const t = parseInt(saida.tempo_segundos, 10) || 0;
+        tempoTotal += t;
+        tempoCount++;
+        const scroll = parseInt(saida.scroll_max, 10) || 0;
+        if (t < 10 && scroll < 25) bounces++;
+        const secoes = saida.secoes_vistas || '';
+        if (secoes.includes('catalogo')) viuCatalogo++;
+        if (secoes.includes('cadastro')) viuCadastro++;
+      } else {
+        bounces++; // sem dados de saída = provável bounce
+      }
+    });
+
+    const bounceRate = totalVisitas > 0 ? Math.round((bounces / totalVisitas) * 100) : 0;
+    const avgTime = tempoCount > 0 ? Math.round(tempoTotal / tempoCount) : 0;
+
+    document.getElementById('stat-beacon').textContent = totalVisitas;
+    document.getElementById('stat-bounce').textContent = bounceRate + '%';
+
+    // Behavior stats mini-cards
+    const behaviorStats = document.getElementById('behavior-stats');
+    if (behaviorStats) {
+      behaviorStats.innerHTML = `
+        <div class="stat-card" style="border-top-color:#06b6d4"><div class="stat-label">Tempo Médio</div><div class="stat-value">${avgTime}s</div></div>
+        <div class="stat-card" style="border-top-color:#f97316"><div class="stat-label">📱 Mobile</div><div class="stat-value">${mobileCount}</div></div>
+        <div class="stat-card" style="border-top-color:#64748b"><div class="stat-label">🖥️ Desktop</div><div class="stat-value">${desktopCount}</div></div>
+        <div class="stat-card" style="border-top-color:#10b981"><div class="stat-label">Viram Catálogo</div><div class="stat-value">${viuCatalogo}</div></div>
+        <div class="stat-card" style="border-top-color:#8b5cf6"><div class="stat-label">Viram Cadastro</div><div class="stat-value">${viuCadastro}</div></div>
+        <div class="stat-card" style="border-top-color:#f43f5e"><div class="stat-label">Funil: Visita→Lead</div><div class="stat-value">${totalVisitas > 0 ? ((totalLeads/totalVisitas)*100).toFixed(1) : 0}%</div></div>
+      `;
+    }
+
+    // Behavior detail table
+    const behaviorTbody = document.querySelector('#table-behavior tbody');
+    if (behaviorTbody) {
+      behaviorTbody.innerHTML = '';
+      const allVisitas = [...beaconPageviews.map(v => ({...v, _tipo: 'pageview'})), ...beaconSaidas.map(v => ({...v, _tipo: 'saida'}))];
+      allVisitas.sort((a,b) => {
+        const ta = (a.data||'')+(a.hora||'');
+        const tb = (b.data||'')+(b.hora||'');
+        return tb.localeCompare(ta);
+      });
+      allVisitas.slice(0, 50).forEach(v => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${v.data || '-'}</td>
+          <td>${v.hora || '-'}</td>
+          <td>${v._tipo === 'pageview' ? '👁️ Visita' : '🚪 Saída'}</td>
+          <td>${v.dispositivo === 'mobile' ? '📱' : '🖥️'} ${v.dispositivo || '-'}</td>
+          <td>${v.tempo_segundos || '-'}</td>
+          <td>${v.scroll_max !== undefined ? v.scroll_max + '%' : '-'}</td>
+          <td>${v.secoes_vistas || '-'}</td>
+          <td>${v.utm_source || '-'}</td>
+          <td>${(v.referrer || '-').substring(0, 30)}</td>
+        `;
+        behaviorTbody.appendChild(tr);
+      });
+      if (allVisitas.length === 0) {
+        behaviorTbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--dim)">Nenhuma visita registrada ainda</td></tr>';
+      }
+    }
 
     // Process Top Filmes
     const topFilmes = Object.keys(filmeStats).map(name => ({

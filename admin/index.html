@@ -145,8 +145,12 @@
         
         <div class="stats-grid">
           <div class="stat-card" style="border-top-color: #f43f5e">
-            <div class="stat-label">Visitas à Página</div>
-            <div class="stat-value" id="stat-pageviews">-</div>
+            <div class="stat-label">Visitas (Beacon)</div>
+            <div class="stat-value" id="stat-beacon">-</div>
+          </div>
+          <div class="stat-card" style="border-top-color: #f43f5e">
+            <div class="stat-label">Bounce Rate</div>
+            <div class="stat-value" id="stat-bounce">-</div>
           </div>
           <div class="stat-card" style="border-top-color: var(--gold)">
             <div class="stat-label">Total de Cliques</div>
@@ -163,6 +167,33 @@
           <div class="stat-card" style="border-top-color: #8b5cf6">
             <div class="stat-label">Leads Cadastrados</div>
             <div class="stat-value" id="stat-leads">-</div>
+          </div>
+        </div>
+
+        <!-- Funil de Comportamento -->
+        <div class="chart-card" style="margin-bottom: 24px;">
+          <h3>🔍 Comportamento dos Visitantes</h3>
+          <div class="stats-grid" id="behavior-stats"></div>
+          <div class="chart-actions">
+            <button class="btn btn--sm" onclick="document.getElementById('table-behavior-container').hidden = !document.getElementById('table-behavior-container').hidden">📋 Detalhes</button>
+          </div>
+          <div class="table-responsive" id="table-behavior-container" hidden>
+            <table class="data-table" id="table-behavior">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Hora</th>
+                  <th>Tipo</th>
+                  <th>Dispositivo</th>
+                  <th>Tempo (s)</th>
+                  <th>Scroll %</th>
+                  <th>Seções Vistas</th>
+                  <th>UTM Source</th>
+                  <th>Referrer</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
           </div>
         </div>
 

@@ -24,6 +24,101 @@
   <!-- End Meta Pixel Code -->
 
   <!-- ============================================================
+       RAGUI Beacon — Tracking ultra-leve (sem Firebase SDK)
+       Dispara IMEDIATAMENTE ao carregar, mesmo em conexão lenta
+       ============================================================ -->
+  <script>
+  (function(){
+    var API='https://firestore.googleapis.com/v1/projects/ragui-84c9e/databases/(default)/documents/';
+
+    // IDs
+    var vid=localStorage.getItem('ragui_visitor_id');
+    if(!vid){vid='v_'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('ragui_visitor_id',vid);}
+    var sid=sessionStorage.getItem('ragui_session_id');
+    if(!sid){sid='s_'+Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem('ragui_session_id',sid);}
+
+    // UTMs
+    var p=new URLSearchParams(location.search);
+    var utm_s=p.get('utm_source')||'';
+    var utm_m=p.get('utm_medium')||'';
+    var utm_c=p.get('utm_campaign')||'';
+    var utm_ct=p.get('utm_content')||'';
+    var fbc=p.get('fbclid')||'';
+    var ref=document.referrer||'';
+    var agora=new Date();
+    var dt=agora.toLocaleDateString('pt-BR');
+    var hr=agora.toLocaleTimeString('pt-BR');
+    var t0=Date.now();
+
+    // Gravar string no formato Firestore
+    function S(v){return{stringValue:v||''};}
+
+    // --- 1. PAGEVIEW imediato ---
+    var pvKey='ragui_bpv_'+sid;
+    if(!sessionStorage.getItem(pvKey)){
+      sessionStorage.setItem(pvKey,'1');
+      try{
+        var body=JSON.stringify({fields:{
+          tipo:S('pageview'),visitor_id:S(vid),session_id:S(sid),
+          referrer:S(ref),utm_source:S(utm_s),utm_medium:S(utm_m),
+          utm_campaign:S(utm_c),utm_content:S(utm_ct),fbclid:S(fbc),
+          url:S(location.href),tela:S(innerWidth+'x'+innerHeight),
+          dispositivo:S(/Mobi|Android/i.test(navigator.userAgent)?'mobile':'desktop'),
+          data:S(dt),hora:S(hr)
+        }});
+        if(navigator.sendBeacon){
+          navigator.sendBeacon(API+'visitas',body);
+        }else{
+          fetch(API+'visitas',{method:'POST',body:body,keepalive:true});
+        }
+      }catch(e){}
+    }
+
+    // --- 2. TEMPO NA PÁGINA + SCROLL ao sair ---
+    var maxScroll=0;
+    var secoeVistas={hero:false,catalogo:false,cadastro:false};
+
+    addEventListener('scroll',function(){
+      var sh=document.documentElement.scrollHeight-innerHeight;
+      if(sh>0)maxScroll=Math.max(maxScroll,Math.round(pageYOffset/sh*100));
+
+      // Detectar seções visíveis
+      var els={hero:'.hero',catalogo:'.catalog',cadastro:'.cadastro'};
+      for(var k in els){
+        if(!secoeVistas[k]){
+          var el=document.querySelector(els[k]);
+          if(el){
+            var r=el.getBoundingClientRect();
+            if(r.top<innerHeight&&r.bottom>0)secoeVistas[k]=true;
+          }
+        }
+      }
+    });
+
+    // Ao sair da página: grava tempo + scroll + seções vistas
+    function gravarSaida(){
+      var segundos=Math.round((Date.now()-t0)/1000);
+      var secoes=Object.keys(secoeVistas).filter(function(k){return secoeVistas[k];}).join(',');
+      try{
+        var body2=JSON.stringify({fields:{
+          tipo:S('saida'),visitor_id:S(vid),session_id:S(sid),
+          tempo_segundos:{integerValue:String(segundos)},
+          scroll_max:{integerValue:String(maxScroll)},
+          secoes_vistas:S(secoes),
+          dispositivo:S(/Mobi|Android/i.test(navigator.userAgent)?'mobile':'desktop'),
+          data:S(dt),hora:S(hr)
+        }});
+        navigator.sendBeacon?navigator.sendBeacon(API+'visitas',body2):fetch(API+'visitas',{method:'POST',body:body2,keepalive:true});
+      }catch(e){}
+    }
+
+    document.addEventListener('visibilitychange',function(){
+      if(document.visibilityState==='hidden')gravarSaida();
+    });
+    addEventListener('pagehide',gravarSaida);
+  })();
+  </script>
+  <!-- ============================================================
        MEDIÇÃO
        Preencha só o que for usar; o que ficar vazio não carrega nada.
        ============================================================ -->
