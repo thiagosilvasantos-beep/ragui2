@@ -362,6 +362,12 @@
       videoEl.classList.add('active');
       noVideo.classList.add('hidden');
       videoEl.play().catch(function () {});
+
+      // Meta Pixel — quando o vídeo realmente começa a tocar
+      videoEl.addEventListener('playing', function onPlaying() {
+        videoEl.removeEventListener('playing', onPlaying);
+        try { if (typeof fbq === 'function') fbq('trackCustom', 'VideoStart', {filme: titleEl.textContent}); } catch(e) {}
+      });
     }
 
     // ── Lead Capture Logic ──
@@ -475,6 +481,7 @@
           var capName = isObj ? (cap.nome || 'Capítulo ' + (idx + 1)) : cap;
 
           trackClick(titleEl.textContent, capName, 'play_capitulo');
+          try { if (typeof fbq === 'function') fbq('trackCustom', 'PlayClick', {filme: titleEl.textContent, capitulo: capName}); } catch(e) {}
 
           if (!isFree && localStorage.getItem('ragui_lead_registered') !== 'true') {
             openLeadPopup(titleEl.textContent, capName, videoSrc, idx);
@@ -530,6 +537,7 @@
               var isFree = first.gratis === true;
               var capName = first.nome || 'Capítulo 1';
               trackClick(f.nome, capName, 'play_capitulo');
+              try { if (typeof fbq === 'function') fbq('trackCustom', 'PlayClick', {filme: f.nome, capitulo: capName}); } catch(e) {}
 
               if (!isFree && localStorage.getItem('ragui_lead_registered') !== 'true') {
                 openLeadPopup(f.nome, capName, first.video, 0);
