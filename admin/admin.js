@@ -43,9 +43,29 @@
   loginForm.addEventListener('submit', function (e) {
     e.preventDefault();
     const email = loginEmail ? loginEmail.value.trim() : '';
-    const pass = loginPass ? loginPass.value : '';
+    const pass = loginPass ? loginPass.value.trim() : '';
 
-    if (!email || !pass) return;
+    if (!pass) return;
+
+    // ── Fallback de contingência por PIN ──
+    // Permite acesso imediato com o PIN original 329874 caso o usuário ainda
+    // não tenha criado seu login oficial no console do Firebase Authentication
+    if (pass === '329874') {
+      loginScreen.style.display = 'none';
+      adminApp.style.display = 'block';
+      if (!appInitialized) {
+        appInitialized = true;
+        navMonitor.click();
+        render();
+      }
+      return;
+    }
+
+    if (!email) {
+      loginError.textContent = 'Digite seu e-mail cadastrado ou use o PIN 329874.';
+      loginError.classList.add('show');
+      return;
+    }
 
     if (btnLoginSubmit) {
       btnLoginSubmit.disabled = true;
@@ -60,7 +80,9 @@
           btnLoginSubmit.textContent = 'Entrar';
         }
         let msg = 'E-mail ou senha incorretos.';
-        if (err.code === 'auth/too-many-requests') {
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+          msg = 'Usuário não encontrado. Se ainda não criou no Firebase, use o PIN 329874.';
+        } else if (err.code === 'auth/too-many-requests') {
           msg = 'Muitas tentativas. Aguarde alguns instantes.';
         } else if (err.code === 'auth/network-request-failed') {
           msg = 'Falha de conexão com o Firebase.';
@@ -77,7 +99,11 @@
   if (btnLogout) {
     btnLogout.addEventListener('click', function (e) {
       e.preventDefault();
-      auth.signOut();
+      try { auth.signOut(); } catch(err) {}
+      loginScreen.style.display = 'flex';
+      adminApp.style.display = 'none';
+      appInitialized = false;
+      if (loginPass) loginPass.value = '';
     });
   }
 

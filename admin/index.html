@@ -33,10 +33,13 @@
       <h2>Área Administrativa</h2>
       <p>Digite seu e-mail e senha de acesso</p>
       <form id="login-form">
-        <input type="email" id="login-email" placeholder="E-mail" autocomplete="username" required style="margin-bottom: 12px;">
-        <input type="password" id="login-pass" placeholder="Senha" autocomplete="current-password" required>
+        <input type="email" id="login-email" placeholder="E-mail (Firebase Auth)" autocomplete="username" style="margin-bottom: 12px;">
+        <input type="password" id="login-pass" placeholder="Senha (ou PIN 329874)" autocomplete="current-password" required>
         <div class="login-error" id="login-error">E-mail ou senha inválidos</div>
         <button type="submit" id="btn-login-submit">Entrar</button>
+        <p style="font-size:0.78rem;color:var(--dim);margin-top:14px;line-height:1.4;">
+          🔑 <em>Dica: se ainda não criou seu usuário no Firebase Console, digite <strong>329874</strong> na senha para entrar direto.</em>
+        </p>
       </form>
     </div>
   </div>
