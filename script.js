@@ -258,8 +258,11 @@
       if (capaSrc && capaSrc.indexOf('http') !== 0) {
         capaSrc = capaSrc.replace(/^\.\.\//, '');
       }
+      // WebP com fallback JPG
+      var capaWebp = capaSrc.replace(/\.jpg$/i, '.webp');
+      var lazyAttr = i < 2 ? 'loading="eager"' : 'loading="lazy"';
       var capaHtml = capaSrc
-        ? '<img src="' + capaSrc + '" alt="' + f.nome.replace(/"/g,'') + '">'
+        ? '<img src="' + capaWebp + '" onerror="this.onerror=null;this.src=\'' + capaSrc + '\'" alt="' + f.nome.replace(/"/g,'') + '" ' + lazyAttr + '>'
         : '';
       var nCaps = (f.capitulos && f.capitulos.length) || 0;
 
@@ -363,10 +366,18 @@
       noVideo.classList.add('hidden');
       videoEl.play().catch(function () {});
 
-      // Meta Pixel — quando o vídeo realmente começa a tocar
+      // Quando o vídeo realmente começa a tocar
       videoEl.addEventListener('playing', function onPlaying() {
         videoEl.removeEventListener('playing', onPlaying);
+        trackClick(titleEl.textContent, '', 'video_iniciou');
         try { if (typeof fbq === 'function') fbq('trackCustom', 'VideoStart', {filme: titleEl.textContent}); } catch(e) {}
+      });
+
+      // Quando o vídeo falha ao carregar
+      videoEl.addEventListener('error', function onError() {
+        videoEl.removeEventListener('error', onError);
+        trackClick(titleEl.textContent, '', 'video_erro');
+        try { if (typeof fbq === 'function') fbq('trackCustom', 'VideoError', {filme: titleEl.textContent}); } catch(e) {}
       });
     }
 
