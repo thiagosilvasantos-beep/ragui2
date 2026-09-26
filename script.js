@@ -417,8 +417,13 @@
           }
         } catch (err) {}
 
-        // Meta Pixel — evento de cadastro
-        try { if (typeof fbq === 'function') fbq('track', 'Lead'); } catch(e) {}
+        // Meta Pixel — evento de cadastro com ID único
+        try {
+          if (typeof fbq === 'function') {
+            var leadId = visitorId + '_' + Date.now();
+            fbq('track', 'Lead', {}, {eventID: leadId});
+          }
+        } catch(e) {}
 
         localStorage.setItem('ragui_lead_registered', 'true');
         closeLeadPopup();
@@ -875,6 +880,15 @@
         if (window.RAGUI_ATIVO) {
           raguiEvento('Lead', { content_name: 'Cadastro RAGUI verificado' });
         }
+
+        // Meta Pixel — evento de cadastro com ID único
+        try {
+          if (typeof fbq === 'function') {
+            var leadId = (localStorage.getItem('ragui_visitor_id') || 'anon') + '_' + Date.now();
+            fbq('track', 'Lead', {}, {eventID: leadId});
+          }
+        } catch(e) {}
+
         etapaCodigo.hidden = true;
         formSucesso.hidden = false;
         if (timerInterval) clearInterval(timerInterval);
