@@ -50,6 +50,9 @@
     loadMonitorData();
   });
 
+  // Abrir direto no Monitor
+  navMonitor.click();
+
   document.getElementById('btn-refresh-monitor').addEventListener('click', loadMonitorData);
 
   // --- MONITOR DASHBOARD ---
@@ -506,11 +509,11 @@
       }
     }
 
-    // NEW SECTION 2: Customer Journey
+    // NEW SECTION 2: Customer Journey — últimos 100
     const visitorsSortedByTime = visitorIds
       .filter(vid => vid !== 'Sem ID')
       .sort((a,b) => visitorsMap[b].latestTimestamp - visitorsMap[a].latestTimestamp)
-      .slice(0, 10);
+      .slice(0, 100);
       
     const journeyContainer = document.getElementById('journey-container');
     if(journeyContainer) {
@@ -518,54 +521,51 @@
       if (visitorsSortedByTime.length === 0) {
         journeyContainer.innerHTML = '<div style="text-align:center;color:var(--dim);padding:20px;">Nenhuma jornada recente</div>';
       } else {
-        visitorsSortedByTime.forEach(vid => {
+        visitorsSortedByTime.forEach((vid, idx) => {
           const v = visitorsMap[vid];
           v.events.sort((a,b) => a.ts - b.ts);
           
+          // Primeira e última data/hora
+          const firstEv = v.events[0];
+          const lastEv = v.events[v.events.length - 1];
+          const firstDate = firstEv ? (firstEv.data || '') + ' ' + (firstEv.hora || '') : '';
+          const lastDate = lastEv ? (lastEv.data || '') + ' ' + (lastEv.hora || '') : '';
+          
+          // Resumo da linha
+          const leadName = v.lead ? v.lead.nome : '';
+          const leadBadge = leadName ? `<span style="background:#22c55e;color:#fff;padding:1px 8px;border-radius:10px;font-size:0.75rem;margin-left:8px;">✅ ${leadName}</span>` : '';
+          const dispositivo = (v.events.find(e => e.dispositivo) || {}).dispositivo;
+          const dispIcon = dispositivo === 'mobile' ? '📱' : '🖥️';
+          
+          // Steps HTML
           let stepsHtml = '';
           v.events.forEach(ev => {
-            let icon = '';
-            let text = '';
-            let cls = 'journey-step';
-            
+            let icon = '', text = '', cls = 'journey-step';
             if (ev.type === 'lead') {
-              icon = '✅';
-              text = `<strong>Cadastrou-se</strong> — ${ev.nome || 'Sem nome'}`;
-              cls += ' journey-step--lead';
+              icon = '✅'; text = `<strong>Cadastrou-se</strong> — ${ev.nome || 'Sem nome'}`; cls += ' journey-step--lead';
+            } else if (ev.acao === 'abrir_filme') {
+              icon = '🎬'; text = `Abriu <strong>${ev.filme || 'Filme'}</strong>`;
+            } else if (ev.acao === 'play_capitulo') {
+              icon = '▶️'; text = `Play <strong>${ev.capitulo || 'Cap'}</strong> em <strong>${ev.filme || 'Filme'}</strong>`;
             } else {
-              if (ev.acao === 'abrir_filme') {
-                icon = '🎬';
-                text = `Abriu <strong>${ev.filme || 'Filme'}</strong>`;
-              } else if (ev.acao === 'play_capitulo') {
-                icon = '▶️';
-                text = `Play <strong>${ev.capitulo || 'Capítulo'}</strong> em <strong>${ev.filme || 'Filme'}</strong>`;
-              } else {
-                icon = '🔹';
-                text = ev.acao || 'Ação';
-              }
+              icon = '🔹'; text = ev.acao || 'Ação';
             }
-            
-            stepsHtml += `
-              <div class="${cls}">
-                <span class="journey-time">${ev.hora || '--:--'}</span>
-                <span class="journey-icon">${icon}</span>
-                <span class="journey-text">${text}</span>
-              </div>
-            `;
+            stepsHtml += `<div class="${cls}"><span class="journey-time">${ev.data || ''} ${ev.hora || ''}</span><span class="journey-icon">${icon}</span><span class="journey-text">${text}</span></div>`;
           });
-          
-          const leadBadge = v.lead ? `<span class="journey-badge">${v.lead.nome || ''} ${v.lead.telefone ? '— ' + v.lead.telefone : ''}</span>` : '';
-          
+
+          const rowId = 'journey-row-' + idx;
           journeyContainer.innerHTML += `
-            <div class="journey-card">
-              <div class="journey-header">
-                <span class="journey-visitor">👤 ${vid.substring(0,12)}...</span>
-                ${leadBadge}
-                <span class="journey-count">${v.events.length} ações</span>
-              </div>
-              <div class="journey-timeline">
-                ${stepsHtml}
-              </div>
+            <div class="journey-row" onclick="var d=document.getElementById('${rowId}');d.hidden=!d.hidden;this.querySelector('.journey-arrow').textContent=d.hidden?'▸':'▾';" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.06);transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'">
+              <span class="journey-arrow" style="font-size:0.9rem;color:var(--dim);width:14px;">▸</span>
+              <span style="font-family:monospace;color:var(--gold);font-size:0.8rem;min-width:100px;">${vid.substring(0,14)}</span>
+              <span style="color:var(--dim);font-size:0.8rem;min-width:140px;">${firstDate}</span>
+              <span style="font-size:0.8rem;">${dispIcon}</span>
+              <span style="font-size:0.8rem;color:var(--dim);">${v.events.length} ações</span>
+              <span style="font-size:0.8rem;">${v.movies.size}🎬 ${v.chapters.size}▶️</span>
+              ${leadBadge}
+            </div>
+            <div id="${rowId}" hidden style="padding:8px 12px 16px 38px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.2);">
+              <div class="journey-timeline">${stepsHtml}</div>
             </div>
           `;
         });
