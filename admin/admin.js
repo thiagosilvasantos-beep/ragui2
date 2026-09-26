@@ -208,13 +208,13 @@
     const leadsByHour = new Array(24).fill(0);
 
     clicks.forEach(c => {
-      if (c.acao === 'abrir_filme') filmesAbertos++;
-      if (c.acao === 'play_capitulo') capAssistidos++;
+      if (c.acao === 'abrir_filme' || c.acao === 'abriu_player') filmesAbertos++;
+      if (c.acao === 'play_capitulo' || c.acao === 'video_iniciou') capAssistidos++;
 
       if (c.filme) {
         if (!filmeStats[c.filme]) filmeStats[c.filme] = { cliques: 0, capAssistidos: 0 };
-        if (c.acao === 'abrir_filme' || c.acao === 'play_capitulo') filmeStats[c.filme].cliques++;
-        if (c.acao === 'play_capitulo') filmeStats[c.filme].capAssistidos++;
+        filmeStats[c.filme].cliques++;
+        if (c.acao === 'play_capitulo' || c.acao === 'video_iniciou') filmeStats[c.filme].capAssistidos++;
       }
 
       if (c.hora) {
@@ -371,7 +371,13 @@
       recentClicks.forEach(c => {
         let acaoFmt = c.acao;
         if (c.acao === 'abrir_filme') acaoFmt = '🎬 Abriu filme';
-        if (c.acao === 'play_capitulo') acaoFmt = '▶️ Play capítulo';
+        else if (c.acao === 'play_capitulo') acaoFmt = '▶️ Play capítulo';
+        else if (c.acao === 'abriu_player') acaoFmt = '📺 Abriu player';
+        else if (c.acao === 'video_iniciou') acaoFmt = '▶️ Vídeo começou';
+        else if (c.acao === 'video_concluido') acaoFmt = '🏁 Concluiu vídeo';
+        else if (c.acao === 'assistir_mais_filmes') acaoFmt = '🍿 Clicou "Assistir mais"';
+        else if (c.acao === 'video_erro') acaoFmt = '⚠️ Erro no vídeo';
+        else if (c.acao && c.acao.indexOf('scroll_') === 0) acaoFmt = '📜 Rolou ' + c.acao.replace('scroll_', '') + '%';
         
         recentClicksTbody.innerHTML += `<tr>
           <td>${c.data || '-'}</td>
@@ -520,8 +526,8 @@
         visitorsMap[vid] = { clicks: 0, movies: new Set(), chapters: new Set(), latestTimestamp: 0, events: [] };
       }
       visitorsMap[vid].clicks++;
-      if (c.acao === 'abrir_filme' && c.filme) visitorsMap[vid].movies.add(c.filme);
-      if (c.acao === 'play_capitulo' && c.capitulo) visitorsMap[vid].chapters.add(c.capitulo);
+      if ((c.acao === 'abrir_filme' || c.acao === 'abriu_player' || c.acao === 'video_iniciou') && c.filme) visitorsMap[vid].movies.add(c.filme);
+      if ((c.acao === 'play_capitulo' || c.acao === 'video_iniciou') && c.capitulo) visitorsMap[vid].chapters.add(c.capitulo);
       
       const ts = getTimestampFromData(c);
       if (ts > visitorsMap[vid].latestTimestamp) visitorsMap[vid].latestTimestamp = ts;
@@ -669,6 +675,18 @@
               icon = '🎬'; text = `Abriu <strong>${ev.filme || 'Filme'}</strong>`;
             } else if (ev.acao === 'play_capitulo') {
               icon = '▶️'; text = `Play <strong>${ev.capitulo || 'Cap'}</strong> em <strong>${ev.filme || 'Filme'}</strong>`;
+            } else if (ev.acao === 'abriu_player') {
+              icon = '📺'; text = `Abriu player de <strong>${ev.filme || 'Filme'}</strong>`;
+            } else if (ev.acao === 'video_iniciou') {
+              icon = '▶️'; text = `Começou a assistir <strong>${ev.filme || 'Filme'}</strong>`;
+            } else if (ev.acao === 'video_concluido') {
+              icon = '🏁'; text = `<strong>Assistiu até o fim!</strong> (${ev.filme || 'Filme'})`;
+            } else if (ev.acao === 'assistir_mais_filmes') {
+              icon = '🍿'; text = `<strong>Clicou em "Assistir mais filmes"</strong> (foi para cadastro)`; cls += ' journey-step--lead';
+            } else if (ev.acao === 'video_erro') {
+              icon = '⚠️'; text = `Erro ao carregar vídeo (${ev.filme || 'Filme'})`;
+            } else if (ev.acao && ev.acao.indexOf('scroll_') === 0) {
+              icon = '📜'; text = `Rolou ${ev.acao.replace('scroll_', '')}% da página`;
             } else {
               icon = '🔹'; text = ev.acao || 'Ação';
             }
