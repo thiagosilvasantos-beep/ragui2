@@ -557,6 +557,21 @@
           const leadBadge = leadName ? `<span style="background:#22c55e;color:#fff;padding:1px 8px;border-radius:10px;font-size:0.75rem;margin-left:8px;">✅ ${leadName}</span>` : '';
           const dispositivo = (v.events.find(e => e.dispositivo) || {}).dispositivo;
           const dispIcon = dispositivo === 'mobile' ? '📱' : '🖥️';
+
+          // Fonte do acesso
+          const utmEv = v.events.find(e => e.utm_source && e.utm_source !== '');
+          const refEv = v.events.find(e => e.referrer && e.referrer !== '');
+          let fonteLabel = '🔗 Direto';
+          let fonteBg = 'rgba(255,255,255,0.1)';
+          if (utmEv && utmEv.utm_source.toLowerCase() === 'meta') {
+            fonteLabel = '📣 Meta'; fonteBg = '#1877F2';
+          } else if (refEv && /facebook|fb\.com|instagram/i.test(refEv.referrer)) {
+            fonteLabel = '📣 Meta'; fonteBg = '#1877F2';
+          } else if (refEv && refEv.referrer) {
+            fonteLabel = '🌐 ' + refEv.referrer.replace(/https?:\/\//, '').split('/')[0].substring(0, 20);
+            fonteBg = '#6366f1';
+          }
+          const fonteBadge = `<span style="background:${fonteBg};color:#fff;padding:1px 8px;border-radius:10px;font-size:0.7rem;">${fonteLabel}</span>`;
           
           // Steps HTML
           let stepsHtml = '';
@@ -581,6 +596,7 @@
               <span style="font-family:monospace;color:var(--gold);font-size:0.8rem;min-width:100px;">${vid.substring(0,14)}</span>
               <span style="color:var(--dim);font-size:0.8rem;min-width:140px;">${firstDate}</span>
               <span style="font-size:0.8rem;">${dispIcon}</span>
+              ${fonteBadge}
               <span style="font-size:0.8rem;color:var(--dim);">${v.events.length} ações</span>
               <span style="font-size:0.8rem;">${v.movies.size}🎬 ${v.chapters.size}▶️</span>
               ${leadBadge}
