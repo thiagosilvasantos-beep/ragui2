@@ -106,9 +106,10 @@
       // Beacon visitas (REST API, sem timestamp do server)
       let visitasSnap;
       try {
-        visitasSnap = await window.RAGUI_DB.collection('visitas').orderBy('data','desc').limit(2000).get();
-      } catch(e) {
         visitasSnap = await window.RAGUI_DB.collection('visitas').limit(2000).get();
+      } catch(e) {
+        console.warn('Visitas query falhou:', e);
+        visitasSnap = { forEach: function(){} };
       }
       monitorRawVisitas = [];
       visitasSnap.forEach(doc => monitorRawVisitas.push(doc.data()));
