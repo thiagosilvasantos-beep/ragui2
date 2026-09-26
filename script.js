@@ -372,13 +372,63 @@
       document.body.style.overflow = 'hidden';
     }
 
+    var unmuteBtn = document.getElementById('player-unmute-btn');
+
+    function mostrarBotaoUnmute() {
+      if (unmuteBtn) unmuteBtn.classList.remove('hidden');
+    }
+
+    function esconderBotaoUnmute() {
+      if (unmuteBtn) unmuteBtn.classList.add('hidden');
+    }
+
+    function desmutarAudio() {
+      if (videoEl) {
+        videoEl.muted = false;
+        videoEl.volume = 1;
+      }
+      esconderBotaoUnmute();
+    }
+
+    if (unmuteBtn) {
+      unmuteBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        desmutarAudio();
+      });
+    }
+
+    // Ao clicar no vídeo enquanto mudo, desmuta automaticamente
+    videoEl.addEventListener('click', function () {
+      if (videoEl.muted) {
+        desmutarAudio();
+      }
+    });
+
+    // Se o usuário mexer nos controles nativos de volume
+    videoEl.addEventListener('volumechange', function () {
+      if (!videoEl.muted && videoEl.volume > 0) {
+        esconderBotaoUnmute();
+      }
+    });
+
+    // Toque em qualquer lugar do overlay desmuta se estiver rodando em silêncio
+    overlay.addEventListener('click', function (e) {
+      if (videoEl && videoEl.muted && !videoEl.paused) {
+        if (!e.target.closest('#player-close') && !e.target.closest('#player-drawer')) {
+          desmutarAudio();
+        }
+      }
+    });
+
     function closeOverlay() {
       overlay.classList.remove('open');
       document.body.style.overflow = '';
+      esconderBotaoUnmute();
       videoEl.pause();
       videoEl.removeAttribute('src');
       videoEl.load();
       videoEl.classList.remove('active');
+      videoEl.muted = false;
       noVideo.classList.remove('hidden');
       if (drawer) drawer.classList.remove('open');
     }
@@ -402,6 +452,7 @@
         videoEl.load();
         videoEl.classList.remove('active');
         noVideo.classList.remove('hidden');
+        esconderBotaoUnmute();
         return;
       }
 
@@ -409,12 +460,23 @@
       videoEl.src = src;
       videoEl.classList.add('active');
       noVideo.classList.add('hidden');
+
+      // Tenta SEMPRE reproduzir com áudio ativo
+      videoEl.muted = false;
+      esconderBotaoUnmute();
+
       var playPromise = videoEl.play();
       if (playPromise !== undefined) {
-        playPromise.catch(function () {
-          // Autoplay policy mobile: tenta muted para o vídeo começar a rodar imediatamente
+        playPromise.then(function () {
+          // Tocou com som com sucesso
+          esconderBotaoUnmute();
+        }).catch(function () {
+          // Autoplay policy do navegador (ex: visitante veio direto do anúncio sem interação prévia):
+          // O navegador proíbe áudio sem clique. Roda com vídeo (mudo) e exibe o botão "Ativar Som".
           videoEl.muted = true;
-          videoEl.play().catch(function () {});
+          videoEl.play().then(function () {
+            mostrarBotaoUnmute();
+          }).catch(function () {});
         });
       }
 
