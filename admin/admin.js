@@ -136,6 +136,7 @@
   let chartTopMovies = null;
   let chartHourlyClicks = null;
   let chartHourlyLeads = null;
+  let chartEventsTimeline = null;
 
   // Setup Chart.js defaults
   if (typeof Chart !== 'undefined') {
@@ -262,11 +263,15 @@
       }
     });
 
-    // Update Stats
-    document.getElementById('stat-clicks').textContent = totalClicks;
-    document.getElementById('stat-movies').textContent = filmesAbertos;
-    document.getElementById('stat-chapters').textContent = capAssistidos;
-    document.getElementById('stat-leads').textContent = totalLeads;
+    // Update Stats (se existirem na página)
+    const elClicks = document.getElementById('stat-clicks');
+    if (elClicks) elClicks.textContent = totalClicks;
+    const elMovies = document.getElementById('stat-movies');
+    if (elMovies) elMovies.textContent = filmesAbertos;
+    const elChapters = document.getElementById('stat-chapters');
+    if (elChapters) elChapters.textContent = capAssistidos;
+    const elLeads = document.getElementById('stat-leads');
+    if (elLeads) elLeads.textContent = totalLeads;
 
     // --- Beacon Visitas Analytics ---
     const visitas = monitorRawVisitas.filter(v => {
@@ -313,17 +318,19 @@
         if (secoes.includes('catalogo')) viuCatalogo++;
         if (secoes.includes('cadastro')) viuCadastro++;
       } else {
-        bounces++; // sem dados de saída = provável bounce
+        bounces++;
       }
     });
 
     const bounceRate = totalVisitas > 0 ? Math.round((bounces / totalVisitas) * 100) : 0;
     const avgTime = tempoCount > 0 ? Math.round(tempoTotal / tempoCount) : 0;
 
-    document.getElementById('stat-beacon').textContent = totalVisitas;
-    document.getElementById('stat-bounce').textContent = bounceRate + '%';
+    const elBeacon = document.getElementById('stat-beacon');
+    if (elBeacon) elBeacon.textContent = totalVisitas;
+    const elBounce = document.getElementById('stat-bounce');
+    if (elBounce) elBounce.textContent = bounceRate + '%';
 
-    // Behavior stats mini-cards
+    // Behavior stats mini-cards (se o elemento existir)
     const behaviorStats = document.getElementById('behavior-stats');
     if (behaviorStats) {
       behaviorStats.innerHTML = `
@@ -336,7 +343,7 @@
       `;
     }
 
-    // Behavior detail table
+    // Behavior detail table (se o elemento existir)
     const behaviorTbody = document.querySelector('#table-behavior tbody');
     if (behaviorTbody) {
       behaviorTbody.innerHTML = '';
@@ -364,6 +371,167 @@
       if (allVisitas.length === 0) {
         behaviorTbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--dim)">Nenhuma visita registrada ainda</td></tr>';
       }
+    }
+
+    // ========================================================
+    // --- Preparação dos Dados para o Gráfico de Eventos ---
+    // ========================================================
+    let timeLabels = [];
+    let timeKeys = [];
+    const isToday = currentMonitorFilter === 1;
+
+    if (isToday) {
+      for (let h = 0; h < 24; h++) {
+        const hh = String(h).padStart(2, '0');
+        timeLabels.push(hh + 'h');
+        timeKeys.push(hh);
+      }
+    } else {
+      const numDays = currentMonitorFilter;
+      for (let i = numDays - 1; i >= 0; i--) {
+        const d = new Date(now - i * 24 * 60 * 60 * 1000);
+        const dayStr = d.toLocaleDateString('pt-BR');
+        timeLabels.push(dayStr.slice(0, 5));
+        timeKeys.push(dayStr);
+      }
+    }
+
+    function getTimeIndex(item) {
+      if (isToday) {
+        if (!item.hora) return -1;
+        const hh = item.hora.split(':')[0].padStart(2, '0');
+        return timeKeys.indexOf(hh);
+      } else {
+        if (item.data) {
+          const idx = timeKeys.indexOf(item.data);
+          if (idx !== -1) return idx;
+        }
+        const ts = getTimestampFromData(item);
+        if (ts > 0) {
+          const dayStr = new Date(ts).toLocaleDateString('pt-BR');
+          return timeKeys.indexOf(dayStr);
+        }
+        return -1;
+      }
+    }
+
+    const timelineLen = timeLabels.length;
+    const seriesVisitas = new Array(timelineLen).fill(0);
+    const seriesAbriuFilme = new Array(timelineLen).fill(0);
+    const seriesPlays = new Array(timelineLen).fill(0);
+    const seriesConcluiu = new Array(timelineLen).fill(0);
+    const seriesAssistirMais = new Array(timelineLen).fill(0);
+    const seriesLeads = new Array(timelineLen).fill(0);
+    const seriesScroll = new Array(timelineLen).fill(0);
+    const seriesSaidas = new Array(timelineLen).fill(0);
+
+    // 1. Visitas (Pageviews)
+    const allPvs = beaconPageviews.length > 0 ? beaconPageviews : pageviews;
+    allPvs.forEach(p => {
+      const idx = getTimeIndex(p);
+      if (idx !== -1) seriesVisitas[idx]++;
+    });
+
+    // 2. Saídas
+    beaconSaidas.forEach(s => {
+      const idx = getTimeIndex(s);
+      if (idx !== -1) seriesSaidas[idx]++;
+    });
+
+    // 3. Ações e Cliques
+    clicks.forEach(c => {
+      const idx = getTimeIndex(c);
+      if (idx === -1) return;
+
+      if (c.acao === 'abrir_filme' || c.acao === 'abriu_player') {
+        seriesAbriuFilme[idx]++;
+      } else if (c.acao === 'play_capitulo' || c.acao === 'video_iniciou') {
+        seriesPlays[idx]++;
+      } else if (c.acao === 'video_concluido') {
+        seriesConcluiu[idx]++;
+      } else if (c.acao === 'assistir_mais_filmes') {
+        seriesAssistirMais[idx]++;
+      } else if (c.acao && c.acao.startsWith('scroll_')) {
+        seriesScroll[idx]++;
+      }
+    });
+
+    // 4. Leads
+    leads.forEach(l => {
+      const idx = getTimeIndex(l);
+      if (idx !== -1) seriesLeads[idx]++;
+    });
+
+    const eventsConfig = [
+      { name: '👁️ Visitas', key: 'visitas', color: '#38bdf8', data: seriesVisitas },
+      { name: '🎬 Filmes Abertos', key: 'abriu_filme', color: '#f59e0b', data: seriesAbriuFilme },
+      { name: '▶️ Plays / Iniciados', key: 'plays', color: '#10b981', data: seriesPlays },
+      { name: '🏁 Vídeos Concluídos', key: 'concluiu', color: '#06b6d4', data: seriesConcluiu },
+      { name: '🍿 Clicou "Assistir Mais"', key: 'assistir_mais', color: '#ec4899', data: seriesAssistirMais },
+      { name: '✅ Cadastros (Leads)', key: 'leads', color: '#8b5cf6', data: seriesLeads },
+      { name: '📜 Rolagem (Scroll)', key: 'scroll', color: '#a855f7', data: seriesScroll },
+      { name: '🚪 Saídas', key: 'saidas', color: '#f43f5e', data: seriesSaidas }
+    ];
+
+    // Renderizar botões interativos de marcar/desmarcar
+    const togglesContainer = document.getElementById('events-toggles');
+    if (togglesContainer) {
+      togglesContainer.innerHTML = eventsConfig.map((cfg, idx) => {
+        const total = cfg.data.reduce((a, b) => a + b, 0);
+        return `
+          <button type="button" class="event-toggle-btn active" data-index="${idx}" style="border-color: ${cfg.color};">
+            <span class="event-dot" style="background: ${cfg.color};"></span>
+            <span class="event-name">${cfg.name}</span>
+            <span class="event-count">${total}</span>
+          </button>
+        `;
+      }).join('');
+
+      togglesContainer.querySelectorAll('.event-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const idx = parseInt(this.getAttribute('data-index'), 10);
+          if (!chartEventsTimeline) return;
+          const isVisible = chartEventsTimeline.isDatasetVisible(idx);
+          chartEventsTimeline.setDatasetVisibility(idx, !isVisible);
+          chartEventsTimeline.update();
+          this.classList.toggle('active', !isVisible);
+          this.classList.toggle('inactive', isVisible);
+        });
+      });
+    }
+
+    const btnAll = document.getElementById('btn-events-all');
+    if (btnAll) {
+      btnAll.onclick = function () {
+        if (!chartEventsTimeline) return;
+        eventsConfig.forEach((_, idx) => {
+          chartEventsTimeline.setDatasetVisibility(idx, true);
+        });
+        chartEventsTimeline.update();
+        if (togglesContainer) {
+          togglesContainer.querySelectorAll('.event-toggle-btn').forEach(b => {
+            b.classList.add('active');
+            b.classList.remove('inactive');
+          });
+        }
+      };
+    }
+
+    const btnNone = document.getElementById('btn-events-none');
+    if (btnNone) {
+      btnNone.onclick = function () {
+        if (!chartEventsTimeline) return;
+        eventsConfig.forEach((_, idx) => {
+          chartEventsTimeline.setDatasetVisibility(idx, false);
+        });
+        chartEventsTimeline.update();
+        if (togglesContainer) {
+          togglesContainer.querySelectorAll('.event-toggle-btn').forEach(b => {
+            b.classList.remove('active');
+            b.classList.add('inactive');
+          });
+        }
+      };
     }
 
     // Process Top Filmes
@@ -437,6 +605,83 @@
 
     // Charts
     if (!window.Chart) return;
+
+    // 1. Gráfico Multi-Linhas de Eventos
+    const canvasEvents = document.getElementById('chart-events-timeline');
+    if (canvasEvents) {
+      if (chartEventsTimeline) chartEventsTimeline.destroy();
+
+      const timelineDatasets = eventsConfig.map(cfg => ({
+        label: cfg.name,
+        data: cfg.data,
+        borderColor: cfg.color,
+        backgroundColor: cfg.color,
+        borderWidth: 2.2,
+        pointBackgroundColor: cfg.color,
+        pointRadius: isToday ? 3.5 : 2.5,
+        pointHoverRadius: 6,
+        tension: 0.35,
+        fill: false
+      }));
+
+      chartEventsTimeline = new Chart(canvasEvents, {
+        type: 'line',
+        data: {
+          labels: timeLabels,
+          datasets: timelineDatasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                boxWidth: 10,
+                font: { size: 11, weight: '600' },
+                color: '#ddd',
+                usePointStyle: true,
+                padding: 12
+              },
+              onClick: function(e, legendItem, legend) {
+                const index = legendItem.datasetIndex;
+                const ci = legend.chart;
+                const isVisible = ci.isDatasetVisible(index);
+                ci.setDatasetVisibility(index, !isVisible);
+                ci.update();
+                const btn = document.querySelector(`.event-toggle-btn[data-index="${index}"]`);
+                if (btn) {
+                  btn.classList.toggle('active', !isVisible);
+                  btn.classList.toggle('inactive', isVisible);
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                title: function(items) {
+                  return isToday ? `Horário: ${items[0].label}` : `Data: ${items[0].label}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#999', font: { size: 10 } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { precision: 0, color: '#999', font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
 
     if (chartTopMovies) chartTopMovies.destroy();
     chartTopMovies = new Chart(document.getElementById('chart-top-movies'), {

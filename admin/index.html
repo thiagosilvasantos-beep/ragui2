@@ -148,57 +148,29 @@
           </div>
         </div>
         
-        <div class="stats-grid">
-          <div class="stat-card" style="border-top-color: #f43f5e">
-            <div class="stat-label">Visitas (Beacon)</div>
-            <div class="stat-value" id="stat-beacon">-</div>
+        <!-- GRÁFICO DE LINHAS: EVOLUÇÃO DE EVENTOS DOS USUÁRIOS -->
+        <div class="chart-card chart-card--events" style="margin-bottom: 24px;">
+          <div class="events-chart-header">
+            <div>
+              <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                <span>📈</span> Evolução dos Eventos dos Usuários
+              </h3>
+              <p style="font-size: 0.8rem; color: var(--dim);">
+                Marque ou desmarque os eventos abaixo para exibir ou ocultar as linhas correspondentes no gráfico:
+              </p>
+            </div>
+            <div class="events-chart-quick-actions">
+              <button class="btn btn--sm" id="btn-events-all" type="button">Marcar Todas</button>
+              <button class="btn btn--sm" id="btn-events-none" type="button">Ocultar Todas</button>
+            </div>
           </div>
-          <div class="stat-card" style="border-top-color: #f43f5e">
-            <div class="stat-label">Bounce Rate</div>
-            <div class="stat-value" id="stat-bounce">-</div>
-          </div>
-          <div class="stat-card" style="border-top-color: var(--gold)">
-            <div class="stat-label">Total de Cliques</div>
-            <div class="stat-value" id="stat-clicks">-</div>
-          </div>
-          <div class="stat-card" style="border-top-color: #3b82f6">
-            <div class="stat-label">Filmes Abertos</div>
-            <div class="stat-value" id="stat-movies">-</div>
-          </div>
-          <div class="stat-card" style="border-top-color: #10b981">
-            <div class="stat-label">Capítulos Assistidos</div>
-            <div class="stat-value" id="stat-chapters">-</div>
-          </div>
-          <div class="stat-card" style="border-top-color: #8b5cf6">
-            <div class="stat-label">Leads Cadastrados</div>
-            <div class="stat-value" id="stat-leads">-</div>
-          </div>
-        </div>
 
-        <!-- Funil de Comportamento -->
-        <div class="chart-card" style="margin-bottom: 24px;">
-          <h3>🔍 Comportamento dos Visitantes</h3>
-          <div class="stats-grid" id="behavior-stats"></div>
-          <div class="chart-actions">
-            <button class="btn btn--sm" onclick="document.getElementById('table-behavior-container').hidden = !document.getElementById('table-behavior-container').hidden">📋 Detalhes</button>
-          </div>
-          <div class="table-responsive" id="table-behavior-container" hidden>
-            <table class="data-table" id="table-behavior">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Hora</th>
-                  <th>Tipo</th>
-                  <th>Dispositivo</th>
-                  <th>Tempo (s)</th>
-                  <th>Scroll %</th>
-                  <th>Seções Vistas</th>
-                  <th>UTM Source</th>
-                  <th>Referrer</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+          <!-- Filtros de alternância das linhas (Check-pills) -->
+          <div class="events-toggles" id="events-toggles"></div>
+
+          <!-- Canvas do Gráfico de Linhas -->
+          <div class="chart-container" style="position: relative; height: 360px; width: 100%; margin-top: 14px;">
+            <canvas id="chart-events-timeline"></canvas>
           </div>
         </div>
 
