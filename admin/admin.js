@@ -544,7 +544,7 @@
       } else {
         visitorsSortedByTime.forEach((vid, idx) => {
           const v = visitorsMap[vid];
-          v.events.sort((a,b) => a.ts - b.ts);
+          v.events.sort((a,b) => b.ts - a.ts);
           
           // Primeira e última data/hora
           const firstEv = v.events[0];
