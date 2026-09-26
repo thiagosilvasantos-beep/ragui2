@@ -52,6 +52,82 @@
     }
   }
 
+  // ─── Page View Tracking ─────────────────────────────
+  // Rastreia TODA visita à página (mesmo sem clique em filme)
+  (function trackPageView() {
+    try {
+      if (!window.RAGUI_DB) return;
+
+      // Capturar UTM e referrer do anúncio
+      var params = new URLSearchParams(window.location.search);
+      var utmSource = params.get('utm_source') || '';
+      var utmMedium = params.get('utm_medium') || '';
+      var utmCampaign = params.get('utm_campaign') || '';
+      var utmContent = params.get('utm_content') || '';
+      var utmTerm = params.get('utm_term') || '';
+      var fbclid = params.get('fbclid') || '';
+      var referrer = document.referrer || '';
+
+      // Evitar duplicar pageview na mesma sessão
+      var pvKey = 'ragui_pv_' + sessionId;
+      if (sessionStorage.getItem(pvKey)) return;
+      sessionStorage.setItem(pvKey, '1');
+
+      window.RAGUI_DB.collection('pageviews').add({
+        acao: 'pageview',
+        pagina: window.location.pathname,
+        url_completa: window.location.href,
+        referrer: referrer,
+        utm_source: utmSource,
+        utm_medium: utmMedium,
+        utm_campaign: utmCampaign,
+        utm_content: utmContent,
+        utm_term: utmTerm,
+        fbclid: fbclid,
+        visitor_id: visitorId,
+        session_id: sessionId,
+        user_agent: navigator.userAgent,
+        tela: window.innerWidth + 'x' + window.innerHeight,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        data: new Date().toLocaleDateString('pt-BR'),
+        hora: new Date().toLocaleTimeString('pt-BR')
+      });
+    } catch (e) {}
+  })();
+
+  // ─── Scroll Depth Tracking ──────────────────────────
+  // Rastreia até onde o usuário rolou (25%, 50%, 75%, 100%)
+  (function trackScroll() {
+    if (!window.RAGUI_DB) return;
+    var tracked = {};
+    var thresholds = [25, 50, 75, 100];
+
+    window.addEventListener('scroll', function() {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight <= 0) return;
+      var pct = Math.round((scrollTop / docHeight) * 100);
+
+      thresholds.forEach(function(t) {
+        if (pct >= t && !tracked[t]) {
+          tracked[t] = true;
+          try {
+            window.RAGUI_DB.collection('clicks').add({
+              filme: '',
+              capitulo: null,
+              acao: 'scroll_' + t,
+              visitor_id: visitorId,
+              session_id: sessionId,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              data: new Date().toLocaleDateString('pt-BR'),
+              hora: new Date().toLocaleTimeString('pt-BR')
+            });
+          } catch(e) {}
+        }
+      });
+    });
+  })();
+
 
   // ─── Particles (Hero Background) ────────────────────
   function criarParticulas() {

@@ -55,6 +55,7 @@
   // --- MONITOR DASHBOARD ---
   let monitorRawClicks = [];
   let monitorRawLeads = [];
+  let monitorRawPageviews = [];
   let currentMonitorFilter = 30; // default 30 days
   let chartTopMovies = null;
   let chartHourlyClicks = null;
@@ -90,12 +91,16 @@
     try {
       const clicksSnap = await window.RAGUI_DB.collection('clicks').orderBy('timestamp','desc').limit(2000).get();
       const leadsSnap = await window.RAGUI_DB.collection('leads').orderBy('timestamp','desc').limit(2000).get();
+      const pvSnap = await window.RAGUI_DB.collection('pageviews').orderBy('timestamp','desc').limit(2000).get();
       
       monitorRawClicks = [];
       clicksSnap.forEach(doc => monitorRawClicks.push(doc.data()));
       
       monitorRawLeads = [];
       leadsSnap.forEach(doc => monitorRawLeads.push(doc.data()));
+
+      monitorRawPageviews = [];
+      pvSnap.forEach(doc => monitorRawPageviews.push(doc.data()));
       
       buildMonitorDashboard();
     } catch (err) {
@@ -129,11 +134,13 @@
 
     const clicks = monitorRawClicks.filter(c => getTimestampFromData(c) >= cutoff);
     const leads = monitorRawLeads.filter(l => getTimestampFromData(l) >= cutoff);
+    const pageviews = monitorRawPageviews.filter(p => getTimestampFromData(p) >= cutoff);
 
     let totalClicks = clicks.length;
     let filmesAbertos = 0;
     let capAssistidos = 0;
     let totalLeads = leads.length;
+    let totalPageviews = pageviews.length;
 
     const filmeStats = {};
     const clicksByHour = new Array(24).fill(0);
@@ -167,6 +174,7 @@
     });
 
     // Update Stats
+    document.getElementById('stat-pageviews').textContent = totalPageviews;
     document.getElementById('stat-clicks').textContent = totalClicks;
     document.getElementById('stat-movies').textContent = filmesAbertos;
     document.getElementById('stat-chapters').textContent = capAssistidos;
