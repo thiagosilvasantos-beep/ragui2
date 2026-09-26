@@ -409,7 +409,14 @@
       videoEl.src = src;
       videoEl.classList.add('active');
       noVideo.classList.add('hidden');
-      videoEl.play().catch(function () {});
+      var playPromise = videoEl.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(function () {
+          // Autoplay policy mobile: tenta muted para o vídeo começar a rodar imediatamente
+          videoEl.muted = true;
+          videoEl.play().catch(function () {});
+        });
+      }
 
       // Quando o vídeo realmente começa a tocar
       videoEl.addEventListener('playing', function onPlaying() {
@@ -622,6 +629,43 @@
     // Expose attachCardClicks so Firestore re-render can re-bind clicks
     window._ragui_attachCardClicks = attachCardClicks;
 
+    // ── Auto-play via URL (?play=1, ?play=caindo-na-real, ?assistir=1, etc) ──
+    var autoPlayExecutado = false;
+    function checkAutoPlayUrl() {
+      if (autoPlayExecutado) return;
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var playParam = params.get('play') || params.get('assistir') || params.get('filme');
+        if (!playParam) return;
+
+        var targetFilm = null;
+        var p = playParam.toLowerCase().trim();
+
+        if (p === '1' || p === 'true' || p === 'destaque' || p === 'caindo-na-real' || p === 'caindonareal') {
+          targetFilm = filmeDestaqueGlobal || filmesAtivos[0];
+        } else if (!isNaN(parseInt(p, 10))) {
+          var idx = parseInt(p, 10) - 1;
+          targetFilm = filmesAtivos[idx] || filmesAtivos[0];
+        } else {
+          targetFilm = filmesAtivos.find(function (f) {
+            var n = (f.nome || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            var cleanP = p.replace(/[^a-z0-9]/g, '');
+            return n.indexOf(cleanP) !== -1 || (f.id && f.id.toLowerCase() === p);
+          }) || filmeDestaqueGlobal || filmesAtivos[0];
+        }
+
+        if (targetFilm) {
+          autoPlayExecutado = true;
+          abrirFilmeModal(targetFilm);
+        }
+      } catch (e) {
+        if (window.console) console.warn('Autoplay URL erro:', e);
+      }
+    }
+
+    window._ragui_checkAutoPlay = checkAutoPlayUrl;
+    setTimeout(checkAutoPlayUrl, 300);
+
     // Re-attach after filter clicks re-show cards (they are the same DOM nodes, but just in case)
     // We use event delegation as a safety net
     document.getElementById('grid').addEventListener('click', function (e) {
@@ -684,6 +728,7 @@
           renderizarCatalogo(filmes);
           setupScrollReveal();
           if (window._ragui_attachCardClicks) window._ragui_attachCardClicks();
+          if (window._ragui_checkAutoPlay) window._ragui_checkAutoPlay();
         }
       })
       .catch(function (err) {
