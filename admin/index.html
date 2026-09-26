@@ -228,12 +228,26 @@
 
             <div class="charts-grid">
               <div class="chart-card">
-                <h3>👥 Cadastros por Hora</h3>
-                <div class="chart-container">
-                  <canvas id="chart-hourly-leads"></canvas>
+                <h3>🌐 Divisão por Fonte de Acesso</h3>
+                <div class="chart-container" style="position: relative; height: 230px;">
+                  <canvas id="chart-sources"></canvas>
                 </div>
-                <div class="chart-actions">
-                  <button class="btn btn--sm" onclick="document.getElementById('table-leads-container').hidden = !document.getElementById('table-leads-container').hidden">📋 Detalhes</button>
+                <div class="chart-actions" style="display: flex; gap: 8px;">
+                  <button class="btn btn--sm" onclick="document.getElementById('table-sources-container').hidden = !document.getElementById('table-sources-container').hidden">📋 Detalhes (Fontes)</button>
+                  <button class="btn btn--sm" style="opacity: 0.85;" onclick="document.getElementById('table-leads-container').hidden = !document.getElementById('table-leads-container').hidden">👥 Cadastros</button>
+                </div>
+                <div class="table-responsive" id="table-sources-container" hidden>
+                  <table class="data-table" id="table-sources">
+                    <thead>
+                      <tr>
+                        <th>Fonte / Origem</th>
+                        <th>Acessos</th>
+                        <th>% Total</th>
+                        <th>Proporção</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
                 </div>
                 <div class="table-responsive" id="table-leads-container" hidden>
                   <table class="data-table" id="table-leads">

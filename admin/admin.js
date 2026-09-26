@@ -135,7 +135,7 @@
   let currentMonitorFilter = 30; // default 30 days
   let chartTopMovies = null;
   let chartHourlyClicks = null;
-  let chartHourlyLeads = null;
+  let chartSources = null;
   let chartEventsTimeline = null;
 
   // Setup Chart.js defaults
@@ -734,30 +734,133 @@
       }
     });
 
-    if (chartHourlyLeads) chartHourlyLeads.destroy();
-    chartHourlyLeads = new Chart(document.getElementById('chart-hourly-leads'), {
-      type: 'bar',
-      data: {
-        labels: Array.from({length: 24}, (_, i) => i + 'h'),
-        datasets: [{
-          label: 'Cadastros',
-          data: leadsByHour,
-          backgroundColor: '#22c55e',
-          borderRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 1 } },
-          x: { grid: { display: false } }
-        }
+    // 3. Gráfico de Pizza / Rosca: Fontes de Acesso
+    const sourceIcons = {
+      'Facebook': '📘',
+      'Instagram': '📷',
+      'Chrome': '🌐',
+      'Safari': '🧭',
+      'WhatsApp': '💬',
+      'Google': '🔍',
+      'Meta Ads': '📣',
+      'Direto / Outros': '🔗'
+    };
+
+    const sourceColorMap = {
+      'Facebook': '#1877F2',
+      'Instagram': '#E1306C',
+      'Chrome': '#FBBF24',
+      'Safari': '#0284C7',
+      'WhatsApp': '#22C55E',
+      'Google': '#EA4335',
+      'Meta Ads': '#8B5CF6',
+      'Direto / Outros': '#64748B'
+    };
+
+    const sourceCounts = {};
+    const sourceList = beaconPageviews.length > 0 ? beaconPageviews : (visitas.length > 0 ? visitas : clicks);
+    
+    sourceList.forEach(v => {
+      const utm = (v.utm_source || '').toLowerCase();
+      const ref = (v.referrer || '').toLowerCase();
+      const app = (v.app || '');
+      const disp = (v.dispositivo || '').toLowerCase();
+      const ua = (v.ua || '').toLowerCase();
+
+      let src = 'Direto / Outros';
+      if (app === 'Instagram' || utm.includes('instagram') || ref.includes('instagram')) {
+        src = 'Instagram';
+      } else if (app === 'Facebook' || utm.includes('facebook') || ref.includes('facebook') || ref.includes('fb.com') || ref.includes('fbcdn')) {
+        src = 'Facebook';
+      } else if (app === 'WhatsApp' || utm.includes('whatsapp') || ref.includes('whatsapp')) {
+        src = 'WhatsApp';
+      } else if (app === 'Chrome' || /chrome|crios/i.test(disp) || /chrome|crios/i.test(ua)) {
+        src = 'Chrome';
+      } else if (app === 'Safari' || /safari/i.test(disp) || /safari/i.test(ua)) {
+        src = 'Safari';
+      } else if (utm === 'meta' || ref.includes('adsmanager') || v.fbclid) {
+        src = 'Meta Ads';
+      } else if (utm.includes('google') || ref.includes('google')) {
+        src = 'Google';
       }
+
+      sourceCounts[src] = (sourceCounts[src] || 0) + 1;
     });
+
+    const sortedSources = Object.keys(sourceCounts).sort((a, b) => sourceCounts[b] - sourceCounts[a]);
+    const sourceLabels = sortedSources.map(s => `${sourceIcons[s] || '🌐'} ${s}`);
+    const sourceData = sortedSources.map(s => sourceCounts[s]);
+    const sourceColors = sortedSources.map(s => sourceColorMap[s] || '#94a3b8');
+    const totalSourceVisits = sourceData.reduce((acc, cur) => acc + cur, 0);
+
+    const canvasSources = document.getElementById('chart-sources');
+    if (canvasSources) {
+      if (chartSources) chartSources.destroy();
+      chartSources = new Chart(canvasSources, {
+        type: 'doughnut',
+        data: {
+          labels: sourceLabels,
+          datasets: [{
+            data: sourceData,
+            backgroundColor: sourceColors,
+            borderColor: '#1e293b',
+            borderWidth: 2,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: window.innerWidth < 640 ? 'bottom' : 'right',
+              labels: {
+                color: '#e2e8f0',
+                font: { size: 11, family: 'sans-serif' },
+                padding: 10,
+                boxWidth: 12
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const val = context.raw || 0;
+                  const pct = totalSourceVisits > 0 ? ((val / totalSourceVisits) * 100).toFixed(1) : 0;
+                  return ` ${context.label}: ${val} (${pct}%)`;
+                }
+              }
+            }
+          },
+          cutout: '52%'
+        }
+      });
+    }
+
+    // Renderizar tabela detalhada de fontes
+    const sourcesTbody = document.querySelector('#table-sources tbody');
+    if (sourcesTbody) {
+      sourcesTbody.innerHTML = '';
+      if (sortedSources.length === 0) {
+        sourcesTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--dim)">Nenhum acesso registrado</td></tr>';
+      } else {
+        sortedSources.forEach(s => {
+          const count = sourceCounts[s];
+          const pct = totalSourceVisits > 0 ? ((count / totalSourceVisits) * 100).toFixed(1) : 0;
+          const color = sourceColorMap[s] || '#94a3b8';
+          const icon = sourceIcons[s] || '🌐';
+          sourcesTbody.innerHTML += `<tr>
+            <td style="font-weight:600;"><span style="color:${color};margin-right:6px;">●</span>${icon} ${s}</td>
+            <td style="font-weight:600;">${count}</td>
+            <td>${pct}%</td>
+            <td style="min-width:100px;">
+              <div style="background:rgba(255,255,255,0.08);border-radius:4px;height:8px;overflow:hidden;width:100%;">
+                <div style="background:${color};width:${pct}%;height:100%;border-radius:4px;"></div>
+              </div>
+            </td>
+          </tr>`;
+        });
+      }
+    }
 
     // NEW SECTION 1: Visitor Stats
     const visitorsMap = {};
