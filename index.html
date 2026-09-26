@@ -53,25 +53,28 @@
     // Gravar string no formato Firestore
     function S(v){return{stringValue:v||''};}
 
-    // --- 1. PAGEVIEW imediato ---
+    // Enviar para Firestore REST API
+    function enviar(colecao, dados){
+      var body=JSON.stringify({fields:dados});
+      // fetch é mais confiável no carregamento; sendBeacon na saída
+      fetch(API+colecao,{method:'POST',headers:{'Content-Type':'application/json'},body:body,keepalive:true}).catch(function(){
+        // fallback: sendBeacon com Blob tipado
+        try{navigator.sendBeacon(API+colecao,new Blob([body],{type:'application/json'}));}catch(e){}
+      });
+    }
+
+    // --- 1. PAGEVIEW imediato (fetch garante entrega) ---
     var pvKey='ragui_bpv_'+sid;
     if(!sessionStorage.getItem(pvKey)){
       sessionStorage.setItem(pvKey,'1');
-      try{
-        var body=JSON.stringify({fields:{
-          tipo:S('pageview'),visitor_id:S(vid),session_id:S(sid),
-          referrer:S(ref),utm_source:S(utm_s),utm_medium:S(utm_m),
-          utm_campaign:S(utm_c),utm_content:S(utm_ct),fbclid:S(fbc),
-          url:S(location.href),tela:S(innerWidth+'x'+innerHeight),
-          dispositivo:S(/Mobi|Android/i.test(navigator.userAgent)?'mobile':'desktop'),
-          data:S(dt),hora:S(hr)
-        }});
-        if(navigator.sendBeacon){
-          navigator.sendBeacon(API+'visitas',body);
-        }else{
-          fetch(API+'visitas',{method:'POST',body:body,keepalive:true});
-        }
-      }catch(e){}
+      enviar('visitas',{
+        tipo:S('pageview'),visitor_id:S(vid),session_id:S(sid),
+        referrer:S(ref),utm_source:S(utm_s),utm_medium:S(utm_m),
+        utm_campaign:S(utm_c),utm_content:S(utm_ct),fbclid:S(fbc),
+        url:S(location.href),tela:S(innerWidth+'x'+innerHeight),
+        dispositivo:S(/Mobi|Android/i.test(navigator.userAgent)?'mobile':'desktop'),
+        data:S(dt),hora:S(hr)
+      });
     }
 
     // --- 2. TEMPO NA PÁGINA + SCROLL ao sair ---
@@ -96,20 +99,22 @@
     });
 
     // Ao sair da página: grava tempo + scroll + seções vistas
+    var saidaEnviada=false;
     function gravarSaida(){
+      if(saidaEnviada)return;saidaEnviada=true;
       var segundos=Math.round((Date.now()-t0)/1000);
       var secoes=Object.keys(secoeVistas).filter(function(k){return secoeVistas[k];}).join(',');
-      try{
-        var body2=JSON.stringify({fields:{
-          tipo:S('saida'),visitor_id:S(vid),session_id:S(sid),
-          tempo_segundos:{integerValue:String(segundos)},
-          scroll_max:{integerValue:String(maxScroll)},
-          secoes_vistas:S(secoes),
-          dispositivo:S(/Mobi|Android/i.test(navigator.userAgent)?'mobile':'desktop'),
-          data:S(dt),hora:S(hr)
-        }});
-        navigator.sendBeacon?navigator.sendBeacon(API+'visitas',body2):fetch(API+'visitas',{method:'POST',body:body2,keepalive:true});
-      }catch(e){}
+      var body2=JSON.stringify({fields:{
+        tipo:S('saida'),visitor_id:S(vid),session_id:S(sid),
+        tempo_segundos:{integerValue:String(segundos)},
+        scroll_max:{integerValue:String(maxScroll)},
+        secoes_vistas:S(secoes),
+        dispositivo:S(/Mobi|Android/i.test(navigator.userAgent)?'mobile':'desktop'),
+        data:S(dt),hora:S(hr)
+      }});
+      try{navigator.sendBeacon(API+'visitas',new Blob([body2],{type:'application/json'}));}catch(e){
+        try{fetch(API+'visitas',{method:'POST',headers:{'Content-Type':'application/json'},body:body2,keepalive:true});}catch(e2){}
+      }
     }
 
     document.addEventListener('visibilitychange',function(){
