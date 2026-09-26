@@ -238,9 +238,11 @@
       if (c.acao === 'play_capitulo' || c.acao === 'video_iniciou') capAssistidos++;
 
       if (c.filme) {
-        if (!filmeStats[c.filme]) filmeStats[c.filme] = { cliques: 0, capAssistidos: 0 };
-        filmeStats[c.filme].cliques++;
-        if (c.acao === 'play_capitulo' || c.acao === 'video_iniciou') filmeStats[c.filme].capAssistidos++;
+        let filmName = c.filme.trim();
+        if (filmName.toLowerCase() === 'caindo na real') filmName = 'Caindo na Real';
+        if (!filmeStats[filmName]) filmeStats[filmName] = { cliques: 0, capAssistidos: 0 };
+        filmeStats[filmName].cliques++;
+        if (c.acao === 'play_capitulo' || c.acao === 'video_iniciou') filmeStats[filmName].capAssistidos++;
       }
 
       if (c.hora) {
@@ -552,7 +554,9 @@
         visitorsMap[vid] = { clicks: 0, movies: new Set(), chapters: new Set(), latestTimestamp: 0, events: [] };
       }
       visitorsMap[vid].clicks++;
-      if ((c.acao === 'abrir_filme' || c.acao === 'abriu_player' || c.acao === 'video_iniciou') && c.filme) visitorsMap[vid].movies.add(c.filme);
+      let filmName = (c.filme || '').trim();
+      if (filmName.toLowerCase() === 'caindo na real') filmName = 'Caindo na Real';
+      if ((c.acao === 'abrir_filme' || c.acao === 'abriu_player' || c.acao === 'video_iniciou') && filmName) visitorsMap[vid].movies.add(filmName);
       if ((c.acao === 'play_capitulo' || c.acao === 'video_iniciou') && c.capitulo) visitorsMap[vid].chapters.add(c.capitulo);
       
       const ts = getTimestampFromData(c);
