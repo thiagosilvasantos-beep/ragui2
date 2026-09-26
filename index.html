@@ -63,6 +63,26 @@
       });
     }
 
+    // Detecção detalhada de SO, App, Conexão e Fuso
+    var ua=navigator.userAgent||'';
+    var os='Outro';
+    if(/iPhone|iPad|iPod/i.test(ua)) os='iOS';
+    else if(/Android/i.test(ua)) os='Android';
+    else if(/Windows/i.test(ua)) os='Windows';
+    else if(/Macintosh|Mac OS X/i.test(ua)) os='Mac';
+    else if(/Linux/i.test(ua)) os='Linux';
+
+    var app='Web';
+    if(/Instagram/i.test(ua)) app='Instagram';
+    else if(/FBAN|FBAV/i.test(ua)) app='Facebook';
+    else if(/WhatsApp/i.test(ua)) app='WhatsApp';
+    else if(/Chrome|CriOS/i.test(ua)) app='Chrome';
+    else if(/Safari/i.test(ua)) app='Safari';
+
+    var conexao=(navigator.connection&&navigator.connection.effectiveType)||'';
+    var fuso='';
+    try{fuso=Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){}
+
     // --- 1. PAGEVIEW imediato (fetch garante entrega) ---
     var pvKey='ragui_bpv_'+sid;
     if(!sessionStorage.getItem(pvKey)){
@@ -72,8 +92,39 @@
         referrer:S(ref),utm_source:S(utm_s),utm_medium:S(utm_m),
         utm_campaign:S(utm_c),utm_content:S(utm_ct),fbclid:S(fbc),
         url:S(location.href),tela:S(innerWidth+'x'+innerHeight),
-        dispositivo:S(/Mobi|Android/i.test(navigator.userAgent)?'mobile':'desktop'),
+        dispositivo:S(/Mobi|Android/i.test(ua)?'mobile':'desktop'),
+        os:S(os),app:S(app),conexao:S(conexao),fuso:S(fuso),
         data:S(dt),hora:S(hr)
+      });
+    }
+
+    // --- 1b. GEO IP ASSÍNCRONO (não bloqueia a página) ---
+    var geoKey='ragui_geo_'+vid;
+    var cachedGeo=null;
+    try{cachedGeo=JSON.parse(sessionStorage.getItem(geoKey)||'null');}catch(e){}
+    if(!cachedGeo){
+      fetch('https://ipwho.is/').then(function(r){return r.json();}).then(function(g){
+        if(g&&g.success!==false){
+          sessionStorage.setItem(geoKey,JSON.stringify(g));
+          enviar('visitas',{
+            tipo:S('geo'),visitor_id:S(vid),session_id:S(sid),
+            cidade:S(g.city||''),estado:S(g.region_code||g.region||''),
+            pais:S(g.country_code||'BR'),provedor:S((g.connection&&g.connection.isp)||''),
+            data:S(dt),hora:S(hr)
+          });
+        }
+      }).catch(function(){
+        fetch('https://get.geojs.io/v1/ip/geo.json').then(function(r){return r.json();}).then(function(g2){
+          if(g2&&g2.city){
+            sessionStorage.setItem(geoKey,JSON.stringify(g2));
+            enviar('visitas',{
+              tipo:S('geo'),visitor_id:S(vid),session_id:S(sid),
+              cidade:S(g2.city||''),estado:S(g2.region||''),
+              pais:S(g2.country_code||'BR'),provedor:S(g2.organization_name||''),
+              data:S(dt),hora:S(hr)
+            });
+          }
+        }).catch(function(){});
       });
     }
 

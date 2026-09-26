@@ -448,11 +448,23 @@
       if (ts > visitorsMap[vid].latestTimestamp) visitorsMap[vid].latestTimestamp = ts;
 
       if (v.tipo === 'pageview') {
-        visitorsMap[vid].events.push({ ...v, type: 'click', acao: '👁️ Abriu a página', ts, dispositivo: v.dispositivo });
+        visitorsMap[vid].events.push({
+          ...v,
+          type: 'click',
+          acao: '👁️ Abriu a página',
+          ts,
+          dispositivo: v.dispositivo,
+          os: v.os,
+          app: v.app,
+          conexao: v.conexao,
+          fuso: v.fuso
+        });
       } else if (v.tipo === 'saida') {
         const tempo = v.tempo_segundos || '0';
         const scroll = v.scroll_max || '0';
         visitorsMap[vid].events.push({ ...v, type: 'click', acao: `🚪 Saiu (${tempo}s, scroll ${scroll}%)`, ts });
+      } else if (v.tipo === 'geo') {
+        visitorsMap[vid].geo = v;
       }
     });
 
@@ -554,7 +566,7 @@
           
           // Resumo da linha
           const leadName = v.lead ? v.lead.nome : '';
-          const leadBadge = leadName ? `<span style="background:#22c55e;color:#fff;padding:1px 8px;border-radius:10px;font-size:0.75rem;margin-left:8px;">✅ ${leadName}</span>` : '';
+          const leadBadge = leadName ? `<span style="background:#22c55e;color:#fff;padding:1px 8px;border-radius:10px;font-size:0.75rem;margin-left:6px;">✅ ${leadName}</span>` : '';
           const dispositivo = (v.events.find(e => e.dispositivo) || {}).dispositivo;
           const dispIcon = dispositivo === 'mobile' ? '📱' : '🖥️';
 
@@ -568,10 +580,38 @@
           } else if (refEv && /facebook|fb\.com|instagram/i.test(refEv.referrer)) {
             fonteLabel = '📣 Meta'; fonteBg = '#1877F2';
           } else if (refEv && refEv.referrer) {
-            fonteLabel = '🌐 ' + refEv.referrer.replace(/https?:\/\//, '').split('/')[0].substring(0, 20);
+            fonteLabel = '🌐 ' + refEv.referrer.replace(/https?:\/\//, '').split('/')[0].substring(0, 16);
             fonteBg = '#6366f1';
           }
-          const fonteBadge = `<span style="background:${fonteBg};color:#fff;padding:1px 8px;border-radius:10px;font-size:0.7rem;">${fonteLabel}</span>`;
+          const fonteBadge = `<span style="background:${fonteBg};color:#fff;padding:1px 7px;border-radius:10px;font-size:0.68rem;font-weight:600;">${fonteLabel}</span>`;
+
+          // Geo e Provedor
+          const geo = v.geo || v.events.find(e => e.cidade || e.estado) || {};
+          const cidade = geo.cidade || '';
+          const estado = geo.estado || '';
+          const provedor = geo.provedor || '';
+          let geoBadge = '';
+          if (cidade || estado) {
+            const locText = (cidade && estado) ? `${cidade}/${estado}` : (cidade || estado);
+            geoBadge = `<span style="background:rgba(14,165,233,0.15);color:#38bdf8;padding:1px 7px;border-radius:10px;font-size:0.68rem;" title="${provedor ? 'Provedor: ' + provedor : ''}">📍 ${locText}</span>`;
+          }
+
+          // Dispositivo & App In-App
+          const osEv = v.events.find(e => e.os || e.app) || {};
+          const osName = osEv.os || '';
+          const appName = osEv.app || '';
+          let devBadge = '';
+          if (appName && appName !== 'Web') {
+            devBadge = `<span style="background:rgba(168,85,247,0.15);color:#c084fc;padding:1px 7px;border-radius:10px;font-size:0.68rem;">${dispIcon} ${appName}</span>`;
+          } else if (osName) {
+            devBadge = `<span style="background:rgba(255,255,255,0.08);color:var(--dim);padding:1px 7px;border-radius:10px;font-size:0.68rem;">${dispIcon} ${osName}</span>`;
+          } else {
+            devBadge = `<span style="font-size:0.75rem;">${dispIcon}</span>`;
+          }
+
+          // Conexão (4G / 3G)
+          const conexao = (v.events.find(e => e.conexao) || {}).conexao;
+          const connBadge = conexao ? `<span style="background:rgba(234,179,8,0.12);color:#eab308;padding:1px 6px;border-radius:8px;font-size:0.65rem;">📶 ${conexao.toUpperCase()}</span>` : '';
           
           // Steps HTML
           let stepsHtml = '';
@@ -589,19 +629,32 @@
             stepsHtml += `<div class="${cls}"><span class="journey-time">${ev.data || ''} ${ev.hora || ''}</span><span class="journey-icon">${icon}</span><span class="journey-text">${text}</span></div>`;
           });
 
+          // Detalhes extras no topo da expansão
+          let infoBarHtml = '';
+          const infoItems = [];
+          if (cidade || estado) infoItems.push(`📍 <strong>${cidade ? cidade + ' - ' : ''}${estado}</strong>`);
+          if (provedor) infoItems.push(`🏢 ${provedor}`);
+          if (osName || appName) infoItems.push(`📱 ${osName} ${appName ? '(' + appName + ')' : ''}`);
+          if (conexao) infoItems.push(`📶 Conexão: ${conexao.toUpperCase()}`);
+          if (infoItems.length > 0) {
+            infoBarHtml = `<div style="font-size:0.78rem;color:var(--dim);margin-bottom:8px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;display:flex;flex-wrap:wrap;gap:12px;">${infoItems.join(' &bull; ')}</div>`;
+          }
+
           const rowId = 'journey-row-' + idx;
           journeyContainer.innerHTML += `
-            <div class="journey-row" onclick="var d=document.getElementById('${rowId}');d.hidden=!d.hidden;this.querySelector('.journey-arrow').textContent=d.hidden?'▸':'▾';" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.06);transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'">
-              <span class="journey-arrow" style="font-size:0.9rem;color:var(--dim);width:14px;">▸</span>
-              <span style="font-family:monospace;color:var(--gold);font-size:0.8rem;min-width:100px;">${vid.substring(0,14)}</span>
-              <span style="color:var(--dim);font-size:0.8rem;min-width:140px;">${firstDate}</span>
-              <span style="font-size:0.8rem;">${dispIcon}</span>
+            <div class="journey-row" onclick="var d=document.getElementById('${rowId}');d.hidden=!d.hidden;this.querySelector('.journey-arrow').textContent=d.hidden?'▸':'▾';" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);transition:background .2s;flex-wrap:wrap;" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'">
+              <span class="journey-arrow" style="font-size:0.85rem;color:var(--dim);width:12px;">▸</span>
+              <span style="font-family:monospace;color:var(--gold);font-size:0.78rem;min-width:85px;">${vid.substring(0,12)}</span>
+              <span style="color:var(--dim);font-size:0.75rem;min-width:115px;">${firstDate}</span>
               ${fonteBadge}
-              <span style="font-size:0.8rem;color:var(--dim);">${v.events.length} ações</span>
-              <span style="font-size:0.8rem;">${v.movies.size}🎬 ${v.chapters.size}▶️</span>
+              ${geoBadge}
+              ${devBadge}
+              ${connBadge}
+              <span style="font-size:0.75rem;color:var(--dim);margin-left:auto;">${v.events.length} ações &bull; ${v.movies.size}🎬 ${v.chapters.size}▶️</span>
               ${leadBadge}
             </div>
-            <div id="${rowId}" hidden style="padding:8px 12px 16px 38px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.2);">
+            <div id="${rowId}" hidden style="padding:10px 14px 16px 34px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.25);">
+              ${infoBarHtml}
               <div class="journey-timeline">${stepsHtml}</div>
             </div>
           `;
