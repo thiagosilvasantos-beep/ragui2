@@ -436,6 +436,26 @@
 
     // NEW SECTION 1: Visitor Stats
     const visitorsMap = {};
+
+    // Incluir visitas do beacon (quem abriu a página, mesmo sem clicar)
+    visitas.forEach(v => {
+      const vid = v.visitor_id || '';
+      if (!vid || vid === 'Sem ID') return;
+      if (!visitorsMap[vid]) {
+        visitorsMap[vid] = { clicks: 0, movies: new Set(), chapters: new Set(), latestTimestamp: 0, events: [] };
+      }
+      const ts = getTimestampFromData(v);
+      if (ts > visitorsMap[vid].latestTimestamp) visitorsMap[vid].latestTimestamp = ts;
+
+      if (v.tipo === 'pageview') {
+        visitorsMap[vid].events.push({ ...v, type: 'click', acao: '👁️ Abriu a página', ts, dispositivo: v.dispositivo });
+      } else if (v.tipo === 'saida') {
+        const tempo = v.tempo_segundos || '0';
+        const scroll = v.scroll_max || '0';
+        visitorsMap[vid].events.push({ ...v, type: 'click', acao: `🚪 Saiu (${tempo}s, scroll ${scroll}%)`, ts });
+      }
+    });
+
     clicks.forEach(c => {
       const vid = c.visitor_id || 'Sem ID';
       if (!visitorsMap[vid]) {
@@ -453,12 +473,13 @@
 
     leads.forEach(l => {
       const vid = l.visitor_id || 'Sem ID';
-      if (visitorsMap[vid]) {
-        visitorsMap[vid].lead = l;
-        const ts = getTimestampFromData(l);
-        visitorsMap[vid].events.push({ ...l, type: 'lead', ts });
-        if (ts > visitorsMap[vid].latestTimestamp) visitorsMap[vid].latestTimestamp = ts;
+      if (!visitorsMap[vid]) {
+        visitorsMap[vid] = { clicks: 0, movies: new Set(), chapters: new Set(), latestTimestamp: 0, events: [] };
       }
+      visitorsMap[vid].lead = l;
+      const ts = getTimestampFromData(l);
+      visitorsMap[vid].events.push({ ...l, type: 'lead', ts });
+      if (ts > visitorsMap[vid].latestTimestamp) visitorsMap[vid].latestTimestamp = ts;
     });
 
     const visitorIds = Object.keys(visitorsMap);
