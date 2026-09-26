@@ -251,14 +251,14 @@
 
     if (filmes) filmesAtivos = filmes;
 
-    grid.innerHTML = filmesAtivos.map(function(f) {
+    grid.innerHTML = filmesAtivos.map(function(f, i) {
       var g = GENEROS_MAP[f.genero] || GENEROS_MAP.acao;
       // Suporta URLs completas (Firebase Storage) e caminhos relativos
       var capaSrc = (f.capa || '');
       if (capaSrc && capaSrc.indexOf('http') !== 0) {
         capaSrc = capaSrc.replace(/^\.\.\//, '');
       }
-      var lazyAttr = i < 2 ? '' : ' loading="lazy"';
+      var lazyAttr = (typeof i !== 'undefined' && i < 2) ? '' : ' loading="lazy"';
       var capaHtml = capaSrc
         ? '<img src="' + capaSrc + '" alt="' + f.nome.replace(/"/g,'') + '"' + lazyAttr + '>'
         : '';
