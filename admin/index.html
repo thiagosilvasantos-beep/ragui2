@@ -753,16 +753,22 @@
                 </div>
               </div>
 
-              <!-- Tabela de Campanhas -->
-              <div class="meta-table-title">
-                <span>📋 Campanhas Ativas na Meta</span>
+              <!-- Tabela de Campanhas / Anúncios -->
+              <div class="meta-table-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="font-weight:700;">📋 Detalhamento Meta:</span>
+                  <div class="meta-view-tabs">
+                    <button type="button" id="btn-meta-view-ads" class="meta-view-btn meta-view-btn--active">📢 Anúncios</button>
+                    <button type="button" id="btn-meta-view-campaigns" class="meta-view-btn">📁 Campanhas</button>
+                  </div>
+                </div>
                 <span style="font-size:0.7rem;color:var(--dim);" id="meta-table-subtitle">Dados simulados</span>
               </div>
               <div class="table-responsive meta-table-wrap">
                 <table class="data-table" id="table-meta-campaigns" style="font-size:0.78rem;">
                   <thead>
                     <tr>
-                      <th>Campanha</th>
+                      <th id="th-meta-item-name">Anúncio</th>
                       <th>Status</th>
                       <th>Gasto</th>
                       <th>Cliques</th>

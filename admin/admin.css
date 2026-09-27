@@ -966,5 +966,39 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
   font-family: monospace;
 }
 
+.meta-view-tabs {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.meta-view-btn {
+  background: transparent;
+  color: var(--dim);
+  border: none;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font);
+}
+
+.meta-view-btn:hover {
+  color: #fff;
+}
+
+.meta-view-btn--active {
+  background: rgba(24, 119, 242, 0.25);
+  color: #60a5fa !important;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+
 
 

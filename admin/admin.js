@@ -1775,8 +1775,66 @@
     }
   }
 
+  let currentMetaView = 'ads'; // 'ads' ou 'campaigns'
+  let metaAdsCache = [];
+  let metaCampaignsCache = [];
+
+  function renderMetaTable() {
+    const tbody = document.querySelector('#table-meta-campaigns tbody');
+    const thName = document.getElementById('th-meta-item-name');
+    const btnAds = document.getElementById('btn-meta-view-ads');
+    const btnCamps = document.getElementById('btn-meta-view-campaigns');
+
+    if (btnAds && btnCamps) {
+      if (currentMetaView === 'ads') {
+        btnAds.classList.add('meta-view-btn--active');
+        btnCamps.classList.remove('meta-view-btn--active');
+      } else {
+        btnCamps.classList.add('meta-view-btn--active');
+        btnAds.classList.remove('meta-view-btn--active');
+      }
+    }
+
+    if (thName) {
+      thName.textContent = currentMetaView === 'ads' ? 'Anúncio (Criativo)' : 'Campanha';
+    }
+
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const items = currentMetaView === 'ads' ? metaAdsCache : metaCampaignsCache;
+
+    if (!items || items.length === 0) {
+      const typeLabel = currentMetaView === 'ads' ? 'anúncio' : 'campanha';
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--dim);padding:24px;">Nenhum ${typeLabel} encontrado nesta conta.</td></tr>`;
+      return;
+    }
+
+    items.forEach(c => {
+      const cplStr = c.leads > 0 ? `R$ ${c.cpl.toFixed(2)}` : '—';
+      const subtitle = c.campaignName ? `<div style="font-size:0.68rem;color:var(--dim);margin-top:2px;display:flex;align-items:center;gap:4px;"><span>📁</span><span>${c.campaignName}</span></div>` : '';
+      tbody.innerHTML += `
+        <tr>
+          <td>
+            <div style="font-weight:600;color:#fff;">${c.name}</div>
+            ${subtitle}
+          </td>
+          <td><span class="meta-campaign-tag ${c.tagClass}">${c.status}</span></td>
+          <td>R$ ${c.spend.toFixed(2)}</td>
+          <td>${c.clicks.toLocaleString('pt-BR')}</td>
+          <td>R$ ${c.cpc.toFixed(2)}</td>
+          <td><strong style="color:#22c55e;">${c.leads}</strong></td>
+          <td><strong>${cplStr}</strong></td>
+        </tr>
+      `;
+    });
+
+    alignMonitorColumns();
+    setTimeout(alignMonitorColumns, 100);
+  }
+
   function renderMetaKPIs(data) {
-    const { spend, cpl, leads, clicks, cpc, impressions, cpm, ctr, vviews, siteVisits, plays, isLive, accountName, accountId, campaigns, error } = data;
+    const { spend, cpl, leads, clicks, cpc, impressions, cpm, ctr, vviews, siteVisits, plays, isLive, accountName, accountId, error } = data;
 
     const elBadge = document.getElementById('meta-header-badge');
     const elAct = document.getElementById('meta-header-act');
@@ -1849,40 +1907,11 @@
     if (fPlays) fPlays.textContent = plays.toLocaleString('pt-BR');
     if (fLeads) fLeads.textContent = leads.toLocaleString('pt-BR');
 
-    // Tabela
-    const tbody = document.querySelector('#table-meta-campaigns tbody');
-    if (tbody) {
-      tbody.innerHTML = '';
-      if (!campaigns || campaigns.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--dim);padding:24px;">Nenhuma campanha veiculada neste período.</td></tr>`;
-      } else {
-        campaigns.forEach(c => {
-          const cplStr = c.leads > 0 ? `R$ ${c.cpl.toFixed(2)}` : '—';
-          const isPaused = c.status === 'Pausada' || c.isPaused;
-          const tagClass = isPaused ? 'meta-campaign-tag--paused' : 'meta-campaign-tag--active';
-          const tagText = isPaused ? '⏸️ Pausada' : '🟢 Ativa';
-          tbody.innerHTML += `
-            <tr>
-              <td style="font-weight:600;color:#fff;">${c.name}</td>
-              <td><span class="meta-campaign-tag ${tagClass}">${tagText}</span></td>
-              <td>R$ ${c.spend.toFixed(2)}</td>
-              <td>${c.clicks.toLocaleString('pt-BR')}</td>
-              <td>R$ ${c.cpc.toFixed(2)}</td>
-              <td><strong style="color:#22c55e;">${c.leads}</strong></td>
-              <td><strong>${cplStr}</strong></td>
-            </tr>
-          `;
-        });
-      }
-    }
-
-    alignMonitorColumns();
-    setTimeout(alignMonitorColumns, 150);
+    renderMetaTable();
   }
 
   function updateMetaAdsMock(filterDays) {
     let spend, leads, clicks, impressions, vviews, siteVisits, plays;
-    let campaigns = [];
 
     if (filterDays === 1) { // Hoje
       spend = 85.00;
@@ -1892,12 +1921,19 @@
       vviews = 1980;
       siteVisits = currentSiteStats.siteVisits > 0 ? currentSiteStats.siteVisits : 104;
       plays = currentSiteStats.sitePlays > 0 ? currentSiteStats.sitePlays : 38;
-      campaigns = [
-        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 38.00, clicks: 58, cpc: 0.65, leads: 3, cpl: 12.66 },
-        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 20.00, clicks: 30, cpc: 0.66, leads: 1, cpl: 20.00 },
-        { name: '📱 [Stories] Depoimentos & Alunos', status: 'Ativa', spend: 14.00, clicks: 22, cpc: 0.63, leads: 1, cpl: 14.00 },
-        { name: '⚡ [Lookalike] Semelhantes a Cadastrados', status: 'Ativa', spend: 8.00, clicks: 12, cpc: 0.66, leads: 1, cpl: 8.00 },
-        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 5.00, clicks: 6, cpc: 0.83, leads: 0, cpl: 0 }
+      metaCampaignsCache = [
+        { name: '🎬 [Campanha] Lançamento Caindo na Real', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 38.00, clicks: 58, cpc: 0.65, leads: 3, cpl: 12.66 },
+        { name: '🍿 [Campanha] Topo de Funil - Jovens 16-24', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 20.00, clicks: 30, cpc: 0.66, leads: 1, cpl: 20.00 },
+        { name: '📱 [Campanha] Stories - Depoimentos de Alunos', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 14.00, clicks: 22, cpc: 0.63, leads: 1, cpl: 14.00 },
+        { name: '⚡ [Campanha] Lookalike - Semelhantes a Cadastrados', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 8.00, clicks: 12, cpc: 0.66, leads: 1, cpl: 8.00 },
+        { name: '🎯 [Campanha] Remarketing - Abriu sem Cadastro', status: '⏸️ Pausada', tagClass: 'meta-campaign-tag--paused', spend: 5.00, clicks: 6, cpc: 0.83, leads: 0, cpl: 0 }
+      ];
+      metaAdsCache = [
+        { name: '🎬 Caindo na Real - Reels Vertical 01', campaignName: '🎬 [Campanha] Lançamento Caindo na Real', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 25.00, clicks: 38, cpc: 0.65, leads: 2, cpl: 12.50 },
+        { name: '🎬 Caindo na Real - Teaser 15s Corte Rápido', campaignName: '🎬 [Campanha] Lançamento Caindo na Real', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 13.00, clicks: 20, cpc: 0.65, leads: 1, cpl: 13.00 },
+        { name: '🍿 Ganhe Tempo nos Estudos - Carrossel', campaignName: '🍿 [Campanha] Topo de Funil - Jovens 16-24', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 20.00, clicks: 30, cpc: 0.66, leads: 1, cpl: 20.00 },
+        { name: '📱 Aluno Aprovado Medicina - Depoimento', campaignName: '📱 [Campanha] Stories - Depoimentos de Alunos', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 14.00, clicks: 22, cpc: 0.63, leads: 1, cpl: 14.00 },
+        { name: '🎯 Volte e finalize seu cadastro', campaignName: '🎯 [Campanha] Remarketing - Abriu sem Cadastro', status: '⏸️ Pausado', tagClass: 'meta-campaign-tag--paused', spend: 5.00, clicks: 6, cpc: 0.83, leads: 0, cpl: 0 }
       ];
     } else if (filterDays === 7) { // 7 dias
       spend = 560.00;
@@ -1907,12 +1943,19 @@
       vviews = 12400;
       siteVisits = currentSiteStats.siteVisits > 0 ? currentSiteStats.siteVisits : 670;
       plays = currentSiteStats.sitePlays > 0 ? currentSiteStats.sitePlays : 215;
-      campaigns = [
-        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 250.00, clicks: 390, cpc: 0.64, leads: 19, cpl: 13.15 },
-        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 130.00, clicks: 195, cpc: 0.66, leads: 9, cpl: 14.44 },
-        { name: '📱 [Stories] Depoimentos & Alunos', status: 'Ativa', spend: 90.00, clicks: 138, cpc: 0.65, leads: 7, cpl: 12.85 },
-        { name: '⚡ [Lookalike] Semelhantes a Cadastrados', status: 'Ativa', spend: 50.00, clicks: 75, cpc: 0.66, leads: 4, cpl: 12.50 },
-        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 40.00, clicks: 42, cpc: 0.95, leads: 2, cpl: 20.00 }
+      metaCampaignsCache = [
+        { name: '🎬 [Campanha] Lançamento Caindo na Real', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 250.00, clicks: 390, cpc: 0.64, leads: 19, cpl: 13.15 },
+        { name: '🍿 [Campanha] Topo de Funil - Jovens 16-24', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 130.00, clicks: 195, cpc: 0.66, leads: 9, cpl: 14.44 },
+        { name: '📱 [Campanha] Stories - Depoimentos de Alunos', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 90.00, clicks: 138, cpc: 0.65, leads: 7, cpl: 12.85 },
+        { name: '⚡ [Campanha] Lookalike - Semelhantes a Cadastrados', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 50.00, clicks: 75, cpc: 0.66, leads: 4, cpl: 12.50 },
+        { name: '🎯 [Campanha] Remarketing - Abriu sem Cadastro', status: '⏸️ Pausada', tagClass: 'meta-campaign-tag--paused', spend: 40.00, clicks: 42, cpc: 0.95, leads: 2, cpl: 20.00 }
+      ];
+      metaAdsCache = [
+        { name: '🎬 Caindo na Real - Reels Vertical 01', campaignName: '🎬 [Campanha] Lançamento Caindo na Real', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 160.00, clicks: 250, cpc: 0.64, leads: 12, cpl: 13.33 },
+        { name: '🎬 Caindo na Real - Teaser 15s Corte Rápido', campaignName: '🎬 [Campanha] Lançamento Caindo na Real', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 90.00, clicks: 140, cpc: 0.64, leads: 7, cpl: 12.85 },
+        { name: '🍿 Ganhe Tempo nos Estudos - Carrossel', campaignName: '🍿 [Campanha] Topo de Funil - Jovens 16-24', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 130.00, clicks: 195, cpc: 0.66, leads: 9, cpl: 14.44 },
+        { name: '📱 Aluno Aprovado Medicina - Depoimento', campaignName: '📱 [Campanha] Stories - Depoimentos de Alunos', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 90.00, clicks: 138, cpc: 0.65, leads: 7, cpl: 12.85 },
+        { name: '🎯 Volte e finalize seu cadastro', campaignName: '🎯 [Campanha] Remarketing - Abriu sem Cadastro', status: '⏸️ Pausado', tagClass: 'meta-campaign-tag--paused', spend: 40.00, clicks: 42, cpc: 0.95, leads: 2, cpl: 20.00 }
       ];
     } else { // 30 dias (padrão)
       spend = 2450.00;
@@ -1922,12 +1965,19 @@
       vviews = 54200;
       siteVisits = currentSiteStats.siteVisits > 0 ? currentSiteStats.siteVisits : 2780;
       plays = currentSiteStats.sitePlays > 0 ? currentSiteStats.sitePlays : 840;
-      campaigns = [
-        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 1100.00, clicks: 1690, cpc: 0.65, leads: 83, cpl: 13.25 },
-        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 580.00, clicks: 865, cpc: 0.67, leads: 41, cpl: 14.14 },
-        { name: '📱 [Stories] Depoimentos & Alunos', status: 'Ativa', spend: 390.00, clicks: 590, cpc: 0.66, leads: 28, cpl: 13.92 },
-        { name: '⚡ [Lookalike] Semelhantes a Cadastrados', status: 'Ativa', spend: 220.00, clicks: 335, cpc: 0.65, leads: 17, cpl: 12.94 },
-        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 160.00, clicks: 170, cpc: 0.94, leads: 9, cpl: 17.77 }
+      metaCampaignsCache = [
+        { name: '🎬 [Campanha] Lançamento Caindo na Real', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 1100.00, clicks: 1690, cpc: 0.65, leads: 83, cpl: 13.25 },
+        { name: '🍿 [Campanha] Topo de Funil - Jovens 16-24', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 580.00, clicks: 865, cpc: 0.67, leads: 41, cpl: 14.14 },
+        { name: '📱 [Campanha] Stories - Depoimentos de Alunos', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 390.00, clicks: 590, cpc: 0.66, leads: 28, cpl: 13.92 },
+        { name: '⚡ [Campanha] Lookalike - Semelhantes a Cadastrados', status: '🟢 Ativa', tagClass: 'meta-campaign-tag--active', spend: 220.00, clicks: 335, cpc: 0.65, leads: 17, cpl: 12.94 },
+        { name: '🎯 [Campanha] Remarketing - Abriu sem Cadastro', status: '⏸️ Pausada', tagClass: 'meta-campaign-tag--paused', spend: 160.00, clicks: 170, cpc: 0.94, leads: 9, cpl: 17.77 }
+      ];
+      metaAdsCache = [
+        { name: '🎬 Caindo na Real - Reels Vertical 01', campaignName: '🎬 [Campanha] Lançamento Caindo na Real', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 720.00, clicks: 1110, cpc: 0.65, leads: 55, cpl: 13.09 },
+        { name: '🎬 Caindo na Real - Teaser 15s Corte Rápido', campaignName: '🎬 [Campanha] Lançamento Caindo na Real', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 380.00, clicks: 580, cpc: 0.65, leads: 28, cpl: 13.57 },
+        { name: '🍿 Ganhe Tempo nos Estudos - Carrossel', campaignName: '🍿 [Campanha] Topo de Funil - Jovens 16-24', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 580.00, clicks: 865, cpc: 0.67, leads: 41, cpl: 14.14 },
+        { name: '📱 Aluno Aprovado Medicina - Depoimento', campaignName: '📱 [Campanha] Stories - Depoimentos de Alunos', status: '🟢 Ativo', tagClass: 'meta-campaign-tag--active', spend: 390.00, clicks: 590, cpc: 0.66, leads: 28, cpl: 13.92 },
+        { name: '🎯 Volte e finalize seu cadastro', campaignName: '🎯 [Campanha] Remarketing - Abriu sem Cadastro', status: '⏸️ Pausado', tagClass: 'meta-campaign-tag--paused', spend: 160.00, clicks: 170, cpc: 0.94, leads: 9, cpl: 17.77 }
       ];
     }
 
@@ -1938,7 +1988,7 @@
 
     renderMetaKPIs({
       spend, cpl, leads, clicks, cpc, impressions, cpm, ctr, vviews, siteVisits, plays,
-      isLive: false, accountName: '', accountId: '', campaigns, error: false
+      isLive: false, accountName: '', accountId: '', error: false
     });
 
     initMetaConfigModal();
@@ -1960,17 +2010,27 @@
     const cleanAct = creds.act.startsWith('act_') ? creds.act : 'act_' + creds.act;
 
     try {
-      // 1. Account Insights
+      // 1. Insights gerais da conta
       const accUrl = `https://graph.facebook.com/v20.0/${encodeURIComponent(cleanAct)}/insights?fields=spend,impressions,reach,clicks,cpc,cpm,ctr,actions,video_30_sec_watched_actions,video_continuous_2_sec_watched_actions&date_preset=${preset}&access_token=${encodeURIComponent(creds.token)}`;
-      // 2. Campaign Insights
-      const campUrl = `https://graph.facebook.com/v20.0/${encodeURIComponent(cleanAct)}/insights?fields=campaign_id,campaign_name,spend,impressions,reach,clicks,cpc,cpm,ctr,actions&level=campaign&date_preset=${preset}&limit=25&access_token=${encodeURIComponent(creds.token)}`;
-      // 3. Campaigns List
-      const listUrl = `https://graph.facebook.com/v20.0/${encodeURIComponent(cleanAct)}/campaigns?fields=id,name,status,effective_status&limit=50&access_token=${encodeURIComponent(creds.token)}`;
 
-      const [accRes, campRes, listRes] = await Promise.all([
+      // 2. Lista de TODAS as Campanhas
+      const campListUrl = `https://graph.facebook.com/v20.0/${encodeURIComponent(cleanAct)}/campaigns?fields=id,name,status,effective_status,created_time,updated_time&limit=100&access_token=${encodeURIComponent(creds.token)}`;
+
+      // 3. Insights das Campanhas no período
+      const campInsightsUrl = `https://graph.facebook.com/v20.0/${encodeURIComponent(cleanAct)}/insights?fields=campaign_id,campaign_name,spend,impressions,reach,clicks,cpc,cpm,ctr,actions&level=campaign&date_preset=${preset}&limit=100&access_token=${encodeURIComponent(creds.token)}`;
+
+      // 4. Lista de TODOS os Anúncios individuais
+      const adListUrl = `https://graph.facebook.com/v20.0/${encodeURIComponent(cleanAct)}/ads?fields=id,name,status,effective_status,campaign_id,campaign{id,name},created_time,updated_time&limit=100&access_token=${encodeURIComponent(creds.token)}`;
+
+      // 5. Insights dos Anúncios no período
+      const adInsightsUrl = `https://graph.facebook.com/v20.0/${encodeURIComponent(cleanAct)}/insights?fields=ad_id,ad_name,campaign_id,campaign_name,spend,impressions,reach,clicks,cpc,cpm,ctr,actions&level=ad&date_preset=${preset}&limit=100&access_token=${encodeURIComponent(creds.token)}`;
+
+      const [accRes, campListRes, campInsightsRes, adListRes, adInsightsRes] = await Promise.all([
         fetch(accUrl).then(r => r.json()),
-        fetch(campUrl).then(r => r.json()),
-        fetch(listUrl).then(r => r.json()).catch(() => ({ data: [] }))
+        fetch(campListUrl).then(r => r.json()).catch(() => ({ data: [] })),
+        fetch(campInsightsUrl).then(r => r.json()).catch(() => ({ data: [] })),
+        fetch(adListUrl).then(r => r.json()).catch(() => ({ data: [] })),
+        fetch(adInsightsUrl).then(r => r.json()).catch(() => ({ data: [] }))
       ]);
 
       if (accRes.error) {
@@ -1978,11 +2038,12 @@
         renderMetaKPIs({
           spend: 0, cpl: 0, leads: 0, clicks: 0, cpc: 0, impressions: 0, cpm: 0, ctr: 0, vviews: 0,
           siteVisits: currentSiteStats.siteVisits, plays: currentSiteStats.sitePlays,
-          isLive: false, accountName: creds.name, accountId: cleanAct, campaigns: [], error: true
+          isLive: false, accountName: creds.name, accountId: cleanAct, error: true
         });
         return;
       }
 
+      // Totais da Conta
       let spend = 0, clicks = 0, impressions = 0, cpc = 0, cpm = 0, ctr = 0, leads = 0, vviews = 0;
 
       if (accRes.data && accRes.data.length > 0) {
@@ -2015,24 +2076,27 @@
 
       const cpl = leads > 0 ? spend / leads : 0;
 
-      // Status Map
-      const campStatusMap = {};
-      if (listRes && listRes.data) {
-        listRes.data.forEach(c => {
-          campStatusMap[c.id] = c.effective_status || c.status;
+      // ── Processamento de Campanhas ──
+      const campInsightsMap = {};
+      if (campInsightsRes && campInsightsRes.data) {
+        campInsightsRes.data.forEach(item => {
+          campInsightsMap[item.campaign_id] = item;
         });
       }
 
-      // Campaigns List
-      const campaigns = [];
-      if (campRes.data && campRes.data.length > 0) {
-        campRes.data.forEach(ci => {
-          const cSpend = parseFloat(ci.spend || 0);
-          const cClicks = parseInt(ci.clicks || 0, 10);
-          const cCpc = ci.cpc ? parseFloat(ci.cpc) : (cClicks > 0 ? cSpend / cClicks : 0);
+      metaCampaignsCache = [];
+      const seenCampIds = new Set();
+
+      if (campListRes && campListRes.data) {
+        campListRes.data.forEach(c => {
+          seenCampIds.add(c.id);
+          const insight = campInsightsMap[c.id] || {};
+          const cSpend = parseFloat(insight.spend || 0);
+          const cClicks = parseInt(insight.clicks || 0, 10);
+          const cCpc = insight.cpc ? parseFloat(insight.cpc) : (cClicks > 0 ? cSpend / cClicks : 0);
           let cLeads = 0;
-          if (ci.actions && Array.isArray(ci.actions)) {
-            ci.actions.forEach(a => {
+          if (insight.actions && Array.isArray(insight.actions)) {
+            insight.actions.forEach(a => {
               const type = (a.action_type || '').toLowerCase();
               if (type === 'lead' || type.includes('lead') || type === 'contact' || type === 'complete_registration') {
                 cLeads += parseInt(a.value || 0, 10);
@@ -2040,12 +2104,30 @@
             });
           }
           const cCpl = cLeads > 0 ? cSpend / cLeads : 0;
-          const rawStatus = campStatusMap[ci.campaign_id] || 'ACTIVE';
-          const isPaused = rawStatus.toUpperCase().includes('PAUSED');
-          campaigns.push({
-            name: ci.campaign_name || 'Campanha',
-            status: isPaused ? 'Pausada' : 'Ativa',
-            isPaused: isPaused,
+          const effStatus = (c.effective_status || c.status || 'ACTIVE').toUpperCase();
+          const isActive = effStatus === 'ACTIVE';
+          const isReview = effStatus.includes('REVIEW') || effStatus.includes('PROCESS');
+
+          let statusLabel = 'Ativa';
+          let tagClass = 'meta-campaign-tag--active';
+          if (isActive) {
+            statusLabel = '🟢 Ativa';
+            tagClass = 'meta-campaign-tag--active';
+          } else if (isReview) {
+            statusLabel = '🟡 Em Análise';
+            tagClass = 'meta-campaign-tag--paused';
+          } else {
+            statusLabel = '⏸️ Pausada';
+            tagClass = 'meta-campaign-tag--paused';
+          }
+
+          metaCampaignsCache.push({
+            id: c.id,
+            name: c.name || 'Campanha',
+            status: statusLabel,
+            rawStatus: effStatus,
+            isActive: isActive,
+            tagClass: tagClass,
             spend: cSpend,
             clicks: cClicks,
             cpc: cCpc,
@@ -2055,12 +2137,161 @@
         });
       }
 
+      // Adicionar campanhas de insights que porventura não vieram na listagem
+      if (campInsightsRes && campInsightsRes.data) {
+        campInsightsRes.data.forEach(ci => {
+          if (!seenCampIds.has(ci.campaign_id)) {
+            const cSpend = parseFloat(ci.spend || 0);
+            const cClicks = parseInt(ci.clicks || 0, 10);
+            const cCpc = ci.cpc ? parseFloat(ci.cpc) : (cClicks > 0 ? cSpend / cClicks : 0);
+            let cLeads = 0;
+            if (ci.actions && Array.isArray(ci.actions)) {
+              ci.actions.forEach(a => {
+                const type = (a.action_type || '').toLowerCase();
+                if (type === 'lead' || type.includes('lead') || type === 'contact' || type === 'complete_registration') {
+                  cLeads += parseInt(a.value || 0, 10);
+                }
+              });
+            }
+            metaCampaignsCache.push({
+              id: ci.campaign_id,
+              name: ci.campaign_name || 'Campanha',
+              status: '⏸️ Pausada',
+              rawStatus: 'PAUSED',
+              isActive: false,
+              tagClass: 'meta-campaign-tag--paused',
+              spend: cSpend,
+              clicks: cClicks,
+              cpc: cCpc,
+              leads: cLeads,
+              cpl: cLeads > 0 ? cSpend / cLeads : 0
+            });
+          }
+        });
+      }
+
+      // Ordenar campanhas: Ativas no topo, depois maior gasto
+      metaCampaignsCache.sort((a, b) => {
+        if (a.isActive && !b.isActive) return -1;
+        if (!a.isActive && b.isActive) return 1;
+        return b.spend - a.spend;
+      });
+
+      // ── Processamento de Anúncios (Ads) ──
+      const adInsightsMap = {};
+      if (adInsightsRes && adInsightsRes.data) {
+        adInsightsRes.data.forEach(item => {
+          adInsightsMap[item.ad_id] = item;
+        });
+      }
+
+      metaAdsCache = [];
+      const seenAdIds = new Set();
+
+      if (adListRes && adListRes.data) {
+        adListRes.data.forEach(ad => {
+          seenAdIds.add(ad.id);
+          const insight = adInsightsMap[ad.id] || {};
+          const aSpend = parseFloat(insight.spend || 0);
+          const aClicks = parseInt(insight.clicks || 0, 10);
+          const aCpc = insight.cpc ? parseFloat(insight.cpc) : (aClicks > 0 ? aSpend / aClicks : 0);
+          let aLeads = 0;
+          if (insight.actions && Array.isArray(insight.actions)) {
+            insight.actions.forEach(a => {
+              const type = (a.action_type || '').toLowerCase();
+              if (type === 'lead' || type.includes('lead') || type === 'contact' || type === 'complete_registration') {
+                aLeads += parseInt(a.value || 0, 10);
+              }
+            });
+          }
+          const aCpl = aLeads > 0 ? aSpend / aLeads : 0;
+          const effStatus = (ad.effective_status || ad.status || 'ACTIVE').toUpperCase();
+          const isActive = effStatus === 'ACTIVE';
+          const isReview = effStatus.includes('REVIEW') || effStatus.includes('PROCESS');
+
+          let statusLabel = 'Ativo';
+          let tagClass = 'meta-campaign-tag--active';
+          if (isActive) {
+            statusLabel = '🟢 Ativo';
+            tagClass = 'meta-campaign-tag--active';
+          } else if (isReview) {
+            statusLabel = '🟡 Em Análise';
+            tagClass = 'meta-campaign-tag--paused';
+          } else if (effStatus === 'CAMPAIGN_PAUSED') {
+            statusLabel = '⏸️ Camp. Pausada';
+            tagClass = 'meta-campaign-tag--paused';
+          } else if (effStatus === 'ADSET_PAUSED') {
+            statusLabel = '⏸️ Conj. Pausado';
+            tagClass = 'meta-campaign-tag--paused';
+          } else {
+            statusLabel = '⏸️ Pausado';
+            tagClass = 'meta-campaign-tag--paused';
+          }
+
+          metaAdsCache.push({
+            id: ad.id,
+            name: ad.name || 'Anúncio',
+            campaignName: (ad.campaign && ad.campaign.name) ? ad.campaign.name : (insight.campaign_name || ''),
+            status: statusLabel,
+            rawStatus: effStatus,
+            isActive: isActive,
+            tagClass: tagClass,
+            spend: aSpend,
+            clicks: aClicks,
+            cpc: aCpc,
+            leads: aLeads,
+            cpl: aCpl
+          });
+        });
+      }
+
+      // Adicionar anúncios dos insights que não vieram na listagem
+      if (adInsightsRes && adInsightsRes.data) {
+        adInsightsRes.data.forEach(ai => {
+          if (!seenAdIds.has(ai.ad_id)) {
+            const aSpend = parseFloat(ai.spend || 0);
+            const aClicks = parseInt(ai.clicks || 0, 10);
+            const aCpc = ai.cpc ? parseFloat(ai.cpc) : (aClicks > 0 ? aSpend / aClicks : 0);
+            let aLeads = 0;
+            if (ai.actions && Array.isArray(ai.actions)) {
+              ai.actions.forEach(a => {
+                const type = (a.action_type || '').toLowerCase();
+                if (type === 'lead' || type.includes('lead') || type === 'contact' || type === 'complete_registration') {
+                  aLeads += parseInt(a.value || 0, 10);
+                }
+              });
+            }
+            metaAdsCache.push({
+              id: ai.ad_id,
+              name: ai.ad_name || 'Anúncio',
+              campaignName: ai.campaign_name || '',
+              status: '⏸️ Pausado',
+              rawStatus: 'PAUSED',
+              isActive: false,
+              tagClass: 'meta-campaign-tag--paused',
+              spend: aSpend,
+              clicks: aClicks,
+              cpc: aCpc,
+              leads: aLeads,
+              cpl: aLeads > 0 ? aSpend / aLeads : 0
+            });
+          }
+        });
+      }
+
+      // Ordenar anúncios: Ativos no topo absoluto, depois maior gasto
+      metaAdsCache.sort((a, b) => {
+        if (a.isActive && !b.isActive) return -1;
+        if (!a.isActive && b.isActive) return 1;
+        return b.spend - a.spend;
+      });
+
       const siteVisits = currentSiteStats.siteVisits;
       const plays = currentSiteStats.sitePlays;
 
       renderMetaKPIs({
         spend, cpl, leads, clicks, cpc, impressions, cpm, ctr, vviews, siteVisits, plays,
-        isLive: true, accountName: creds.name, accountId: cleanAct, campaigns, error: false
+        isLive: true, accountName: creds.name, accountId: cleanAct, error: false
       });
 
     } catch (err) {
@@ -2131,6 +2362,21 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
     });
+
+    const btnViewAds = document.getElementById('btn-meta-view-ads');
+    const btnViewCamps = document.getElementById('btn-meta-view-campaigns');
+    if (btnViewAds) {
+      btnViewAds.onclick = () => {
+        currentMetaView = 'ads';
+        renderMetaTable();
+      };
+    }
+    if (btnViewCamps) {
+      btnViewCamps.onclick = () => {
+        currentMetaView = 'campaigns';
+        renderMetaTable();
+      };
+    }
 
     if (btnToggleToken && inputToken) {
       btnToggleToken.onclick = () => {
