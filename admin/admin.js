@@ -463,32 +463,84 @@
     });
 
     const eventsConfig = [
-      { name: '👁️ Visitas', key: 'visitas', color: '#38bdf8', data: seriesVisitas },
-      { name: '🎬 Filmes Abertos', key: 'abriu_filme', color: '#f59e0b', data: seriesAbriuFilme },
-      { name: '▶️ Plays / Iniciados', key: 'plays', color: '#10b981', data: seriesPlays },
-      { name: '🏁 Vídeos Concluídos', key: 'concluiu', color: '#06b6d4', data: seriesConcluiu },
-      { name: '🍿 Clicou "Assistir Mais"', key: 'assistir_mais', color: '#ec4899', data: seriesAssistirMais },
-      { name: '✅ Cadastros (Leads)', key: 'leads', color: '#8b5cf6', data: seriesLeads },
-      { name: '📜 Rolagem (Scroll)', key: 'scroll', color: '#a855f7', data: seriesScroll },
-      { name: '🚪 Saídas', key: 'saidas', color: '#f43f5e', data: seriesSaidas }
+      { 
+        name: '👁️ Visitas', 
+        key: 'visitas', 
+        color: '#38bdf8', 
+        data: seriesVisitas,
+        total: allPvs.length
+      },
+      { 
+        name: '🎬 Filmes Abertos', 
+        key: 'abriu_filme', 
+        color: '#f59e0b', 
+        data: seriesAbriuFilme,
+        total: clicks.filter(c => c.acao === 'abrir_filme' || c.acao === 'abriu_player').length
+      },
+      { 
+        name: '▶️ Plays / Iniciados', 
+        key: 'plays', 
+        color: '#10b981', 
+        data: seriesPlays,
+        total: clicks.filter(c => c.acao === 'play_capitulo' || c.acao === 'video_iniciou').length
+      },
+      { 
+        name: '🏁 Vídeos Concluídos', 
+        key: 'concluiu', 
+        color: '#06b6d4', 
+        data: seriesConcluiu,
+        total: clicks.filter(c => c.acao === 'video_concluido').length
+      },
+      { 
+        name: '🍿 Clicou "Assistir Mais"', 
+        key: 'assistir_mais', 
+        color: '#ec4899', 
+        data: seriesAssistirMais,
+        total: clicks.filter(c => c.acao === 'assistir_mais_filmes').length
+      },
+      { 
+        name: '✅ Cadastros (Leads)', 
+        key: 'leads', 
+        color: '#8b5cf6', 
+        data: seriesLeads,
+        total: leads.length
+      },
+      { 
+        name: '📜 Rolagem (Scroll)', 
+        key: 'scroll', 
+        color: '#a855f7', 
+        data: seriesScroll,
+        total: clicks.filter(c => c.acao && c.acao.startsWith('scroll_')).length
+      },
+      { 
+        name: '🚪 Saídas', 
+        key: 'saidas', 
+        color: '#f43f5e', 
+        data: seriesSaidas,
+        total: beaconSaidas.length
+      }
     ];
 
-    // Renderizar botões interativos de marcar/desmarcar
+    // Renderizar botões interativos com o total acima de cada filtro
     const togglesContainer = document.getElementById('events-toggles');
     if (togglesContainer) {
       togglesContainer.innerHTML = eventsConfig.map((cfg, idx) => {
-        const total = cfg.data.reduce((a, b) => a + b, 0);
+        const total = typeof cfg.total === 'number' ? cfg.total : cfg.data.reduce((a, b) => a + b, 0);
         return `
-          <button type="button" class="event-toggle-btn active" data-index="${idx}" style="border-color: ${cfg.color};">
-            <span class="event-dot" style="background: ${cfg.color};"></span>
-            <span class="event-name">${cfg.name}</span>
-            <span class="event-count">${total}</span>
-          </button>
+          <div class="event-filter-col active" data-index="${idx}">
+            <div class="event-filter-total" style="color: ${cfg.color};">
+              ${total.toLocaleString('pt-BR')}
+            </div>
+            <button type="button" class="event-toggle-btn" style="border-color: ${cfg.color};" tabindex="-1">
+              <span class="event-dot" style="background: ${cfg.color};"></span>
+              <span class="event-name">${cfg.name}</span>
+            </button>
+          </div>
         `;
       }).join('');
 
-      togglesContainer.querySelectorAll('.event-toggle-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
+      togglesContainer.querySelectorAll('.event-filter-col').forEach(col => {
+        col.addEventListener('click', function () {
           const idx = parseInt(this.getAttribute('data-index'), 10);
           if (!chartEventsTimeline) return;
           const isVisible = chartEventsTimeline.isDatasetVisible(idx);
@@ -509,7 +561,7 @@
         });
         chartEventsTimeline.update();
         if (togglesContainer) {
-          togglesContainer.querySelectorAll('.event-toggle-btn').forEach(b => {
+          togglesContainer.querySelectorAll('.event-filter-col').forEach(b => {
             b.classList.add('active');
             b.classList.remove('inactive');
           });
@@ -526,7 +578,7 @@
         });
         chartEventsTimeline.update();
         if (togglesContainer) {
-          togglesContainer.querySelectorAll('.event-toggle-btn').forEach(b => {
+          togglesContainer.querySelectorAll('.event-filter-col').forEach(b => {
             b.classList.remove('active');
             b.classList.add('inactive');
           });
