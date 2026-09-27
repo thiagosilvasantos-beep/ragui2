@@ -999,6 +999,78 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* VIDEO PERFORMANCE & BUFFER MONITOR */
+.video-perf-bar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.video-perf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+.video-perf-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 1024px) {
+  .video-perf-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .video-perf-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.video-perf-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.video-perf-card-label {
+  font-size: 0.7rem;
+  color: var(--dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.video-perf-card-val {
+  font-family: var(--display);
+  font-size: 1.55rem;
+  color: #fff;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+}
+
+.video-perf-card-sub {
+  font-size: 0.68rem;
+  color: var(--dim);
+}
+
+
 
 
 

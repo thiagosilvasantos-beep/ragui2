@@ -33,10 +33,10 @@
   }
 
   // ─── Click Tracking ────────────────────────────────
-  function trackClick(filme, capitulo, acao) {
+  function trackClick(filme, capitulo, acao, extra) {
     try {
       if (window.RAGUI_DB) {
-        window.RAGUI_DB.collection('clicks').add({
+        var payload = {
           filme: filme || '',
           capitulo: capitulo || null,
           acao: acao,
@@ -45,7 +45,15 @@
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           data: new Date().toLocaleDateString('pt-BR'),
           hora: new Date().toLocaleTimeString('pt-BR')
-        });
+        };
+        if (extra && typeof extra === 'object') {
+          for (var k in extra) {
+            if (extra.hasOwnProperty(k) && extra[k] !== undefined) {
+              payload[k] = extra[k];
+            }
+          }
+        }
+        window.RAGUI_DB.collection('clicks').add(payload);
       }
     } catch (e) {
       // fire and forget, do not break UX
@@ -521,6 +529,13 @@
       }
 
       var src = normalizePath(videoSrc);
+      var videoPlayRequestedAt = performance.now();
+      var chapterName = '';
+      if (items && items[chapterIndex]) {
+        var nameSpan = items[chapterIndex].querySelector('.chapter-name');
+        if (nameSpan) chapterName = nameSpan.textContent.trim();
+      }
+
       videoEl.src = src;
       videoEl.classList.add('active');
       noVideo.classList.add('hidden');
@@ -545,17 +560,65 @@
         });
       }
 
-      // Quando o vídeo realmente começa a tocar
-      videoEl.addEventListener('playing', function onPlaying() {
+      // Quando o vídeo realmente começa a renderizar o 1º frame e tocar
+      function onPlaying() {
         videoEl.removeEventListener('playing', onPlaying);
-        trackClick(titleEl.textContent, '', 'video_iniciou');
-        try { if (typeof fbq === 'function') fbq('trackCustom', 'VideoStart', {filme: titleEl.textContent}); } catch(e) {}
-      });
+        var startupMs = Math.round(performance.now() - videoPlayRequestedAt);
+
+        // Obter métricas de rede nativas do terminal do usuário
+        var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection || {};
+        var effectiveType = (conn.effectiveType || '').toUpperCase() || 'WIFI/4G';
+        var downlink = conn.downlink ? conn.downlink + ' Mbps' : '';
+        var rtt = conn.rtt ? conn.rtt + ' ms' : '';
+
+        // Detecção de plataforma / dispositivo
+        var ua = navigator.userAgent || '';
+        var isIOS = /iPhone|iPad|iPod/i.test(ua);
+        var isAndroid = /Android/i.test(ua);
+        var deviceType = (isIOS || isAndroid || window.innerWidth <= 768) ? 'Mobile' : 'Desktop';
+        var platform = isIOS ? 'iPhone/iOS' : (isAndroid ? 'Android' : 'Desktop');
+
+        trackClick(titleEl.textContent, chapterName, 'video_iniciou', {
+          startup_ms: startupMs,
+          conexao: effectiveType,
+          downlink: downlink,
+          rtt: rtt,
+          dispositivo: deviceType,
+          plataforma: platform
+        });
+
+        try {
+          if (typeof fbq === 'function') {
+            fbq('trackCustom', 'VideoStart', {
+              filme: titleEl.textContent,
+              capitulo: chapterName,
+              startup_ms: startupMs
+            });
+          }
+        } catch (e) {}
+      }
+      videoEl.addEventListener('playing', onPlaying);
+
+      // Rastrear travamentos de buffer (re-buffering) durante a reprodução
+      var stallCount = 0;
+      function onWaiting() {
+        stallCount++;
+        if (stallCount === 1) {
+          trackClick(titleEl.textContent, chapterName, 'video_travou', {
+            posicao_s: Math.round(videoEl.currentTime || 0)
+          });
+        }
+      }
+      videoEl.addEventListener('waiting', onWaiting);
 
       // Quando o vídeo falha ao carregar
       videoEl.addEventListener('error', function onError() {
         videoEl.removeEventListener('error', onError);
-        trackClick(titleEl.textContent, '', 'video_erro');
+        var errorTimeMs = Math.round(performance.now() - videoPlayRequestedAt);
+        trackClick(titleEl.textContent, chapterName, 'video_erro', {
+          error_code: videoEl.error ? videoEl.error.code : 0,
+          error_ms: errorTimeMs
+        });
         try { if (typeof fbq === 'function') fbq('trackCustom', 'VideoError', {filme: titleEl.textContent}); } catch(e) {}
       });
     }

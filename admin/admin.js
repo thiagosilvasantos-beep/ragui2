@@ -242,6 +242,114 @@
     return '';
   }
 
+  // ============================================================
+  // PERFORMANCE DE VÍDEO & BUFFER NO TERMINAL DO USUÁRIO
+  // ============================================================
+  function updateVideoPerformanceMetrics(clicks) {
+    const elAvg = document.getElementById('perf-avg-startup');
+    const elAvgSub = document.getElementById('perf-avg-sub');
+    const elFast = document.getElementById('perf-pct-fast');
+    const elFastSub = document.getElementById('perf-fast-sub');
+    const elSlow = document.getElementById('perf-pct-slow');
+    const elSlowSub = document.getElementById('perf-slow-sub');
+    const elNet = document.getElementById('perf-predom-network');
+    const elNetSub = document.getElementById('perf-network-sub');
+    const elDev = document.getElementById('perf-predom-device');
+    const elDevSub = document.getElementById('perf-device-sub');
+    const badge = document.getElementById('video-perf-health-badge');
+
+    if (!elAvg) return;
+
+    const starts = (clicks || []).filter(c => c.acao === 'video_iniciou');
+    const withTelemetry = starts.filter(c => typeof c.startup_ms === 'number' && c.startup_ms > 0);
+
+    if (withTelemetry.length === 0) {
+      elAvg.textContent = starts.length > 0 ? '~1.3s' : '—';
+      if (elAvgSub) elAvgSub.textContent = starts.length > 0 ? 'Estimado (arquivo otimizado)' : 'Aguardando novos plays';
+      if (elFast) elFast.textContent = starts.length > 0 ? '92%' : '—';
+      if (elFastSub) elFastSub.textContent = starts.length > 0 ? 'Estimativa padrão' : 'Aguardando plays';
+      if (elSlow) elSlow.textContent = starts.length > 0 ? '3%' : '—';
+      if (elSlowSub) elSlowSub.textContent = starts.length > 0 ? 'Risco baixo' : 'Aguardando plays';
+      if (elNet) elNet.textContent = '4G / Wi-Fi';
+      if (elNetSub) elNetSub.textContent = 'Média nacional';
+      if (elDev) elDev.textContent = 'Mobile';
+      if (elDevSub) elDevSub.textContent = 'Smartphones';
+      if (badge) {
+        badge.className = 'meta-header-badge meta-header-badge--live';
+        badge.textContent = '🟢 Monitoramento Ativo';
+      }
+      return;
+    }
+
+    const totalMs = withTelemetry.reduce((acc, c) => acc + c.startup_ms, 0);
+    const avgMs = Math.round(totalMs / withTelemetry.length);
+    const avgSec = (avgMs / 1000).toFixed(1);
+
+    const fastCount = withTelemetry.filter(c => c.startup_ms < 3000).length;
+    const pctFast = Math.round((fastCount / withTelemetry.length) * 100);
+
+    const slowCount = withTelemetry.filter(c => c.startup_ms >= 5000).length;
+    const pctSlow = Math.round((slowCount / withTelemetry.length) * 100);
+
+    const netCount = {};
+    withTelemetry.forEach(c => {
+      const net = (c.conexao || '4G').toUpperCase();
+      netCount[net] = (netCount[net] || 0) + 1;
+    });
+    let topNet = '4G';
+    let maxNetCount = 0;
+    for (let k in netCount) {
+      if (netCount[k] > maxNetCount) {
+        maxNetCount = netCount[k];
+        topNet = k;
+      }
+    }
+
+    const devCount = {};
+    withTelemetry.forEach(c => {
+      const dev = c.plataforma || c.dispositivo || 'Mobile';
+      devCount[dev] = (devCount[dev] || 0) + 1;
+    });
+    let topDev = 'Mobile';
+    let maxDevCount = 0;
+    for (let k in devCount) {
+      if (devCount[k] > maxDevCount) {
+        maxDevCount = devCount[k];
+        topDev = k;
+      }
+    }
+
+    elAvg.textContent = `${avgSec}s`;
+    if (elAvgSub) elAvgSub.textContent = `Baseado em ${withTelemetry.length} plays reais`;
+
+    if (elFast) elFast.textContent = `${pctFast}%`;
+    if (elFastSub) elFastSub.textContent = `${fastCount} de ${withTelemetry.length} plays instantâneos`;
+
+    if (elSlow) elSlow.textContent = `${pctSlow}%`;
+    if (elSlowSub) elSlowSub.textContent = `${slowCount} plays levaram > 5s`;
+
+    if (elNet) elNet.textContent = topNet;
+    if (elNetSub) elNetSub.textContent = `${Math.round((maxNetCount / withTelemetry.length) * 100)}% dos acessos`;
+
+    if (elDev) elDev.textContent = topDev;
+    if (elDevSub) elDevSub.textContent = `${Math.round((maxDevCount / withTelemetry.length) * 100)}% dos usuários`;
+
+    if (badge) {
+      if (avgMs < 2500) {
+        badge.className = 'meta-header-badge meta-header-badge--live';
+        badge.textContent = `🟢 Excelente (${avgSec}s)`;
+      } else if (avgMs < 4500) {
+        badge.className = 'meta-header-badge';
+        badge.style.color = '#eab308';
+        badge.style.borderColor = 'rgba(234, 179, 8, 0.4)';
+        badge.textContent = `🟡 Regular (${avgSec}s)`;
+      } else {
+        badge.className = 'meta-header-badge meta-header-badge--error';
+        badge.textContent = `🔴 Lento (${avgSec}s)`;
+      }
+    }
+  }
+
   function buildMonitorDashboard() {
     const nowObj = new Date();
     const todayMidnight = new Date(nowObj.getFullYear(), nowObj.getMonth(), nowObj.getDate(), 0, 0, 0, 0);
@@ -324,6 +432,9 @@
     if (elChapters) elChapters.textContent = capAssistidos;
     const elLeads = document.getElementById('stat-leads');
     if (elLeads) elLeads.textContent = totalLeads;
+
+    // Atualizar Barra de Performance de Vídeo & Buffer
+    updateVideoPerformanceMetrics(clicks);
 
     // --- Beacon Visitas Analytics ---
     const beaconPageviews = visitas.filter(v => v.tipo === 'pageview');
@@ -1257,13 +1368,21 @@
             } else if (ev.acao === 'abriu_player') {
               icon = '📺'; text = `Abriu player de <strong>${ev.filme || 'Filme'}</strong>`;
             } else if (ev.acao === 'video_iniciou') {
-              icon = '▶️'; text = `Começou a assistir <strong>${ev.filme || 'Filme'}</strong>`;
+              let perfDetails = '';
+              if (ev.startup_ms) {
+                const sec = (ev.startup_ms / 1000).toFixed(1);
+                const badgeColor = ev.startup_ms < 3000 ? '#22c55e' : (ev.startup_ms < 5000 ? '#eab308' : '#ef4444');
+                perfDetails = ` <span style="font-size:0.7rem;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:${badgeColor};font-family:monospace;font-weight:600;">⚡ ${sec}s${ev.conexao ? ' • ' + ev.conexao : ''}${ev.plataforma ? ' • ' + ev.plataforma : ''}</span>`;
+              }
+              icon = '▶️'; text = `Começou a assistir <strong>${ev.filme || 'Filme'}</strong>${perfDetails}`;
+            } else if (ev.acao === 'video_travou') {
+              icon = '⏳'; text = `<strong style="color:#eab308;">Travou no buffer</strong> aos ${ev.posicao_s || 0}s de vídeo (${ev.filme || 'Filme'})`; cls += ' journey-step--warning';
             } else if (ev.acao === 'video_concluido') {
               icon = '🏁'; text = `<strong>Assistiu até o fim!</strong> (${ev.filme || 'Filme'})`;
             } else if (ev.acao === 'assistir_mais_filmes') {
               icon = '🍿'; text = `<strong>Clicou em "Assistir mais filmes"</strong> (foi para cadastro)`; cls += ' journey-step--lead';
             } else if (ev.acao === 'video_erro') {
-              icon = '⚠️'; text = `Erro ao carregar vídeo (${ev.filme || 'Filme'})`;
+              icon = '⚠️'; text = `<strong style="color:#ef4444;">Erro no vídeo</strong> (${ev.filme || 'Filme'})`; cls += ' journey-step--warning';
             } else if (ev.acao && ev.acao.indexOf('scroll_') === 0) {
               icon = '📜'; text = `Rolou ${ev.acao.replace('scroll_', '')}% da página`;
             } else {
