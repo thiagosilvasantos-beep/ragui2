@@ -1159,6 +1159,9 @@
       }
     }
 
+    // NOVO: Atualizar Mapa de Calor do Brasil (Geolocalização)
+    updateBrazilHeatmap(visitas, monitorRawVisitas, visitorsMap);
+
     // NEW SECTION 2: Customer Journey — últimos 100
     const visitorsSortedByTime = visitorIds
       .filter(vid => vid !== 'Sem ID')
@@ -1289,6 +1292,411 @@
           `;
         });
       }
+    }
+  }
+
+  // ============================================================
+  // MAPA DO BRASIL & MAPA DE CALOR GEOGRÁFICO
+  // ============================================================
+  const BRAZIL_STATES = {
+    'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas',
+    'BA': 'Bahia', 'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo',
+    'GO': 'Goiás', 'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul',
+    'MG': 'Minas Gerais', 'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná',
+    'PE': 'Pernambuco', 'PI': 'Piauí', 'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte',
+    'RS': 'Rio Grande do Sul', 'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina',
+    'SP': 'São Paulo', 'SE': 'Sergipe', 'TO': 'Tocantins'
+  };
+
+  const BRAZIL_STATE_NAMES_MAP = {
+    'ACRE': 'AC', 'ALAGOAS': 'AL', 'AMAPA': 'AP', 'AMAPÁ': 'AP',
+    'AMAZONAS': 'AM', 'BAHIA': 'BA', 'CEARA': 'CE', 'CEARÁ': 'CE',
+    'DISTRITO FEDERAL': 'DF', 'ESPIRITO SANTO': 'ES', 'ESPÍRITO SANTO': 'ES',
+    'GOIAS': 'GO', 'GOIÁS': 'GO', 'MARANHAO': 'MA', 'MARANHÃO': 'MA',
+    'MATO GROSSO': 'MT', 'MATO GROSSO DO SUL': 'MS', 'MINAS GERAIS': 'MG',
+    'PARA': 'PA', 'PARÁ': 'PA', 'PARAIBA': 'PB', 'PARAÍBA': 'PB',
+    'PARANA': 'PR', 'PARANÁ': 'PR', 'PERNAMBUCO': 'PE', 'PIAUI': 'PI', 'PIAUÍ': 'PI',
+    'RIO DE JANEIRO': 'RJ', 'RIO GRANDE DO NORTE': 'RN', 'RIO GRANDE DO SUL': 'RS',
+    'RONDONIA': 'RO', 'RONDÔNIA': 'RO', 'RORAIMA': 'RR', 'SANTA CATARINA': 'SC',
+    'SAO PAULO': 'SP', 'SÃO PAULO': 'SP', 'SERGIPE': 'SE', 'TOCANTINS': 'TO'
+  };
+
+  function normalizeUF(str) {
+    if (!str) return null;
+    const s = str.trim().toUpperCase();
+    if (BRAZIL_STATES[s]) return s;
+    return BRAZIL_STATE_NAMES_MAP[s] || null;
+  }
+
+  let geoActiveTab = 'estados'; // 'estados' | 'cidades'
+  let geoSelectedUF = null;     // null | 'SP' | ...
+  let currentGeoData = null;    // Cache for tab switching and clearing filter
+
+  function updateBrazilHeatmap(visitas, rawVisitas, visitorsMap) {
+    currentGeoData = { visitas, raw: rawVisitas, vMap: visitorsMap };
+
+    // 1. Lookup de geolocalização por visitor_id
+    const visitorGeoLookup = {};
+    if (Array.isArray(rawVisitas)) {
+      rawVisitas.forEach(v => {
+        if (v && v.tipo === 'geo' && v.visitor_id) {
+          visitorGeoLookup[v.visitor_id] = v;
+        }
+      });
+    }
+
+    // 2. Estrutura de dados por Estado e Cidade
+    const stateStats = {};
+    for (const uf in BRAZIL_STATES) {
+      stateStats[uf] = {
+        uf,
+        name: BRAZIL_STATES[uf],
+        count: 0,
+        visitors: new Set(),
+        cities: {}
+      };
+    }
+
+    const cityStats = {};
+    let exteriorCount = 0;
+    let totalGeoVisitors = 0;
+    const processedVisitors = new Set();
+
+    // A. Visitantes ativos em visitorsMap (no período do filtro)
+    if (visitorsMap) {
+      Object.keys(visitorsMap).forEach(vid => {
+        if (!vid || vid === 'Sem ID') return;
+        const geo = visitorsMap[vid].geo || visitorGeoLookup[vid];
+        if (geo) {
+          processedVisitors.add(vid);
+          const uf = normalizeUF(geo.estado);
+          const city = (geo.cidade || '').trim();
+          if (uf && stateStats[uf]) {
+            stateStats[uf].count++;
+            stateStats[uf].visitors.add(vid);
+            totalGeoVisitors++;
+            if (city) {
+              stateStats[uf].cities[city] = (stateStats[uf].cities[city] || 0) + 1;
+              const cKey = `${city} - ${uf}`;
+              if (!cityStats[cKey]) cityStats[cKey] = { name: city, uf, count: 0 };
+              cityStats[cKey].count++;
+            }
+          } else if (geo.estado) {
+            exteriorCount++;
+            totalGeoVisitors++;
+          }
+        }
+      });
+    }
+
+    // B. Eventos 'geo' avulsos no período que porventura não estejam no visitorsMap
+    if (Array.isArray(visitas)) {
+      visitas.forEach(v => {
+        if (v && v.tipo === 'geo') {
+          const vid = v.visitor_id;
+          if (vid && processedVisitors.has(vid)) return;
+          if (vid) processedVisitors.add(vid);
+          const uf = normalizeUF(v.estado);
+          const city = (v.cidade || '').trim();
+          if (uf && stateStats[uf]) {
+            stateStats[uf].count++;
+            if (vid) stateStats[uf].visitors.add(vid);
+            totalGeoVisitors++;
+            if (city) {
+              stateStats[uf].cities[city] = (stateStats[uf].cities[city] || 0) + 1;
+              const cKey = `${city} - ${uf}`;
+              if (!cityStats[cKey]) cityStats[cKey] = { name: city, uf, count: 0 };
+              cityStats[cKey].count++;
+            }
+          } else if (v.estado) {
+            exteriorCount++;
+            totalGeoVisitors++;
+          }
+        }
+      });
+    }
+
+    // 3. Cálculo da escala térmica
+    const maxStateVisits = Math.max(...Object.values(stateStats).map(s => s.count), 0);
+
+    function getStateHeatColor(count) {
+      if (!count || maxStateVisits === 0) {
+        return {
+          fill: 'rgba(255, 255, 255, 0.035)',
+          stroke: 'rgba(255, 255, 255, 0.12)',
+          text: 'rgba(255, 255, 255, 0.25)'
+        };
+      }
+      const r = count / maxStateVisits;
+      if (r > 0.85) {
+        return { fill: '#ef4444', stroke: '#fca5a5', text: '#ffffff' }; // Vermelho quente
+      } else if (r > 0.60) {
+        return { fill: '#f97316', stroke: '#fdba74', text: '#ffffff' }; // Laranja
+      } else if (r > 0.35) {
+        return { fill: '#eab308', stroke: '#fde047', text: '#ffffff' }; // Amarelo / Dourado
+      } else if (r > 0.15) {
+        return { fill: '#059669', stroke: '#34d399', text: '#ffffff' }; // Verde esmeralda
+      } else {
+        return { fill: '#0284c7', stroke: '#38bdf8', text: '#ffffff' }; // Azul celeste
+      }
+    }
+
+    // 4. Colorir o Mapa SVG e configurar Tooltips
+    const stateGroups = document.querySelectorAll('.brazil-state');
+    const tooltip = document.getElementById('geo-tooltip');
+    const mapBox = document.querySelector('.geo-map-box');
+
+    stateGroups.forEach(g => {
+      const uf = g.dataset.uf;
+      const st = stateStats[uf];
+      const count = st ? st.count : 0;
+      const colors = getStateHeatColor(count);
+
+      // Colorir caminhos
+      const paths = g.querySelectorAll('path');
+      paths.forEach(p => {
+        p.style.fill = colors.fill;
+        p.style.stroke = colors.stroke;
+      });
+
+      // Colorir texto
+      const textEl = g.querySelector('text');
+      if (textEl) {
+        textEl.style.fill = colors.text;
+      }
+
+      // Estado selecionado
+      if (geoSelectedUF === uf) {
+        g.classList.add('is-selected');
+      } else {
+        g.classList.remove('is-selected');
+      }
+
+      // Eventos de Mouse (Tooltip)
+      g.onmouseenter = function() {
+        if (!tooltip || !st) return;
+        const pct = totalGeoVisitors > 0 ? ((count / totalGeoVisitors) * 100).toFixed(1) : 0;
+        let html = `<div style="font-weight:700;font-size:0.85rem;color:#fff;margin-bottom:3px;">${st.name} (${uf})</div>`;
+        if (count > 0) {
+          html += `<div style="color:var(--gold);font-weight:600;">👥 ${count} visitante${count > 1 ? 's' : ''} <span style="color:var(--dim);font-weight:400;">(${pct}%)</span></div>`;
+          const topCities = Object.entries(st.cities).sort((a,b) => b[1] - a[1]).slice(0, 3);
+          if (topCities.length > 0) {
+            html += `<div style="margin-top:6px;font-size:0.72rem;color:#ccc;border-top:1px solid rgba(255,255,255,0.12);padding-top:4px;">`;
+            html += `🏙️ ${topCities.map(([c, n]) => `${c} (${n})`).join(', ')}`;
+            html += `</div>`;
+          }
+        } else {
+          html += `<div style="color:var(--dim);font-size:0.72rem;">Nenhum visitante registrado no período</div>`;
+        }
+        tooltip.innerHTML = html;
+        tooltip.style.display = 'block';
+      };
+
+      g.onmousemove = function(e) {
+        if (!tooltip || !mapBox) return;
+        const boxRect = mapBox.getBoundingClientRect();
+        let left = e.clientX - boxRect.left + 14;
+        let top = e.clientY - boxRect.top + 14;
+        if (left + 180 > boxRect.width) left = left - 190;
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+      };
+
+      g.onmouseleave = function() {
+        if (tooltip) tooltip.style.display = 'none';
+      };
+
+      g.onclick = function() {
+        geoSelectedUF = (geoSelectedUF === uf) ? null : uf;
+        updateBrazilHeatmap(visitas, rawVisitas, visitorsMap);
+      };
+    });
+
+    // 5. Atualizar Métricas dos Chips no Topo
+    const activeStatesList = Object.values(stateStats).filter(s => s.count > 0).sort((a,b) => b.count - a.count);
+    const distinctCitiesCount = Object.keys(cityStats).length;
+    const topState = activeStatesList[0];
+
+    const statStatesEl = document.getElementById('geo-stat-states');
+    if (statStatesEl) statStatesEl.textContent = `${activeStatesList.length} / 27`;
+
+    const statCitiesEl = document.getElementById('geo-stat-cities');
+    if (statCitiesEl) statCitiesEl.textContent = `${distinctCitiesCount} ${distinctCitiesCount === 1 ? 'cidade' : 'cidades'}`;
+
+    const statTopEl = document.getElementById('geo-stat-top-state');
+    if (statTopEl) {
+      if (topState) {
+        const pct = totalGeoVisitors > 0 ? Math.round((topState.count / totalGeoVisitors) * 100) : 0;
+        statTopEl.textContent = `${topState.name} (${topState.uf}) - ${pct}%`;
+      } else {
+        statTopEl.textContent = '—';
+      }
+    }
+
+    const exteriorChip = document.getElementById('geo-stat-exterior-chip');
+    const exteriorVal = document.getElementById('geo-stat-exterior');
+    if (exteriorChip && exteriorVal) {
+      if (exteriorCount > 0) {
+        exteriorVal.textContent = exteriorCount;
+        exteriorChip.style.display = 'inline-flex';
+      } else {
+        exteriorChip.style.display = 'none';
+      }
+    }
+
+    // 6. Atualizar Painel de Listas / Rankings à Direita
+    const listContainer = document.getElementById('geo-list-container');
+    const filterBanner = document.getElementById('geo-active-filter-banner');
+    const filterName = document.getElementById('geo-filter-state-name');
+    const clearFilterBtn = document.getElementById('btn-geo-clear-filter');
+
+    if (!listContainer) return;
+
+    if (geoSelectedUF) {
+      const selSt = stateStats[geoSelectedUF];
+      if (filterBanner && filterName) {
+        filterBanner.style.display = 'block';
+        filterName.textContent = `${selSt.name} (${geoSelectedUF}) • ${selSt.count} visitante${selSt.count > 1 ? 's' : ''}`;
+      }
+      if (clearFilterBtn) clearFilterBtn.style.display = 'inline-block';
+
+      const stateCities = Object.entries(selSt.cities).sort((a,b) => b[1] - a[1]);
+      if (stateCities.length === 0) {
+        listContainer.innerHTML = `<div style="text-align:center;color:var(--dim);padding:20px;font-size:0.8rem;">Nenhuma cidade registrada em ${selSt.name}</div>`;
+      } else {
+        let html = '';
+        const maxC = stateCities[0][1];
+        stateCities.forEach(([cName, cCount], idx) => {
+          const barPct = maxC > 0 ? (cCount / maxC) * 100 : 0;
+          html += `
+            <div class="geo-list-item">
+              <div class="geo-item-header">
+                <span class="geo-item-name">
+                  <span style="font-size:0.7rem;color:var(--dim);min-width:18px;">#${idx + 1}</span>
+                  <span>🏙️ ${cName}</span>
+                </span>
+                <span class="geo-item-val"><strong>${cCount}</strong> acessos</span>
+              </div>
+              <div class="geo-bar-track">
+                <div class="geo-bar-fill" style="width:${barPct}%;background:var(--gold);"></div>
+              </div>
+            </div>
+          `;
+        });
+        listContainer.innerHTML = html;
+      }
+    } else {
+      if (filterBanner) filterBanner.style.display = 'none';
+      if (clearFilterBtn) clearFilterBtn.style.display = 'none';
+
+      if (geoActiveTab === 'estados') {
+        if (activeStatesList.length === 0) {
+          listContainer.innerHTML = '<div style="text-align:center;color:var(--dim);padding:24px;font-size:0.8rem;">Nenhum dado geográfico registrado no período</div>';
+        } else {
+          let html = '';
+          activeStatesList.forEach((s, idx) => {
+            const colors = getStateHeatColor(s.count);
+            const barPct = maxStateVisits > 0 ? (s.count / maxStateVisits) * 100 : 0;
+            const sharePct = totalGeoVisitors > 0 ? ((s.count / totalGeoVisitors) * 100).toFixed(1) : 0;
+            html += `
+              <div class="geo-list-item" data-uf="${s.uf}">
+                <div class="geo-item-header">
+                  <span class="geo-item-name">
+                    <span style="font-size:0.7rem;color:var(--dim);min-width:18px;">#${idx + 1}</span>
+                    <span class="geo-uf-badge" style="background:${colors.fill};color:${colors.text};border:1px solid ${colors.stroke}">${s.uf}</span>
+                    <span>${s.name}</span>
+                  </span>
+                  <span class="geo-item-val">
+                    <strong>${s.count}</strong> (${sharePct}%)
+                  </span>
+                </div>
+                <div class="geo-bar-track">
+                  <div class="geo-bar-fill" style="width:${barPct}%;background:${colors.fill};"></div>
+                </div>
+              </div>
+            `;
+          });
+          listContainer.innerHTML = html;
+
+          listContainer.querySelectorAll('.geo-list-item').forEach(item => {
+            item.onclick = function() {
+              const uf = item.dataset.uf;
+              geoSelectedUF = (geoSelectedUF === uf) ? null : uf;
+              updateBrazilHeatmap(visitas, rawVisitas, visitorsMap);
+            };
+          });
+        }
+      } else {
+        // Tab Top Cidades
+        const sortedCities = Object.values(cityStats).sort((a,b) => b.count - a.count).slice(0, 30);
+        if (sortedCities.length === 0) {
+          listContainer.innerHTML = '<div style="text-align:center;color:var(--dim);padding:24px;font-size:0.8rem;">Nenhuma cidade registrada no período</div>';
+        } else {
+          let html = '';
+          const maxC = sortedCities[0].count;
+          sortedCities.forEach((c, idx) => {
+            const barPct = maxC > 0 ? (c.count / maxC) * 100 : 0;
+            html += `
+              <div class="geo-list-item" data-uf="${c.uf}">
+                <div class="geo-item-header">
+                  <span class="geo-item-name">
+                    <span style="font-size:0.7rem;color:var(--dim);min-width:18px;">#${idx + 1}</span>
+                    <span>🏙️ ${c.name}</span>
+                    <span class="geo-uf-badge">${c.uf}</span>
+                  </span>
+                  <span class="geo-item-val"><strong>${c.count}</strong> acessos</span>
+                </div>
+                <div class="geo-bar-track">
+                  <div class="geo-bar-fill" style="width:${barPct}%;background:#38bdf8;"></div>
+                </div>
+              </div>
+            `;
+          });
+          listContainer.innerHTML = html;
+
+          listContainer.querySelectorAll('.geo-list-item').forEach(item => {
+            item.onclick = function() {
+              const uf = item.dataset.uf;
+              geoSelectedUF = (geoSelectedUF === uf) ? null : uf;
+              updateBrazilHeatmap(visitas, rawVisitas, visitorsMap);
+            };
+          });
+        }
+      }
+    }
+
+    // 7. Configuração dos botões das Abas (executado uma vez)
+    const btnTabEstados = document.getElementById('tab-btn-estados');
+    const btnTabCidades = document.getElementById('tab-btn-cidades');
+
+    if (btnTabEstados && !btnTabEstados._initialized) {
+      btnTabEstados._initialized = true;
+      btnTabEstados.onclick = function() {
+        geoActiveTab = 'estados';
+        geoSelectedUF = null;
+        btnTabEstados.classList.add('active');
+        if (btnTabCidades) btnTabCidades.classList.remove('active');
+        if (currentGeoData) updateBrazilHeatmap(currentGeoData.visitas, currentGeoData.raw, currentGeoData.vMap);
+      };
+    }
+
+    if (btnTabCidades && !btnTabCidades._initialized) {
+      btnTabCidades._initialized = true;
+      btnTabCidades.onclick = function() {
+        geoActiveTab = 'cidades';
+        geoSelectedUF = null;
+        btnTabCidades.classList.add('active');
+        if (btnTabEstados) btnTabEstados.classList.remove('active');
+        if (currentGeoData) updateBrazilHeatmap(currentGeoData.visitas, currentGeoData.raw, currentGeoData.vMap);
+      };
+    }
+
+    if (clearFilterBtn && !clearFilterBtn._initialized) {
+      clearFilterBtn._initialized = true;
+      clearFilterBtn.onclick = function() {
+        geoSelectedUF = null;
+        if (currentGeoData) updateBrazilHeatmap(currentGeoData.visitas, currentGeoData.raw, currentGeoData.vMap);
+      };
     }
   }
 
