@@ -1162,6 +1162,9 @@
     // NOVO: Atualizar Mapa de Calor do Brasil (Geolocalização)
     updateBrazilHeatmap(visitas, monitorRawVisitas, visitorsMap);
 
+    // NOVO: Atualizar Quadro de Simulação Meta Ads
+    updateMetaAdsMock(currentMonitorFilter);
+
     // NEW SECTION 2: Customer Journey — últimos 100
     const visitorsSortedByTime = visitorIds
       .filter(vid => vid !== 'Sem ID')
@@ -1696,6 +1699,123 @@
       clearFilterBtn.onclick = function() {
         geoSelectedUF = null;
         if (currentGeoData) updateBrazilHeatmap(currentGeoData.visitas, currentGeoData.raw, currentGeoData.vMap);
+      };
+    }
+  }
+
+  // ============================================================
+  // META ADS DASHBOARD (SIMULAÇÃO / VALIDAÇÃO DE LAYOUT)
+  // ============================================================
+  function updateMetaAdsMock(filterDays) {
+    let spend, leads, clicks, impressions, vviews, siteVisits, plays;
+    let campaigns = [];
+
+    if (filterDays === 1) { // Hoje
+      spend = 85.00;
+      leads = 6;
+      clicks = 128;
+      impressions = 4250;
+      vviews = 1980;
+      siteVisits = 104;
+      plays = 38;
+      campaigns = [
+        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 48.00, clicks: 74, cpc: 0.65, leads: 4, cpl: 12.00 },
+        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 25.00, clicks: 38, cpc: 0.66, leads: 2, cpl: 12.50 },
+        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 12.00, clicks: 16, cpc: 0.75, leads: 0, cpl: 0 }
+      ];
+    } else if (filterDays === 7) { // 7 dias
+      spend = 560.00;
+      leads = 41;
+      clicks = 840;
+      impressions = 26800;
+      vviews = 12400;
+      siteVisits = 670;
+      plays = 215;
+      campaigns = [
+        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 310.00, clicks: 485, cpc: 0.64, leads: 24, cpl: 12.91 },
+        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 170.00, clicks: 255, cpc: 0.67, leads: 12, cpl: 14.16 },
+        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 80.00, clicks: 100, cpc: 0.80, leads: 5, cpl: 16.00 }
+      ];
+    } else { // 30 dias (padrão)
+      spend = 2450.00;
+      leads = 178;
+      clicks = 3650;
+      impressions = 118000;
+      vviews = 54200;
+      siteVisits = 2780;
+      plays = 840;
+      campaigns = [
+        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 1350.00, clicks: 2080, cpc: 0.65, leads: 102, cpl: 13.23 },
+        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 750.00, clicks: 1120, cpc: 0.67, leads: 53, cpl: 14.15 },
+        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 350.00, clicks: 450, cpc: 0.78, leads: 23, cpl: 15.21 }
+      ];
+    }
+
+    const cpl = leads > 0 ? (spend / leads) : 0;
+    const cpc = clicks > 0 ? (spend / clicks) : 0;
+    const cpm = impressions > 0 ? (spend / impressions * 1000) : 0;
+    const ctr = impressions > 0 ? (clicks / impressions * 100) : 0;
+
+    // Atualizar elementos
+    const elSpend = document.getElementById('meta-kpi-spend');
+    const elCpl = document.getElementById('meta-kpi-cpl');
+    const elLeads = document.getElementById('meta-kpi-leads');
+    const elClicks = document.getElementById('meta-kpi-clicks');
+    const elCpc = document.getElementById('meta-kpi-cpc');
+    const elImp = document.getElementById('meta-kpi-impressions');
+    const elCpm = document.getElementById('meta-kpi-cpm');
+    const elCtr = document.getElementById('meta-kpi-ctr');
+    const elVviews = document.getElementById('meta-kpi-vviews');
+
+    if (elSpend) elSpend.textContent = `R$ ${spend.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    if (elCpl) elCpl.textContent = `R$ ${cpl.toFixed(2)}`;
+    if (elLeads) elLeads.textContent = `${leads} cadastros gerados`;
+    if (elClicks) elClicks.textContent = clicks.toLocaleString('pt-BR');
+    if (elCpc) elCpc.textContent = `CPC Médio: R$ ${cpc.toFixed(2)}`;
+    if (elImp) elImp.textContent = impressions.toLocaleString('pt-BR');
+    if (elCpm) elCpm.textContent = `CPM: R$ ${cpm.toFixed(2)}`;
+    if (elCtr) elCtr.textContent = `${ctr.toFixed(2)}%`;
+    if (elVviews) elVviews.textContent = vviews.toLocaleString('pt-BR');
+
+    // Funil
+    const fImp = document.getElementById('meta-funnel-imp');
+    const fClicks = document.getElementById('meta-funnel-clicks');
+    const fSite = document.getElementById('meta-funnel-site');
+    const fPlays = document.getElementById('meta-funnel-plays');
+    const fLeads = document.getElementById('meta-funnel-leads');
+
+    if (fImp) fImp.textContent = impressions >= 1000 ? `${(impressions / 1000).toFixed(1)}k` : impressions;
+    if (fClicks) fClicks.textContent = clicks.toLocaleString('pt-BR');
+    if (fSite) fSite.textContent = siteVisits.toLocaleString('pt-BR');
+    if (fPlays) fPlays.textContent = plays.toLocaleString('pt-BR');
+    if (fLeads) fLeads.textContent = leads.toLocaleString('pt-BR');
+
+    // Tabela
+    const tbody = document.querySelector('#table-meta-campaigns tbody');
+    if (tbody) {
+      tbody.innerHTML = '';
+      campaigns.forEach(c => {
+        const cplStr = c.leads > 0 ? `R$ ${c.cpl.toFixed(2)}` : '—';
+        tbody.innerHTML += `
+          <tr>
+            <td style="font-weight:600;color:#fff;">${c.name}</td>
+            <td><span class="meta-campaign-tag meta-campaign-tag--active">🟢 ${c.status}</span></td>
+            <td>R$ ${c.spend.toFixed(2)}</td>
+            <td>${c.clicks}</td>
+            <td>R$ ${c.cpc.toFixed(2)}</td>
+            <td><strong style="color:#22c55e;">${c.leads}</strong></td>
+            <td><strong>${cplStr}</strong></td>
+          </tr>
+        `;
+      });
+    }
+
+    // Botão Conectar
+    const btnConfig = document.getElementById('btn-meta-config');
+    if (btnConfig && !btnConfig._initialized) {
+      btnConfig._initialized = true;
+      btnConfig.onclick = function() {
+        alert('⚙️ Conexão com a Meta Marketing API\n\nEm breve: Você poderá inserir aqui o seu ID de Conta de Anúncios (act_XXXXXXXXX) e Token Permanente de Usuário do Sistema para carregar dados ao vivo.');
       };
     }
   }

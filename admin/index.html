@@ -670,9 +670,114 @@
             </div>
           </div>
 
-          <!-- Coluna Direita: Últimos 100 Visitantes (com scroll interno de 720px) -->
+          <!-- Coluna Direita: Meta Ads (Topo) + Últimos 100 Visitantes (Baixo, alinhado com o Mapa) -->
           <div class="monitor-col-journey">
-            <div class="chart-card">
+            <!-- 1. NOVO: Card Meta Ads & Campanhas (Dados de Demonstração / Simulados) -->
+            <div class="chart-card chart-card--meta-ads" id="card-meta-ads">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:1.2rem;">📣</span>
+                  <h3 style="padding:0;border:none;margin:0;font-size:1.15rem;display:inline-block;">Meta Ads (Tráfego Pago)</h3>
+                  <span class="meta-header-badge">🧪 Simulação</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:0.72rem;color:var(--dim);font-family:monospace;">act_39104829</span>
+                  <button class="btn btn--sm" id="btn-meta-config" type="button" style="padding:3px 8px;font-size:0.72rem;border-color:rgba(24,119,242,0.4);color:#60a5fa;">⚙️ Conectar API</button>
+                </div>
+              </div>
+
+              <!-- KPIs Grid -->
+              <div class="meta-kpi-grid">
+                <div class="meta-kpi-box">
+                  <div class="meta-kpi-label"><span>💸 Investimento</span><span style="font-size:0.65rem;color:#3b82f6;">Spend</span></div>
+                  <div class="meta-kpi-val" id="meta-kpi-spend">R$ 2.450,00</div>
+                  <div class="meta-kpi-sub" id="meta-kpi-sub-spend">Período selecionado</div>
+                </div>
+
+                <div class="meta-kpi-box" style="border-left: 2px solid #22c55e;">
+                  <div class="meta-kpi-label"><span>🎯 Custo / Lead</span><span style="font-size:0.65rem;color:#22c55e;">CPL</span></div>
+                  <div class="meta-kpi-val" style="color:#22c55e;" id="meta-kpi-cpl">R$ 13,76</div>
+                  <div class="meta-kpi-sub" id="meta-kpi-leads">178 cadastros gerados</div>
+                </div>
+
+                <div class="meta-kpi-box">
+                  <div class="meta-kpi-label"><span>🖱️ Cliques no Link</span><span style="font-size:0.65rem;color:#f5b95a;">Clicks</span></div>
+                  <div class="meta-kpi-val" style="color:var(--gold);" id="meta-kpi-clicks">3.650</div>
+                  <div class="meta-kpi-sub" id="meta-kpi-cpc">CPC Médio: R$ 0,67</div>
+                </div>
+
+                <div class="meta-kpi-box">
+                  <div class="meta-kpi-label"><span>👁️ Impressões</span><span>Alcance</span></div>
+                  <div class="meta-kpi-val" id="meta-kpi-impressions">118.000</div>
+                  <div class="meta-kpi-sub" id="meta-kpi-cpm">CPM: R$ 20,76</div>
+                </div>
+
+                <div class="meta-kpi-box">
+                  <div class="meta-kpi-label"><span>📈 Taxa de Clique</span><span>CTR</span></div>
+                  <div class="meta-kpi-val" id="meta-kpi-ctr">3,09%</div>
+                  <div class="meta-kpi-sub" style="color:#22c55e;">Acima da média</div>
+                </div>
+
+                <div class="meta-kpi-box">
+                  <div class="meta-kpi-label"><span>🎬 Vídeo Views (3s)</span><span>Play Rate</span></div>
+                  <div class="meta-kpi-val" id="meta-kpi-vviews">54.200</div>
+                  <div class="meta-kpi-sub">Retenção: 45,9%</div>
+                </div>
+              </div>
+
+              <!-- Funil Integrado Meta ➔ RAGUI -->
+              <div class="meta-funnel-box">
+                <div class="meta-funnel-step">
+                  <strong id="meta-funnel-imp">118k</strong>
+                  <span>Impressões</span>
+                </div>
+                <span class="meta-funnel-arrow">➔</span>
+                <div class="meta-funnel-step">
+                  <strong style="color:var(--gold);" id="meta-funnel-clicks">3.650</strong>
+                  <span>Cliques (3.1%)</span>
+                </div>
+                <span class="meta-funnel-arrow">➔</span>
+                <div class="meta-funnel-step">
+                  <strong style="color:#38bdf8;" id="meta-funnel-site">2.780</strong>
+                  <span>Visitas no Site</span>
+                </div>
+                <span class="meta-funnel-arrow">➔</span>
+                <div class="meta-funnel-step">
+                  <strong style="color:#c084fc;" id="meta-funnel-plays">840</strong>
+                  <span>Plays Vídeo (30%)</span>
+                </div>
+                <span class="meta-funnel-arrow">➔</span>
+                <div class="meta-funnel-step">
+                  <strong style="color:#22c55e;" id="meta-funnel-leads">178</strong>
+                  <span>Leads (6.4%)</span>
+                </div>
+              </div>
+
+              <!-- Tabela de Campanhas -->
+              <div class="meta-table-title">
+                <span>📋 Campanhas Ativas na Meta</span>
+                <span style="font-size:0.7rem;color:var(--dim);">Dados simulados</span>
+              </div>
+              <div class="table-responsive" style="max-height: 180px; overflow-y: auto;">
+                <table class="data-table" id="table-meta-campaigns" style="font-size:0.78rem;">
+                  <thead>
+                    <tr>
+                      <th>Campanha</th>
+                      <th>Status</th>
+                      <th>Gasto</th>
+                      <th>Cliques</th>
+                      <th>CPC</th>
+                      <th>Leads</th>
+                      <th>CPL</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- 2. Últimos 100 Visitantes (Agora alinhado com o Mapa de Origem dos Visitantes) -->
+            <div class="chart-card" id="card-recent-visitors">
               <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);">
                 <h3 style="padding:0;border:none;">🗺️ Últimos 100 Visitantes</h3>
                 <span style="font-size:0.75rem;color:var(--gold);font-weight:500;">Feed em tempo real</span>
