@@ -1719,9 +1719,11 @@
       siteVisits = 104;
       plays = 38;
       campaigns = [
-        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 48.00, clicks: 74, cpc: 0.65, leads: 4, cpl: 12.00 },
-        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 25.00, clicks: 38, cpc: 0.66, leads: 2, cpl: 12.50 },
-        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 12.00, clicks: 16, cpc: 0.75, leads: 0, cpl: 0 }
+        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 38.00, clicks: 58, cpc: 0.65, leads: 3, cpl: 12.66 },
+        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 20.00, clicks: 30, cpc: 0.66, leads: 1, cpl: 20.00 },
+        { name: '📱 [Stories] Depoimentos & Alunos', status: 'Ativa', spend: 14.00, clicks: 22, cpc: 0.63, leads: 1, cpl: 14.00 },
+        { name: '⚡ [Lookalike] Semelhantes a Cadastrados', status: 'Ativa', spend: 8.00, clicks: 12, cpc: 0.66, leads: 1, cpl: 8.00 },
+        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 5.00, clicks: 6, cpc: 0.83, leads: 0, cpl: 0 }
       ];
     } else if (filterDays === 7) { // 7 dias
       spend = 560.00;
@@ -1732,9 +1734,11 @@
       siteVisits = 670;
       plays = 215;
       campaigns = [
-        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 310.00, clicks: 485, cpc: 0.64, leads: 24, cpl: 12.91 },
-        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 170.00, clicks: 255, cpc: 0.67, leads: 12, cpl: 14.16 },
-        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 80.00, clicks: 100, cpc: 0.80, leads: 5, cpl: 16.00 }
+        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 250.00, clicks: 390, cpc: 0.64, leads: 19, cpl: 13.15 },
+        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 130.00, clicks: 195, cpc: 0.66, leads: 9, cpl: 14.44 },
+        { name: '📱 [Stories] Depoimentos & Alunos', status: 'Ativa', spend: 90.00, clicks: 138, cpc: 0.65, leads: 7, cpl: 12.85 },
+        { name: '⚡ [Lookalike] Semelhantes a Cadastrados', status: 'Ativa', spend: 50.00, clicks: 75, cpc: 0.66, leads: 4, cpl: 12.50 },
+        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 40.00, clicks: 42, cpc: 0.95, leads: 2, cpl: 20.00 }
       ];
     } else { // 30 dias (padrão)
       spend = 2450.00;
@@ -1745,9 +1749,11 @@
       siteVisits = 2780;
       plays = 840;
       campaigns = [
-        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 1350.00, clicks: 2080, cpc: 0.65, leads: 102, cpl: 13.23 },
-        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 750.00, clicks: 1120, cpc: 0.67, leads: 53, cpl: 14.15 },
-        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 350.00, clicks: 450, cpc: 0.78, leads: 23, cpl: 15.21 }
+        { name: '🎬 [Vídeo] Caindo na Real - Reels 01', status: 'Ativa', spend: 1100.00, clicks: 1690, cpc: 0.65, leads: 83, cpl: 13.25 },
+        { name: '🍿 [Tráfego] Topo de Funil - Jovens 16-24', status: 'Ativa', spend: 580.00, clicks: 865, cpc: 0.67, leads: 41, cpl: 14.14 },
+        { name: '📱 [Stories] Depoimentos & Alunos', status: 'Ativa', spend: 390.00, clicks: 590, cpc: 0.66, leads: 28, cpl: 13.92 },
+        { name: '⚡ [Lookalike] Semelhantes a Cadastrados', status: 'Ativa', spend: 220.00, clicks: 335, cpc: 0.65, leads: 17, cpl: 12.94 },
+        { name: '🎯 [Remarketing] Abriu sem Cadastro', status: 'Ativa', spend: 160.00, clicks: 170, cpc: 0.94, leads: 9, cpl: 17.77 }
       ];
     }
 
@@ -1818,7 +1824,32 @@
         alert('⚙️ Conexão com a Meta Marketing API\n\nEm breve: Você poderá inserir aqui o seu ID de Conta de Anúncios (act_XXXXXXXXX) e Token Permanente de Usuário do Sistema para carregar dados ao vivo.');
       };
     }
+
+    // Alinhar altura da coluna à direita com o final de Visitantes Únicos
+    alignMonitorColumns();
+    setTimeout(alignMonitorColumns, 150);
   }
+
+  // Alinhamento dinâmico da coluna Meta Ads com o bloco de gráficos da esquerda
+  function alignMonitorColumns() {
+    if (window.innerWidth <= 1200) {
+      const metaCard = document.getElementById('card-meta-ads');
+      if (metaCard) metaCard.style.height = 'auto';
+      return;
+    }
+    const grids = document.querySelectorAll('.monitor-col-charts > .charts-grid');
+    if (grids.length >= 2) {
+      const rect1 = grids[0].getBoundingClientRect();
+      const rect2 = grids[1].getBoundingClientRect();
+      const totalHeight = rect2.bottom - rect1.top;
+      const metaCard = document.getElementById('card-meta-ads');
+      if (metaCard && totalHeight > 100) {
+        metaCard.style.height = `${Math.round(totalHeight)}px`;
+      }
+    }
+  }
+
+  window.addEventListener('resize', alignMonitorColumns);
 
   var expandido = null; // id do filme expandido
   var filmesCache = [];
