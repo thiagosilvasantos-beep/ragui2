@@ -134,7 +134,7 @@
   let monitorRawVisitas = [];
   let currentMonitorFilter = 30; // default 30 days
   let chartTopMovies = null;
-  let chartHourlyClicks = null;
+  let chartSessionDuration = null;
   let chartSources = null;
   let chartEventsTimeline = null;
 
@@ -818,30 +818,108 @@
       }
     });
 
-    if (chartHourlyClicks) chartHourlyClicks.destroy();
-    chartHourlyClicks = new Chart(document.getElementById('chart-hourly-clicks'), {
-      type: 'bar',
-      data: {
-        labels: Array.from({length: 24}, (_, i) => i + 'h'),
-        datasets: [{
-          label: 'Cliques',
-          data: clicksByHour,
-          backgroundColor: '#3b82f6',
-          borderRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
-          x: { grid: { display: false } }
-        }
+    // 2. Gráfico: Tempo de Permanência na Página (por hora no filtro Hoje, por dia nos outros)
+    function formatDurationTime(sec) {
+      if (sec === null || sec === undefined) return '-';
+      if (sec < 60) return `${sec}s`;
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return s > 0 ? `${m}m ${s}s` : `${m}m`;
+    }
+
+    const durationLen = timeLabels.length;
+    const durationTotals = new Array(durationLen).fill(0);
+    const durationCounts = new Array(durationLen).fill(0);
+
+    beaconSaidas.forEach(s => {
+      let idx = -1;
+      if (isToday) {
+        const itemKey = getItemDateKey(s);
+        if (itemKey && itemKey !== todayKey) return;
+        if (!s.hora) return;
+        const hh = s.hora.split(':')[0].padStart(2, '0');
+        const hNum = parseInt(hh, 10);
+        if (isNaN(hNum) || hNum < 0 || hNum > 23 || hNum > currentHour) return;
+        idx = timeKeys.indexOf(hh);
+      } else {
+        const itemKey = getItemDateKey(s);
+        if (itemKey) idx = timeKeys.indexOf(itemKey);
+      }
+
+      if (idx !== -1) {
+        const sec = parseInt(s.tempo_segundos, 10) || 0;
+        durationTotals[idx] += sec;
+        durationCounts[idx]++;
       }
     });
+
+    const durationAvgSeconds = durationTotals.map((tot, i) => {
+      if (isToday && i > currentHour) return null;
+      return durationCounts[i] > 0 ? Math.round(tot / durationCounts[i]) : 0;
+    });
+
+    const canvasDuration = document.getElementById('chart-session-duration') || document.getElementById('chart-hourly-clicks');
+    if (canvasDuration) {
+      if (chartSessionDuration) chartSessionDuration.destroy();
+      chartSessionDuration = new Chart(canvasDuration, {
+        type: 'bar',
+        data: {
+          labels: timeLabels,
+          datasets: [{
+            label: 'Tempo Médio na Página',
+            data: durationAvgSeconds,
+            backgroundColor: 'rgba(56, 189, 248, 0.75)',
+            borderColor: '#38bdf8',
+            borderWidth: 1.5,
+            borderRadius: 4,
+            hoverBackgroundColor: '#38bdf8'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: function(items) {
+                  return isToday ? `Horário: ${items[0].label}` : `Data: ${items[0].label}`;
+                },
+                label: function(context) {
+                  const idx = context.dataIndex;
+                  const sec = context.raw;
+                  if (sec === null || sec === undefined) return '';
+                  const cnt = durationCounts[idx] || 0;
+                  const totSec = durationTotals[idx] || 0;
+                  return [
+                    `⏱️ Tempo Médio: ${formatDurationTime(sec)}`,
+                    `🚪 Saídas Registradas: ${cnt}`,
+                    `⌛ Tempo Total Acumulado: ${formatDurationTime(totSec)}`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: {
+                color: '#999',
+                font: { size: 10 },
+                callback: function(value) {
+                  return formatDurationTime(value);
+                }
+              }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#999', font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
 
     // 3. Gráfico de Pizza / Rosca: Fontes de Acesso
     const sourceIcons = {
