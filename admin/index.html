@@ -678,10 +678,10 @@
                 <div style="display:flex;align-items:center;gap:8px;">
                   <span style="font-size:1.2rem;">📣</span>
                   <h3 style="padding:0;border:none;margin:0;font-size:1.15rem;display:inline-block;">Meta Ads (Tráfego Pago)</h3>
-                  <span class="meta-header-badge">🧪 Simulação</span>
+                  <span class="meta-header-badge" id="meta-header-badge">🧪 Simulação</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                  <span style="font-size:0.72rem;color:var(--dim);font-family:monospace;">act_39104829</span>
+                  <span style="font-size:0.72rem;color:var(--dim);font-family:monospace;" id="meta-header-act">act_39104829</span>
                   <button class="btn btn--sm" id="btn-meta-config" type="button" style="padding:3px 8px;font-size:0.72rem;border-color:rgba(24,119,242,0.4);color:#60a5fa;">⚙️ Conectar API</button>
                 </div>
               </div>
@@ -756,7 +756,7 @@
               <!-- Tabela de Campanhas -->
               <div class="meta-table-title">
                 <span>📋 Campanhas Ativas na Meta</span>
-                <span style="font-size:0.7rem;color:var(--dim);">Dados simulados</span>
+                <span style="font-size:0.7rem;color:var(--dim);" id="meta-table-subtitle">Dados simulados</span>
               </div>
               <div class="table-responsive meta-table-wrap">
                 <table class="data-table" id="table-meta-campaigns" style="font-size:0.78rem;">
@@ -788,6 +788,67 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- Modal Configuração Meta Ads Marketing API -->
+  <div class="meta-modal-overlay" id="modal-meta-config" style="display:none;" aria-hidden="true">
+    <div class="meta-modal-card" role="dialog" aria-modal="true" aria-labelledby="meta-modal-title">
+      <div class="meta-modal-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.4rem;">⚙️</span>
+          <div>
+            <h3 id="meta-modal-title" style="margin:0;font-size:1.15rem;color:#fff;font-family:var(--display);letter-spacing:1px;">CONEXÃO META MARKETING API</h3>
+            <p style="margin:0;font-size:0.75rem;color:var(--dim);">Conecte sua conta de anúncios para carregar métricas ao vivo</p>
+          </div>
+        </div>
+        <button class="btn-x" id="btn-close-meta-modal" type="button" title="Fechar">&times;</button>
+      </div>
+
+      <div class="meta-modal-body">
+        <div class="meta-guide-box">
+          <div style="font-weight:600;color:var(--gold);margin-bottom:6px;display:flex;align-items:center;gap:6px;font-size:0.8rem;">
+            <span>ℹ️</span> Como obter suas credenciais na Meta:
+          </div>
+          <ol style="margin-left:18px;font-size:0.75rem;color:var(--dim);line-height:1.5;">
+            <li><strong>ID da Conta de Anúncios:</strong> Localize no Gerenciador de Anúncios (ex: <code>act_1234567890</code> ou apenas os dígitos).</li>
+            <li><strong>Token de Acesso:</strong> Gerado no <em>Meta for Developers</em> (via Usuário do Sistema ou Graph API Explorer) com permissões <code>ads_read</code> e <code>read_insights</code>.</li>
+            <li><strong>Segurança:</strong> As credenciais são armazenadas no seu navegador de administrador e validadas via CORS direto na Graph API.</li>
+          </ol>
+        </div>
+
+        <form id="form-meta-config" onsubmit="return false;" style="margin-top:16px;">
+          <div class="campo">
+            <label for="meta-input-act">ID da Conta de Anúncios (Ad Account ID)</label>
+            <input type="text" id="meta-input-act" placeholder="Ex: act_123456789012345 ou 123456789012345" autocomplete="off" spellcheck="false" required>
+            <small style="color:var(--muted);font-size:0.7rem;margin-top:3px;display:block;">O prefixo 'act_' será adicionado automaticamente se você colar apenas os números.</small>
+          </div>
+
+          <div class="campo">
+            <label for="meta-input-token">Token de Acesso da Meta (Access Token)</label>
+            <div style="position:relative;">
+              <input type="password" id="meta-input-token" placeholder="Cole aqui seu token: EAA..." autocomplete="off" spellcheck="false" required style="padding-right:40px;">
+              <button type="button" id="btn-toggle-meta-token" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);cursor:pointer;font-size:0.9rem;" title="Mostrar/ocultar token">👁️</button>
+            </div>
+            <small style="color:var(--muted);font-size:0.7rem;margin-top:3px;display:block;">Dica: Utilize um Token de Usuário do Sistema (sem expiração) para manter a conexão contínua.</small>
+          </div>
+
+          <div id="meta-test-status" style="display:none;padding:10px 14px;border-radius:6px;font-size:0.8rem;margin-bottom:14px;line-height:1.4;"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:20px;flex-wrap:wrap;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn--gold" id="btn-save-meta-config" type="button">
+                <span id="meta-btn-spinner" style="display:none;">⏳</span>
+                <span id="meta-btn-label">Testar e Salvar Conexão</span>
+              </button>
+              <button class="btn" id="btn-cancel-meta-modal" type="button">Cancelar</button>
+            </div>
+            <button class="btn btn--danger btn--sm" id="btn-meta-disconnect" type="button" style="display:none;">
+              🗑️ Desconectar / Usar Simulação
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
