@@ -202,27 +202,77 @@
 
   function getTimestampFromData(item) {
     if (item.timestamp) {
-      return item.timestamp.toMillis ? item.timestamp.toMillis() : new Date(item.timestamp).getTime();
+      if (typeof item.timestamp.toMillis === 'function') return item.timestamp.toMillis();
+      if (item.timestamp instanceof Date) return item.timestamp.getTime();
+      const num = Number(item.timestamp);
+      if (!isNaN(num) && num > 1000000000000) return num;
+      const parsed = new Date(item.timestamp).getTime();
+      if (!isNaN(parsed) && parsed > 0) return parsed;
     }
     if (item.data) {
       // Fallback format DD/MM/YYYY
       const parts = item.data.split('/');
       if (parts.length === 3) {
         const h = item.hora ? item.hora.split(':') : [0,0,0];
-        const d = new Date(parts[2], parts[1] - 1, parts[0], h[0]||0, h[1]||0, h[2]||0);
+        const d = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10), parseInt(h[0]||0, 10), parseInt(h[1]||0, 10), parseInt(h[2]||0, 10));
         return d.getTime();
       }
     }
     return 0;
   }
 
-  function buildMonitorDashboard() {
-    const now = Date.now();
-    const cutoff = now - (currentMonitorFilter * 24 * 60 * 60 * 1000);
+  function getItemDateKey(item) {
+    if (item.data) {
+      const parts = item.data.trim().split('/');
+      if (parts.length === 3) {
+        const d = parts[0].padStart(2, '0');
+        const m = parts[1].padStart(2, '0');
+        const y = parts[2];
+        return `${d}/${m}/${y}`;
+      }
+    }
+    const ts = getTimestampFromData(item);
+    if (ts > 0) {
+      const d = new Date(ts);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+    return '';
+  }
 
-    const clicks = monitorRawClicks.filter(c => getTimestampFromData(c) >= cutoff);
-    const leads = monitorRawLeads.filter(l => getTimestampFromData(l) >= cutoff);
-    const pageviews = monitorRawPageviews.filter(p => getTimestampFromData(p) >= cutoff);
+  function buildMonitorDashboard() {
+    const nowObj = new Date();
+    const todayMidnight = new Date(nowObj.getFullYear(), nowObj.getMonth(), nowObj.getDate(), 0, 0, 0, 0);
+    const todayKey = `${String(nowObj.getDate()).padStart(2, '0')}/${String(nowObj.getMonth() + 1).padStart(2, '0')}/${nowObj.getFullYear()}`;
+    const currentHour = nowObj.getHours();
+
+    let cutoff = 0;
+    if (currentMonitorFilter === 1) {
+      cutoff = todayMidnight.getTime();
+    } else {
+      const startD = new Date(nowObj.getFullYear(), nowObj.getMonth(), nowObj.getDate() - (currentMonitorFilter - 1), 0, 0, 0, 0);
+      cutoff = startD.getTime();
+    }
+
+    function isItemInPeriod(item) {
+      if (currentMonitorFilter === 1) {
+        const k = getItemDateKey(item);
+        if (k) return k === todayKey;
+        const ts = getTimestampFromData(item);
+        return ts >= cutoff;
+      }
+      const k = getItemDateKey(item);
+      if (k === todayKey) return true;
+      const ts = getTimestampFromData(item);
+      return ts >= cutoff;
+    }
+
+    const clicks = monitorRawClicks.filter(c => isItemInPeriod(c));
+    const leads = monitorRawLeads.filter(l => isItemInPeriod(l));
+    const pageviews = monitorRawPageviews.filter(p => isItemInPeriod(p));
+    const visitas = monitorRawVisitas.filter(v => isItemInPeriod(v));
 
     let totalClicks = clicks.length;
     let filmesAbertos = 0;
@@ -249,6 +299,7 @@
       if (c.hora) {
         const hour = parseInt(c.hora.split(':')[0], 10);
         if (!isNaN(hour) && hour >= 0 && hour <= 23) {
+          if (currentMonitorFilter === 1 && hour > currentHour) return;
           clicksByHour[hour]++;
         }
       }
@@ -258,6 +309,7 @@
       if (l.hora) {
         const hour = parseInt(l.hora.split(':')[0], 10);
         if (!isNaN(hour) && hour >= 0 && hour <= 23) {
+          if (currentMonitorFilter === 1 && hour > currentHour) return;
           leadsByHour[hour]++;
         }
       }
@@ -274,19 +326,6 @@
     if (elLeads) elLeads.textContent = totalLeads;
 
     // --- Beacon Visitas Analytics ---
-    const visitas = monitorRawVisitas.filter(v => {
-      if (!v.data) return true;
-      try {
-        const parts = v.data.split('/');
-        if (parts.length === 3) {
-          const h = v.hora ? v.hora.split(':') : [0,0,0];
-          const d = new Date(parts[2], parts[1]-1, parts[0], h[0]||0, h[1]||0, h[2]||0);
-          return d.getTime() >= cutoff;
-        }
-      } catch(e) {}
-      return true;
-    });
-
     const beaconPageviews = visitas.filter(v => v.tipo === 'pageview');
     const beaconSaidas = visitas.filter(v => v.tipo === 'saida');
     
@@ -389,27 +428,30 @@
     } else {
       const numDays = currentMonitorFilter;
       for (let i = numDays - 1; i >= 0; i--) {
-        const d = new Date(now - i * 24 * 60 * 60 * 1000);
-        const dayStr = d.toLocaleDateString('pt-BR');
-        timeLabels.push(dayStr.slice(0, 5));
-        timeKeys.push(dayStr);
+        const d = new Date(nowObj.getFullYear(), nowObj.getMonth(), nowObj.getDate() - i, 0, 0, 0, 0);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        timeKeys.push(`${day}/${month}/${year}`);
+        timeLabels.push(`${day}/${month}`);
       }
     }
 
     function getTimeIndex(item) {
       if (isToday) {
+        const itemKey = getItemDateKey(item);
+        if (itemKey && itemKey !== todayKey) return -1;
         if (!item.hora) return -1;
         const hh = item.hora.split(':')[0].padStart(2, '0');
+        const hourNum = parseInt(hh, 10);
+        if (isNaN(hourNum) || hourNum < 0 || hourNum > 23) return -1;
+        if (hourNum > currentHour) return -1; // Não mapear para horas que ainda não aconteceram
         return timeKeys.indexOf(hh);
       } else {
-        if (item.data) {
-          const idx = timeKeys.indexOf(item.data);
+        const itemKey = getItemDateKey(item);
+        if (itemKey) {
+          const idx = timeKeys.indexOf(itemKey);
           if (idx !== -1) return idx;
-        }
-        const ts = getTimestampFromData(item);
-        if (ts > 0) {
-          const dayStr = new Date(ts).toLocaleDateString('pt-BR');
-          return timeKeys.indexOf(dayStr);
         }
         return -1;
       }
@@ -461,6 +503,20 @@
       const idx = getTimeIndex(l);
       if (idx !== -1) seriesLeads[idx]++;
     });
+
+    // Se for "Hoje", marcar horários futuros como null para a linha parar exatamente na hora atual
+    if (isToday) {
+      for (let h = currentHour + 1; h < 24; h++) {
+        seriesVisitas[h] = null;
+        seriesAbriuFilme[h] = null;
+        seriesPlays[h] = null;
+        seriesConcluiu[h] = null;
+        seriesAssistirMais[h] = null;
+        seriesLeads[h] = null;
+        seriesScroll[h] = null;
+        seriesSaidas[h] = null;
+      }
+    }
 
     const eventsConfig = [
       { 
@@ -673,7 +729,8 @@
         pointRadius: isToday ? 3.5 : 2.5,
         pointHoverRadius: 6,
         tension: 0.35,
-        fill: false
+        fill: false,
+        spanGaps: false
       }));
 
       chartEventsTimeline = new Chart(canvasEvents, {
@@ -705,10 +762,10 @@
                 const isVisible = ci.isDatasetVisible(index);
                 ci.setDatasetVisibility(index, !isVisible);
                 ci.update();
-                const btn = document.querySelector(`.event-toggle-btn[data-index="${index}"]`);
-                if (btn) {
-                  btn.classList.toggle('active', !isVisible);
-                  btn.classList.toggle('inactive', isVisible);
+                const col = document.querySelector(`.event-filter-col[data-index="${index}"]`);
+                if (col) {
+                  col.classList.toggle('active', !isVisible);
+                  col.classList.toggle('inactive', isVisible);
                 }
               }
             },
