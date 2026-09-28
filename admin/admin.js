@@ -573,6 +573,7 @@
     const seriesAbriuFilme = new Array(timelineLen).fill(0);
     const seriesPlays = new Array(timelineLen).fill(0);
     const seriesConcluiu = new Array(timelineLen).fill(0);
+    const seriesAbandonoVideo = new Array(timelineLen).fill(0);
     const seriesAssistirMais = new Array(timelineLen).fill(0);
     const seriesLeads = new Array(timelineLen).fill(0);
     const seriesScroll = new Array(timelineLen).fill(0);
@@ -602,6 +603,8 @@
         seriesPlays[idx]++;
       } else if (c.acao === 'video_concluido') {
         seriesConcluiu[idx]++;
+      } else if (c.acao === 'video_abandonou') {
+        seriesAbandonoVideo[idx]++;
       } else if (c.acao === 'assistir_mais_filmes') {
         seriesAssistirMais[idx]++;
       } else if (c.acao && c.acao.startsWith('scroll_')) {
@@ -622,6 +625,7 @@
         seriesAbriuFilme[h] = null;
         seriesPlays[h] = null;
         seriesConcluiu[h] = null;
+        seriesAbandonoVideo[h] = null;
         seriesAssistirMais[h] = null;
         seriesLeads[h] = null;
         seriesScroll[h] = null;
@@ -657,6 +661,13 @@
         color: '#06b6d4', 
         data: seriesConcluiu,
         total: clicks.filter(c => c.acao === 'video_concluido').length
+      },
+      { 
+        name: '🚪 Abandonou Vídeo', 
+        key: 'abandonou_video', 
+        color: '#fb7185', 
+        data: seriesAbandonoVideo,
+        total: clicks.filter(c => c.acao === 'video_abandonou').length
       },
       { 
         name: '🍿 Clicou "Assistir Mais"', 
@@ -790,6 +801,16 @@
         else if (c.acao === 'abriu_player') acaoFmt = '📺 Abriu player';
         else if (c.acao === 'video_iniciou') acaoFmt = '▶️ Vídeo começou';
         else if (c.acao === 'video_concluido') acaoFmt = '🏁 Concluiu vídeo';
+        else if (c.acao === 'video_abandonou') {
+          const pos = typeof c.posicao_s === 'number' ? ` (${c.posicao_s}s${c.percentual ? ' • ' + c.percentual + '%' : ''})` : '';
+          acaoFmt = '🚪 Abandonou vídeo' + pos;
+        }
+        else if (c.acao === 'video_3s') acaoFmt = '⏱️ Assistiu 3s';
+        else if (c.acao === 'video_10s') acaoFmt = '⏱️ Assistiu 10s';
+        else if (c.acao === 'video_25') acaoFmt = '📊 Assistiu 25%';
+        else if (c.acao === 'video_50') acaoFmt = '📊 Assistiu 50%';
+        else if (c.acao === 'video_75') acaoFmt = '📊 Assistiu 75%';
+        else if (c.acao === 'video_travou') acaoFmt = '⏳ Buffer (' + (c.posicao_s || 0) + 's)';
         else if (c.acao === 'assistir_mais_filmes') acaoFmt = '🍿 Clicou "Assistir mais"';
         else if (c.acao === 'video_erro') acaoFmt = '⚠️ Erro no vídeo';
         else if (c.acao && c.acao.indexOf('scroll_') === 0) acaoFmt = '📜 Rolou ' + c.acao.replace('scroll_', '') + '%';
@@ -1202,8 +1223,8 @@
       visitorsMap[vid].clicks++;
       let filmName = (c.filme || '').trim();
       if (filmName.toLowerCase() === 'caindo na real') filmName = 'Caindo na Real';
-      if ((c.acao === 'abrir_filme' || c.acao === 'abriu_player' || c.acao === 'video_iniciou') && filmName) visitorsMap[vid].movies.add(filmName);
-      if ((c.acao === 'play_capitulo' || c.acao === 'video_iniciou') && c.capitulo) visitorsMap[vid].chapters.add(c.capitulo);
+      if ((c.acao === 'abrir_filme' || c.acao === 'abriu_player' || c.acao === 'video_iniciou' || c.acao === 'video_abandonou') && filmName) visitorsMap[vid].movies.add(filmName);
+      if ((c.acao === 'play_capitulo' || c.acao === 'video_iniciou' || c.acao === 'video_abandonou') && c.capitulo) visitorsMap[vid].chapters.add(c.capitulo);
       
       const ts = getTimestampFromData(c);
       if (ts > visitorsMap[vid].latestTimestamp) visitorsMap[vid].latestTimestamp = ts;
@@ -1375,8 +1396,21 @@
                 perfDetails = ` <span style="font-size:0.7rem;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:${badgeColor};font-family:monospace;font-weight:600;">⚡ ${sec}s${ev.conexao ? ' • ' + ev.conexao : ''}${ev.plataforma ? ' • ' + ev.plataforma : ''}</span>`;
               }
               icon = '▶️'; text = `Começou a assistir <strong>${ev.filme || 'Filme'}</strong>${perfDetails}`;
+            } else if (ev.acao === 'video_3s') {
+              icon = '⏱️'; text = `Assistiu primeiros <strong>3 segundos</strong> (${ev.filme || 'Filme'})`;
+            } else if (ev.acao === 'video_10s') {
+              icon = '⏱️'; text = `Assistiu primeiros <strong>10 segundos</strong> (${ev.filme || 'Filme'})`;
+            } else if (ev.acao === 'video_25' || ev.acao === 'video_50' || ev.acao === 'video_75') {
+              const pct = ev.acao.replace('video_', '');
+              icon = '📊'; text = `Alcançou <strong>${pct}%</strong> do vídeo (${ev.filme || 'Filme'})`;
+            } else if (ev.acao === 'video_abandonou') {
+              icon = '🚪';
+              const pctStr = ev.percentual ? ` (${ev.percentual}%)` : '';
+              const durStr = ev.duracao_s ? ` de ${ev.duracao_s}s` : '';
+              text = `<strong style="color:#f87171;">Abandonou o vídeo</strong> aos ${ev.posicao_s || 0}s${durStr}${pctStr} em <strong>${ev.filme || 'Filme'}</strong>`;
+              cls += ' journey-step--warning';
             } else if (ev.acao === 'video_travou') {
-              icon = '⏳'; text = `<strong style="color:#eab308;">Travou no buffer</strong> aos ${ev.posicao_s || 0}s de vídeo (${ev.filme || 'Filme'})`; cls += ' journey-step--warning';
+              icon = '⏳'; text = `<strong style="color:#eab308;">Buffer/Re-buffer</strong> aos ${ev.posicao_s || 0}s de vídeo (${ev.filme || 'Filme'})`; cls += ' journey-step--warning';
             } else if (ev.acao === 'video_concluido') {
               icon = '🏁'; text = `<strong>Assistiu até o fim!</strong> (${ev.filme || 'Filme'})`;
             } else if (ev.acao === 'assistir_mais_filmes') {

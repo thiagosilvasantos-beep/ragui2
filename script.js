@@ -59,6 +59,7 @@
       // fire and forget, do not break UX
     }
   }
+  window.trackClick = trackClick;
 
   // ─── Page View Tracking ─────────────────────────────
   // Rastreia TODA visita à página (mesmo sem clique em filme)
@@ -481,6 +482,7 @@
 
     // Evento disparado quando o vídeo chega ao fim
     videoEl.addEventListener('ended', function () {
+      if (window.RAGUI_VIDEO_ATUAL) window.RAGUI_VIDEO_ATUAL.concluido = true;
       mostrarTelaFimDoFilme();
       trackClick(titleEl.textContent, '', 'video_concluido');
       try {
@@ -491,6 +493,9 @@
     });
 
     function closeOverlay() {
+      if (typeof window.registrarAbandono === 'function') {
+        window.registrarAbandono();
+      }
       overlay.classList.remove('open');
       document.body.style.overflow = '';
       esconderBotaoUnmute();
@@ -599,17 +604,65 @@
       }
       videoEl.addEventListener('playing', onPlaying);
 
-      // Rastrear travamentos de buffer (re-buffering) durante a reprodução
+      // ── Correção do video_travou ─────────────────────────────────────
+      // O evento "waiting" também dispara no carregamento inicial, que é
+      // normal em qualquer vídeo. Só conta como travamento de verdade se a
+      // reprodução já estava em curso.
       var stallCount = 0;
       function onWaiting() {
+        if (videoEl.currentTime < 0.5) return;   // buffer de abertura: ignora
         stallCount++;
-        if (stallCount === 1) {
-          trackClick(titleEl.textContent, chapterName, 'video_travou', {
-            posicao_s: Math.round(videoEl.currentTime || 0)
+        trackClick(titleEl.textContent, chapterName, 'video_travou', {
+          posicao_s: Math.round(videoEl.currentTime),
+          numero: stallCount
+        });
+      }
+      if (videoEl._currentOnWaiting) {
+        videoEl.removeEventListener('waiting', videoEl._currentOnWaiting);
+      }
+      videoEl._currentOnWaiting = onWaiting;
+      videoEl.addEventListener('waiting', onWaiting);
+
+      // ── Marcos de progresso ──────────────────────────────────────────
+      // Cada marco dispara uma única vez por reprodução.
+      var marcos = {};
+      function onTimeUpdate() {
+        var t = videoEl.currentTime;
+        var d = videoEl.duration;
+        if (!isFinite(d) || d <= 0) return;
+
+        function marcar(id, condicao) {
+          if (marcos[id] || !condicao) return;
+          marcos[id] = true;
+          trackClick(titleEl.textContent, chapterName, id, {
+            posicao_s: Math.round(t),
+            duracao_s: Math.round(d)
           });
         }
+
+        marcar('video_3s', t >= 3);
+        marcar('video_10s', t >= 10);
+        marcar('video_25', t >= d * 0.25);
+        marcar('video_50', t >= d * 0.50);
+        marcar('video_75', t >= d * 0.75);
       }
-      videoEl.addEventListener('waiting', onWaiting);
+      if (videoEl._currentOnTimeUpdate) {
+        videoEl.removeEventListener('timeupdate', videoEl._currentOnTimeUpdate);
+      }
+      videoEl._currentOnTimeUpdate = onTimeUpdate;
+      videoEl.addEventListener('timeupdate', onTimeUpdate);
+
+      // Guarda o estado atual para o registro de abandono (bloco 2)
+      window.RAGUI_VIDEO_ATUAL = {
+        el: videoEl,
+        filme: titleEl.textContent,
+        capitulo: chapterName,
+        concluido: false,
+        registrado: false
+      };
+      videoEl.addEventListener('ended', function () {
+        if (window.RAGUI_VIDEO_ATUAL) window.RAGUI_VIDEO_ATUAL.concluido = true;
+      });
 
       // Quando o vídeo falha ao carregar
       videoEl.addEventListener('error', function onError() {
@@ -1266,5 +1319,35 @@
       lastScroll = st;
     }, { passive: true });
   }
+
+  // ── Abandono: registra em que ponto a pessoa saiu ────────────────
+  // É o evento mais importante dos dois: ele conta onde o interesse
+  // acabou. Só registra quem começou a assistir e não chegou ao fim.
+  (function () {
+    function registrarAbandono() {
+      var v = window.RAGUI_VIDEO_ATUAL;
+      if (!v || v.registrado || v.concluido) return;
+
+      var t = v.el ? v.el.currentTime : 0;
+      var d = v.el ? v.el.duration : 0;
+      if (!t || t < 1) return;               // nem começou: não interessa
+
+      v.registrado = true;
+      trackClick(v.filme, v.capitulo, 'video_abandonou', {
+        posicao_s: Math.round(t),
+        duracao_s: isFinite(d) ? Math.round(d) : null,
+        percentual: (isFinite(d) && d > 0) ? Math.round((t / d) * 100) : null
+      });
+    }
+
+    window.registrarAbandono = registrarAbandono;
+
+    // "visibilitychange" é o mais confiável em celular — dispara quando a
+    // pessoa troca de aba, volta para o app ou bloqueia a tela.
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') registrarAbandono();
+    });
+    window.addEventListener('pagehide', registrarAbandono);
+  })();
 
 })();
