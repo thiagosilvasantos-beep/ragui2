@@ -250,6 +250,8 @@
     const elAvgSub = document.getElementById('perf-avg-sub');
     const elFast = document.getElementById('perf-pct-fast');
     const elFastSub = document.getElementById('perf-fast-sub');
+    const elNormal = document.getElementById('perf-pct-normal');
+    const elNormalSub = document.getElementById('perf-normal-sub');
     const elSlow = document.getElementById('perf-pct-slow');
     const elSlowSub = document.getElementById('perf-slow-sub');
     const elNet = document.getElementById('perf-predom-network');
@@ -268,6 +270,8 @@
       if (elAvgSub) elAvgSub.textContent = starts.length > 0 ? 'Estimado (arquivo otimizado)' : 'Aguardando novos plays';
       if (elFast) elFast.textContent = starts.length > 0 ? '92%' : '—';
       if (elFastSub) elFastSub.textContent = starts.length > 0 ? 'Estimativa padrão' : 'Aguardando plays';
+      if (elNormal) elNormal.textContent = starts.length > 0 ? '5%' : '—';
+      if (elNormalSub) elNormalSub.textContent = starts.length > 0 ? 'Estimativa padrão' : 'Aguardando plays';
       if (elSlow) elSlow.textContent = starts.length > 0 ? '3%' : '—';
       if (elSlowSub) elSlowSub.textContent = starts.length > 0 ? 'Risco baixo' : 'Aguardando plays';
       if (elNet) elNet.textContent = '4G / Wi-Fi';
@@ -287,6 +291,9 @@
 
     const fastCount = withTelemetry.filter(c => c.startup_ms < 3000).length;
     const pctFast = Math.round((fastCount / withTelemetry.length) * 100);
+
+    const normalCount = withTelemetry.filter(c => c.startup_ms >= 3000 && c.startup_ms < 5000).length;
+    const pctNormal = Math.round((normalCount / withTelemetry.length) * 100);
 
     const slowCount = withTelemetry.filter(c => c.startup_ms >= 5000).length;
     const pctSlow = Math.round((slowCount / withTelemetry.length) * 100);
@@ -324,6 +331,9 @@
 
     if (elFast) elFast.textContent = `${pctFast}%`;
     if (elFastSub) elFastSub.textContent = `${fastCount} de ${withTelemetry.length} plays instantâneos`;
+
+    if (elNormal) elNormal.textContent = `${pctNormal}%`;
+    if (elNormalSub) elNormalSub.textContent = `${normalCount} de ${withTelemetry.length} plays (3s a 5s)`;
 
     if (elSlow) elSlow.textContent = `${pctSlow}%`;
     if (elSlowSub) elSlowSub.textContent = `${slowCount} plays levaram > 5s`;

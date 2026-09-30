@@ -1021,11 +1021,11 @@ body { font-family:var(--font); background:var(--bg); color:var(--text); min-hei
 
 .video-perf-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 10px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .video-perf-grid {
     grid-template-columns: repeat(3, 1fr);
   }
