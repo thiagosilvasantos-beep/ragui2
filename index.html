@@ -1,478 +1,265 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RAGUI — Vídeos Educacionais de Alto Desempenho</title>
-  <meta name="description" content="Aprenda como nunca. Sinta como cinema. Vídeos educacionais em formato de novela vertical com qualidade Hollywood.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAGUI — O Gênio da Bola</title>
+<meta name="description" content="Uma inteligência artificial que cruza estatística, notícias e condições de jogo para explicar o que está em disputa antes da bola rolar.">
+<meta property="og:title" content="RAGUI — O Gênio da Bola">
+<meta property="og:description" content="Entenda o jogo antes de ele começar. Estatística, notícias e condições de campo, cruzadas por IA e explicadas no seu WhatsApp.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fundo:#0A1129; --tinta:#16255A; --borda:#24305A;
+  --ambar:#F2A93B; --ambar-fraco:rgba(242,169,59,.12);
+  --texto:#DDE3F2; --texto-fraco:#93A0BE; --branco:#fff;
+  --disp:"Sora",system-ui,sans-serif; --ui:"Public Sans",system-ui,sans-serif;
+  --raio:18px; --raio-lg:28px; --gutter:clamp(20px,5vw,48px);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--fundo);color:var(--texto);font-family:var(--ui);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{width:min(1120px,100% - var(--gutter)*2);margin-inline:auto}
+section{padding:clamp(64px,9vw,120px) 0}
+h1,h2,h3{font-family:var(--disp);line-height:1.1;letter-spacing:-.02em}
+a{color:inherit}
 
-  <!-- Meta Pixel Code -->
-  <script>
-  !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window,document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', '1555085893056454');
-  fbq('track', 'PageView');
-  </script>
-  <noscript><img height="1" width="1" style="display:none"
-  src="https://www.facebook.com/tr?id=1555085893056454&ev=PageView&noscript=1"/></noscript>
-  <!-- End Meta Pixel Code -->
+/* ---------- chrome ---------- */
+.topo{position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);background:rgba(10,17,41,.82);border-bottom:1px solid var(--borda)}
+.topo .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+.marca{font-family:var(--disp);font-weight:800;font-size:21px;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.marca .pt{width:9px;height:9px;border-radius:50%;background:var(--ambar);flex:none}
+.marca small{display:block;font-family:var(--ui);font-weight:500;font-size:11px;letter-spacing:.16em;color:var(--texto-fraco);text-transform:uppercase;margin-top:-2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;font-family:var(--disp);font-weight:600;font-size:15px;
+  padding:13px 22px;border-radius:999px;background:var(--ambar);color:#15223f;text-decoration:none;border:0;cursor:pointer;
+  transition:transform .15s ease,filter .15s ease;white-space:nowrap}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.07)}
+.btn-fantasma{background:transparent;color:var(--texto);border:1px solid var(--borda)}
+.btn-fantasma:hover{border-color:var(--ambar);color:var(--ambar)}
+.topo .btn{padding:10px 18px;font-size:14px}
 
-  <!-- ============================================================
-       RAGUI Beacon — Tracking ultra-leve (sem Firebase SDK)
-       Dispara IMEDIATAMENTE ao carregar, mesmo em conexão lenta
-       ============================================================ -->
-  <script>
-  (function(){
-    var API='https://firestore.googleapis.com/v1/projects/ragui-84c9e/databases/(default)/documents/';
+/* ---------- hero ---------- */
+.hero{position:relative;padding-top:clamp(56px,8vw,92px);overflow:hidden}
+.hero .campo{position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:
+    radial-gradient(900px 440px at 78% 8%, rgba(242,169,59,.10), transparent 62%),
+    radial-gradient(760px 420px at 6% 86%, rgba(36,48,90,.55), transparent 64%);}
+.hero .linhas{position:absolute;inset:0;pointer-events:none;opacity:.5}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.08fr .92fr;gap:clamp(32px,5vw,64px);align-items:center}
+.selo{display:inline-flex;align-items:center;gap:9px;font-family:var(--ui);font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ambar);background:var(--ambar-fraco);border:1px solid rgba(242,169,59,.42);padding:7px 15px;border-radius:999px;margin-bottom:26px}
+.selo .vivo{width:7px;height:7px;border-radius:50%;background:var(--ambar);box-shadow:0 0 0 0 rgba(242,169,59,.6);animation:pulsa 2.4s infinite}
+@keyframes pulsa{0%{box-shadow:0 0 0 0 rgba(242,169,59,.55)}70%{box-shadow:0 0 0 11px rgba(242,169,59,0)}100%{box-shadow:0 0 0 0 rgba(242,169,59,0)}}
+h1{font-size:clamp(40px,6.4vw,70px);font-weight:800}
+h1 em{font-style:normal;color:var(--ambar)}
+.sub{font-size:clamp(17px,2vw,20px);color:var(--texto-fraco);margin-top:22px;max-width:52ch}
+.acoes{display:flex;flex-wrap:wrap;gap:13px;margin-top:34px}
+.aviso-cta{font-size:13.5px;color:var(--texto-fraco);margin-top:16px}
 
-    // IDs
-    var vid=localStorage.getItem('ragui_visitor_id');
-    if(!vid){vid='v_'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('ragui_visitor_id',vid);}
-    var sid=sessionStorage.getItem('ragui_session_id');
-    if(!sid){sid='s_'+Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem('ragui_session_id',sid);}
+/* ---------- mock de conversa ---------- */
+.fone{background:var(--tinta);border:1px solid var(--borda);border-radius:var(--raio-lg);padding:20px;max-width:420px;margin-inline:auto;width:100%}
+.fone .cab{display:flex;align-items:center;gap:11px;padding-bottom:15px;border-bottom:1px solid var(--borda);margin-bottom:17px}
+.fone .av{width:38px;height:38px;border-radius:50%;background:var(--ambar);color:#15223f;display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:16px;flex:none}
+.fone .nome{font-family:var(--disp);font-weight:600;font-size:15px}
+.fone .status{font-size:11.5px;color:var(--texto-fraco)}
+.bolha{border-radius:16px;padding:13px 16px;font-size:14.5px;margin-bottom:11px;max-width:86%;line-height:1.55}
+.bolha.eu{background:var(--ambar);color:#15223f;margin-left:auto;border-bottom-right-radius:5px;font-weight:500}
+.bolha.ele{background:rgba(255,255,255,.05);border:1px solid var(--borda);border-bottom-left-radius:5px}
+.bolha.ele b{color:var(--ambar);font-weight:600}
+.bolha .fator{display:flex;gap:9px;margin-top:9px;font-size:13.5px;color:var(--texto-fraco)}
+.bolha .fator span:first-child{flex:none}
 
-    // UTMs
-    var p=new URLSearchParams(location.search);
-    var utm_s=p.get('utm_source')||'';
-    var utm_m=p.get('utm_medium')||'';
-    var utm_c=p.get('utm_campaign')||'';
-    var utm_ct=p.get('utm_content')||'';
-    var fbc=p.get('fbclid')||'';
-    var ref=document.referrer||'';
-    var agora=new Date();
-    var dt=agora.toLocaleDateString('pt-BR');
-    var hr=agora.toLocaleTimeString('pt-BR');
-    var t0=Date.now();
+/* ---------- grades ---------- */
+.titulo-sec{max-width:62ch;margin-bottom:clamp(36px,5vw,56px)}
+.titulo-sec .olho{font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ambar);margin-bottom:14px;font-family:var(--ui)}
+h2{font-size:clamp(28px,4vw,44px);font-weight:700}
+.titulo-sec p{color:var(--texto-fraco);margin-top:16px;font-size:17px}
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:18px}
+.card{background:var(--tinta);border:1px solid var(--borda);border-radius:var(--raio);padding:28px 24px}
+.card .ic{width:44px;height:44px;border-radius:12px;background:var(--ambar-fraco);border:1px solid rgba(242,169,59,.34);
+  display:grid;place-items:center;font-size:20px;margin-bottom:18px}
+.card h3{font-size:19px;font-weight:600;margin-bottom:9px}
+.card p{color:var(--texto-fraco);font-size:15px}
 
-    // Gravar string no formato Firestore
-    function S(v){return{stringValue:v||''};}
+/* ---------- passos ---------- */
+.passos{counter-reset:p;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.passo{position:relative;padding:30px 24px;border:1px solid var(--borda);border-radius:var(--raio);background:var(--tinta)}
+.passo::before{counter-increment:p;content:counter(p);font-family:var(--disp);font-weight:800;font-size:15px;
+  width:34px;height:34px;border-radius:50%;background:var(--ambar);color:#15223f;display:grid;place-items:center;margin-bottom:16px}
+.passo h3{font-size:18px;font-weight:600;margin-bottom:8px}
+.passo p{color:var(--texto-fraco);font-size:15px}
 
-    // Enviar para Firestore REST API
-    function enviar(colecao, dados){
-      var body=JSON.stringify({fields:dados});
-      // fetch é mais confiável no carregamento; sendBeacon na saída
-      fetch(API+colecao,{method:'POST',headers:{'Content-Type':'application/json'},body:body,keepalive:true}).catch(function(){
-        // fallback: sendBeacon com Blob tipado
-        try{navigator.sendBeacon(API+colecao,new Blob([body],{type:'application/json'}));}catch(e){}
-      });
-    }
+/* ---------- honestidade ---------- */
+.franqueza{background:var(--tinta);border:1px solid var(--borda);border-left:3px solid var(--ambar);border-radius:var(--raio);padding:clamp(28px,4vw,42px)}
+.franqueza h2{font-size:clamp(24px,3vw,32px);margin-bottom:20px}
+.franqueza ul{list-style:none;display:grid;gap:13px;max-width:70ch}
+.franqueza li{display:flex;gap:13px;color:var(--texto-fraco);font-size:16px}
+.franqueza li b{color:var(--texto);font-weight:600}
+.franqueza .mk{color:var(--ambar);flex:none;font-weight:700}
 
-    // Detecção detalhada de SO, App, Conexão e Fuso
-    var ua=navigator.userAgent||'';
-    var os='Outro';
-    if(/iPhone|iPad|iPod/i.test(ua)) os='iOS';
-    else if(/Android/i.test(ua)) os='Android';
-    else if(/Windows/i.test(ua)) os='Windows';
-    else if(/Macintosh|Mac OS X/i.test(ua)) os='Mac';
-    else if(/Linux/i.test(ua)) os='Linux';
+/* ---------- fecho ---------- */
+.fecho{text-align:center}
+.fecho h2{margin-bottom:18px}
+.fecho p{color:var(--texto-fraco);max-width:54ch;margin:0 auto 32px;font-size:17px}
+footer{border-top:1px solid var(--borda);padding:38px 0;color:var(--texto-fraco);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center}
+footer a{color:var(--texto-fraco)}
 
-    var app='Web';
-    if(/Instagram/i.test(ua)) app='Instagram';
-    else if(/FBAN|FBAV/i.test(ua)) app='Facebook';
-    else if(/WhatsApp/i.test(ua)) app='WhatsApp';
-    else if(/Chrome|CriOS/i.test(ua)) app='Chrome';
-    else if(/Safari/i.test(ua)) app='Safari';
-
-    var conexao=(navigator.connection&&navigator.connection.effectiveType)||'';
-    var fuso='';
-    try{fuso=Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){}
-
-    // --- 1. PAGEVIEW imediato (fetch garante entrega) ---
-    var pvKey='ragui_bpv_'+sid;
-    if(!sessionStorage.getItem(pvKey)){
-      sessionStorage.setItem(pvKey,'1');
-      enviar('visitas',{
-        tipo:S('pageview'),visitor_id:S(vid),session_id:S(sid),
-        referrer:S(ref),utm_source:S(utm_s),utm_medium:S(utm_m),
-        utm_campaign:S(utm_c),utm_content:S(utm_ct),fbclid:S(fbc),
-        url:S(location.href),tela:S(innerWidth+'x'+innerHeight),
-        dispositivo:S(/Mobi|Android/i.test(ua)?'mobile':'desktop'),
-        os:S(os),app:S(app),conexao:S(conexao),fuso:S(fuso),
-        data:S(dt),hora:S(hr)
-      });
-    }
-
-    // --- 1b. GEO IP ASSÍNCRONO (não bloqueia a página) ---
-    var geoKey='ragui_geo_'+vid;
-    var cachedGeo=null;
-    try{cachedGeo=JSON.parse(sessionStorage.getItem(geoKey)||'null');}catch(e){}
-    if(!cachedGeo){
-      fetch('https://ipwho.is/').then(function(r){return r.json();}).then(function(g){
-        if(g&&g.success!==false){
-          sessionStorage.setItem(geoKey,JSON.stringify(g));
-          enviar('visitas',{
-            tipo:S('geo'),visitor_id:S(vid),session_id:S(sid),
-            cidade:S(g.city||''),estado:S(g.region_code||g.region||''),
-            pais:S(g.country_code||'BR'),provedor:S((g.connection&&g.connection.isp)||''),
-            data:S(dt),hora:S(hr)
-          });
-        }
-      }).catch(function(){
-        fetch('https://get.geojs.io/v1/ip/geo.json').then(function(r){return r.json();}).then(function(g2){
-          if(g2&&g2.city){
-            sessionStorage.setItem(geoKey,JSON.stringify(g2));
-            enviar('visitas',{
-              tipo:S('geo'),visitor_id:S(vid),session_id:S(sid),
-              cidade:S(g2.city||''),estado:S(g2.region||''),
-              pais:S(g2.country_code||'BR'),provedor:S(g2.organization_name||''),
-              data:S(dt),hora:S(hr)
-            });
-          }
-        }).catch(function(){});
-      });
-    }
-
-    // --- 2. TEMPO NA PÁGINA + SCROLL ao sair ---
-    var maxScroll=0;
-    var secoeVistas={hero:false,catalogo:false,cadastro:false};
-
-    addEventListener('scroll',function(){
-      var sh=document.documentElement.scrollHeight-innerHeight;
-      if(sh>0)maxScroll=Math.max(maxScroll,Math.round(pageYOffset/sh*100));
-
-      // Detectar seções visíveis
-      var els={hero:'.hero',catalogo:'.catalog',cadastro:'.cadastro'};
-      for(var k in els){
-        if(!secoeVistas[k]){
-          var el=document.querySelector(els[k]);
-          if(el){
-            var r=el.getBoundingClientRect();
-            if(r.top<innerHeight&&r.bottom>0)secoeVistas[k]=true;
-          }
-        }
-      }
-    });
-
-    // Ao sair da página: grava tempo + scroll + seções vistas
-    var saidaEnviada=false;
-    function gravarSaida(){
-      if(saidaEnviada)return;saidaEnviada=true;
-      var segundos=Math.round((Date.now()-t0)/1000);
-      var secoes=Object.keys(secoeVistas).filter(function(k){return secoeVistas[k];}).join(',');
-      var body2=JSON.stringify({fields:{
-        tipo:S('saida'),visitor_id:S(vid),session_id:S(sid),
-        tempo_segundos:{integerValue:String(segundos)},
-        scroll_max:{integerValue:String(maxScroll)},
-        secoes_vistas:S(secoes),
-        dispositivo:S(/Mobi|Android/i.test(navigator.userAgent)?'mobile':'desktop'),
-        data:S(dt),hora:S(hr)
-      }});
-      try{navigator.sendBeacon(API+'visitas',new Blob([body2],{type:'application/json'}));}catch(e){
-        try{fetch(API+'visitas',{method:'POST',headers:{'Content-Type':'application/json'},body:body2,keepalive:true});}catch(e2){}
-      }
-    }
-
-    document.addEventListener('visibilitychange',function(){
-      if(document.visibilityState==='hidden')gravarSaida();
-    });
-    addEventListener('pagehide',gravarSaida);
-  })();
-  </script>
-  <!-- ============================================================
-       MEDIÇÃO
-       Preencha só o que for usar; o que ficar vazio não carrega nada.
-       ============================================================ -->
-  <script>
-  window.RAGUI_LISTA = 'https://qubitadvisors.app.n8n.cloud/webhook/cadastro-aluno';
-
-  window.RAGUI_MEDICAO = {
-    meta:   '',
-    tiktok: '',
-    ga4:    ''
-  };
-
-  (function(){
-    var P = window.RAGUI_MEDICAO || {};
-
-    if (P.meta){
-      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
-      (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', P.meta);
-      fbq('track', 'PageView');
-    }
-
-    if (P.tiktok){
-      !function(w,d,t){w.TiktokAnalyticsObject=t;var q=w[t]=w[t]||[];
-      q.methods=['page','track','identify','instances','debug','on','off','once','ready','alias','group','enableCookie','disableCookie'];
-      q.setAndDefer=function(o,m){o[m]=function(){o.push([m].concat(Array.prototype.slice.call(arguments,0)))}};
-      for(var i=0;i<q.methods.length;i++)q.setAndDefer(q,q.methods[i]);
-      q.load=function(e){var u='https://analytics.tiktok.com/i18n/pixel/events.js';
-      q._i=q._i||{};q._i[e]=[];q._i[e]._u=u;q._t=q._t||{};q._t[e]=+new Date;q._o=q._o||{};
-      var o=d.createElement('script');o.async=!0;o.src=u+'?sdkid='+e+'&lib='+t;
-      var a=d.getElementsByTagName('script')[0];a.parentNode.insertBefore(o,a)};
-      q.load(P.tiktok);q.page()}(window,document,'ttq');
-    }
-
-    if (P.ga4){
-      var g = document.createElement('script'); g.async = true;
-      g.src = 'https://www.googletagmanager.com/gtag/js?id=' + P.ga4;
-      document.head.appendChild(g);
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = function(){ dataLayer.push(arguments); };
-      gtag('js', new Date());
-      gtag('config', P.ga4);
-    }
-
-    window.RAGUI_ATIVO = !!(P.meta || P.tiktok || P.ga4);
-
-    window.raguiEvento = function(nome, dados){
-      try { if (window.fbq)  fbq('track', nome, dados || {}); } catch(e){}
-      try { if (window.ttq)  ttq.track(nome, dados || {});    } catch(e){}
-      try { if (window.gtag) gtag('event', nome, dados || {}); } catch(e){}
-    };
-  })();
-  </script>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+@media(max-width:880px){
+  .hero .wrap{grid-template-columns:1fr}
+  .fone{order:2;margin-top:8px}
+  .topo .btn{display:none}
+}
+</style>
 </head>
 <body>
 
-  <!-- ===================== HEADER ===================== -->
-  <header class="header">
-    <div class="header__inner">
-      <a href="/" class="header__logo">
-        <img src="logo.png" alt="RAGUI" class="logo-img">
-      </a>
-      <button class="btn btn--primary btn--sm abre-cadastro" type="button">Cadastre-se Grátis</button>
-    </div>
-  </header>
+<header class="topo">
+  <div class="wrap">
+    <div class="marca"><span class="pt"></span><div>RAGUI<small>o gênio da bola</small></div></div>
+    <a class="btn" href="#entrar">Entrar na lista</a>
+  </div>
+</header>
 
-  <!-- ===================== HERO ===================== -->
-  <section class="hero" id="hero">
-    <div class="hero__bg">
-      <div class="hero__gradient"></div>
-      <div class="hero__particles" id="particles"></div>
-    </div>
-    <div class="hero__content">
-      <p class="hero__pre">🎬 Uma nova era de aprendizado</p>
-      <h1 class="hero__title hero__title--compact">
-        Aprenda como <span class="text-glow">nunca</span>.
-        Sinta como <span class="text-glow-red">cinema</span>.
-      </h1>
-      <p class="hero__sub hero__sub--compact">
-        Vídeos educacionais em formato de novela vertical — com a intensidade de uma série da Netflix.
-      </p>
-
-      <!-- FILME EM DESTAQUE (Caindo na Real) -->
-      <div class="destaque" id="filme-destaque">
-        <div class="destaque__card" id="btn-play-destaque" role="button" tabindex="0" title="Clique para assistir">
-          <div class="destaque__poster-wrapper">
-            <img src="https://firebasestorage.googleapis.com/v0/b/ragui-84c9e.firebasestorage.app/o/capas%2Fmudktdbrwg7ng0.jpg?alt=media&token=cfafcd38-5954-4203-a8c0-9b41166de791" alt="Caindo na Real" class="destaque__poster" id="destaque-img">
-            <div class="destaque__play-overlay">
-              <span class="destaque__play-btn">▶</span>
-            </div>
-            <span class="card__badge-free destaque__badge-free">GRÁTIS</span>
-          </div>
-          <div class="destaque__info">
-            <div class="destaque__tag">★ FILME EM DESTAQUE</div>
-            <h2 class="destaque__title" id="destaque-title">Caindo na Real</h2>
-            <p class="destaque__meta">
-              <span class="card__badge card__badge--acao" id="destaque-genero">Ação</span>
-              <span id="destaque-duracao">12 min</span> &bull; <span id="destaque-caps">5 Capítulos</span> &bull; <span class="destaque__highlight">1º Episódio Grátis</span>
-            </p>
-            <p class="destaque__desc" id="destaque-desc">
-              As leis da Física nunca foram tão úteis para mantê-lo vivo. Em um futuro dominado por IA, um estudante descobre uma forma de retomar o controle do mundo.
-            </p>
-            <div class="destaque__actions">
-              <button class="btn btn--primary destaque__cta" type="button">
-                <span>▶ Assistir Episódio Grátis</span>
-              </button>
-              <span class="destaque__hint">Sem cadastro prévio &bull; Toque para assistir</span>
-            </div>
-          </div>
-        </div>
+<section class="hero">
+  <div class="campo"></div>
+  <svg class="linhas" viewBox="0 0 1440 700" preserveAspectRatio="none" aria-hidden="true">
+    <g fill="none" stroke="#24305A" stroke-width="1.2">
+      <circle cx="1180" cy="330" r="150"/><circle cx="1180" cy="330" r="4" fill="#24305A"/>
+      <path d="M1440 150 H1030 V510 H1440"/><path d="M1440 240 H1150 V420 H1440"/>
+      <path d="M0 640 H330"/><path d="M0 672 H210"/>
+    </g>
+  </svg>
+  <div class="wrap">
+    <div>
+      <span class="selo"><span class="vivo"></span>Abrindo aos poucos</span>
+      <h1>Entenda o jogo <em>antes</em> de ele começar.</h1>
+      <p class="sub">O RAGUI é uma inteligência artificial que cruza o histórico das equipes, as notícias da semana, as condições de campo e mais uma dezena de fatores — e te explica, em português, o que está realmente em disputa.</p>
+      <div class="acoes">
+        <a class="btn" id="cta-topo" href="#" rel="noopener">Entrar na lista pelo WhatsApp</a>
+        <a class="btn btn-fantasma" href="#como">Ver como funciona</a>
       </div>
-    </div>
-  </section>
-
-  <!-- ===================== CATÁLOGO ===================== -->
-  <section class="catalogo" id="catalogo">
-
-    <!-- Filtros -->
-    <div class="catalogo__filtros" id="filtros">
-      <button class="filtro filtro--ativo" data-genero="todos">Todos</button>
-      <button class="filtro" data-genero="acao">🔥 Ação</button>
-      <button class="filtro" data-genero="terror">🔪 Terror</button>
-      <button class="filtro" data-genero="suspense">🕵️ Suspense</button>
-      <button class="filtro" data-genero="drama">🎭 Drama</button>
-      <button class="filtro" data-genero="scifi">🚀 Sci-Fi</button>
+      <p class="aviso-cta">Sem custo nesta fase. Avisamos assim que sua vez chegar.</p>
     </div>
 
-    <!-- Grid de filmes (dinâmico via Firestore) -->
-    <div class="catalogo__grid" id="grid"></div>
-  </section>
-
-  <!-- ===================== CADASTRO ===================== -->
-  <section class="cadastro" id="cadastro">
-    <div class="cadastro__inner">
-      <div class="cadastro__text">
-        <h2 class="cadastro__title">Garanta seu <span class="text-glow">acesso</span></h2>
-        <p class="cadastro__sub">Cadastro rápido. Sem cartão. Sem compromisso.</p>
+    <div class="fone" aria-label="Exemplo de conversa com o RAGUI">
+      <div class="cab">
+        <div class="av">R</div>
+        <div><div class="nome">RAGUI</div><div class="status">o gênio da bola · online</div></div>
       </div>
-      <form class="cadastro__form" id="form-cadastro" novalidate>
-        <!-- ETAPA 1: Dados -->
-        <div id="etapa-dados">
-          <div class="form-row">
-            <div class="form-field" id="f-nome">
-              <label for="nome">Seu nome</label>
-              <input type="text" id="nome" name="nome" placeholder="Como podemos te chamar?" autocomplete="given-name" required>
-              <span class="form-error">Preencha seu nome.</span>
-            </div>
-            <div class="form-field" id="f-telefone">
-              <label for="telefone">Telefone / WhatsApp</label>
-              <input type="tel" id="telefone" name="telefone" placeholder="(11) 99999-0000" inputmode="numeric" autocomplete="tel" required>
-              <span class="form-error">Número com DDD.</span>
-            </div>
-            <div class="form-field" id="f-email">
-              <label for="email">E-mail</label>
-              <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email" required>
-              <span class="form-error">E-mail inválido.</span>
-            </div>
-            <button type="button" class="btn btn--primary btn--form" id="btn-enviar-codigo">
-              📲 Enviar código
-            </button>
-          </div>
-          <p class="form-legal">
-            Ao se cadastrar, você aceita nossa 
-            <a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.
-          </p>
-          <p class="form-feedback form-feedback--error" id="form-erro-envio" hidden>
-            Não conseguimos enviar o código. Verifique o número e tente novamente.
-          </p>
-        </div>
-
-        <!-- ETAPA 2: Verificação do código -->
-        <div id="etapa-codigo" hidden>
-          <div class="verificacao">
-            <div class="verificacao__icon">📱</div>
-            <p class="verificacao__texto">
-              Enviamos um código de 6 dígitos para o WhatsApp 
-              <strong id="numero-destino"></strong>
-            </p>
-            <div class="verificacao__input-wrap">
-              <input type="text" id="codigo" maxlength="6" inputmode="numeric" 
-                     placeholder="000000" autocomplete="one-time-code" class="verificacao__input">
-              <span class="form-error" id="erro-codigo" style="display:none;">Código incorreto. Tente novamente.</span>
-            </div>
-            <div class="verificacao__actions">
-              <button type="submit" class="btn btn--primary" id="btn-validar">
-                ✅ Validar e Cadastrar
-              </button>
-              <button type="button" class="btn btn--ghost btn--sm" id="btn-reenviar" disabled>
-                Reenviar código (<span id="timer-reenvio">60</span>s)
-              </button>
-            </div>
-            <button type="button" class="btn-link" id="btn-voltar">← Alterar dados</button>
-          </div>
-          <p class="form-feedback form-feedback--error" id="form-erro-codigo" hidden>
-            Código inválido ou expirado. Tente reenviar.
-          </p>
-        </div>
-
-        <!-- Sucesso -->
-        <p class="form-feedback form-feedback--success" id="form-sucesso" hidden>
-          ✅ Cadastro feito! Número verificado com sucesso. Em breve entraremos em contato.
-        </p>
-      </form>
-    </div>
-  </section>
-
-  <!-- ===================== FOOTER ===================== -->
-  <footer class="footer">
-    <div class="footer__inner">
-      <div class="footer__logo">
-        <img src="logo.png" alt="RAGUI" class="logo-img logo-img--footer">
-        <p>Educação que parece cinema.</p>
+      <div class="bolha eu">E o clássico de domingo?</div>
+      <div class="bolha ele">
+        Jogo de poucas chances. Três coisas pesam mais que o retrospecto:
+        <div class="fator"><span>📉</span><span>O visitante não vence fora há <b>7 rodadas</b> — e cede a posse em média 58% nesses jogos.</span></div>
+        <div class="fator"><span>🏥</span><span>Dois titulares do meio saíram lesionados na quarta. O substituto provável tem perfil defensivo.</span></div>
+        <div class="fator"><span>🌧️</span><span>Previsão de <b>chuva forte</b> no horário. Campo pesado historicamente derruba o volume de finalizações nesse estádio.</span></div>
       </div>
-      <div class="footer__links">
-        <a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>
-        <a href="#cadastro">Cadastre-se</a>
-        <a href="#catalogo">Catálogo</a>
-      </div>
-      <p class="footer__copy">&copy; 2026 RAGUI. Todos os direitos reservados.</p>
-    </div>
-  </footer>
-
-  <!-- ===================== LEAD CAPTURE OVERLAY ===================== -->
-  <div class="lead-overlay" id="lead-overlay">
-    <div class="lead-overlay__bg"></div>
-    <div class="lead-overlay__card">
-      <button class="lead-overlay__close" id="lead-close">&times;</button>
-      <div class="lead-overlay__icon">🔒</div>
-      <h3>Conteúdo Exclusivo</h3>
-      <p>Cadastre-se gratuitamente para assistir este capítulo</p>
-      <form id="lead-form">
-        <input type="text" id="lead-nome" placeholder="Seu nome" required>
-        <input type="tel" id="lead-tel" placeholder="Seu telefone (DDD + número)" required>
-        <button type="submit" class="btn btn--primary">Desbloquear Capítulo</button>
-      </form>
+      <div class="bolha ele">Quer que eu abra os números de algum desses pontos?</div>
     </div>
   </div>
+</section>
 
-  <!-- ===================== PLAYER OVERLAY ===================== -->
-  <div class="player-overlay" id="player-overlay">
-    <div class="player-overlay__bg"></div>
-    <!-- Fechar -->
-    <button class="player-overlay__close" id="player-close">&times;</button>
-    <!-- Vídeo maximizado -->
-    <div class="player-overlay__video">
-      <video id="player-video" controls playsinline></video>
-      <button id="player-unmute-btn" class="player-unmute-btn hidden" type="button" aria-label="Ativar som do vídeo">
-        <span class="unmute-icon">🔊</span>
-        <span>Ativar Som</span>
-      </button>
-      <!-- Tela de Fim do Filme / Próximos Passos -->
-      <div id="player-end-screen" class="player-end-screen hidden">
-        <div class="player-end-screen__card">
-          <div class="player-end-screen__badge">Fim da exibição</div>
-          <h3 id="player-end-title">Gostou deste filme?</h3>
-          <p id="player-end-desc">Cadastre-se gratuitamente para ter acesso a todo o catálogo e assistir a todos os filmes completos.</p>
-          <div class="player-end-screen__actions">
-            <button id="btn-end-assistir-mais" class="btn btn--primary btn--end-cta" type="button">
-              🎬 Assistir mais filmes
-            </button>
-            <button id="btn-end-replay" class="btn btn--ghost btn--sm" type="button">
-              ↺ Rever capítulo
-            </button>
-          </div>
-        </div>
-      </div>
-      <div id="player-no-video" class="player-overlay__placeholder">
-        <span>🎬</span>
-        <p>Selecione um capítulo para assistir</p>
-      </div>
+<section id="como">
+  <div class="wrap">
+    <div class="titulo-sec">
+      <div class="olho">O que ele olha</div>
+      <h2>Não é achismo. É cruzamento de dados.</h2>
+      <p>Antes de responder, o RAGUI varre camadas de informação que ninguém consegue acompanhar sozinho — e só te conta o que muda a leitura do jogo.</p>
     </div>
-    <!-- Gaveta de capítulos (bottom drawer) -->
-    <div class="player-drawer" id="player-drawer">
-      <button class="player-drawer__toggle" id="drawer-toggle">
-        <span class="player-drawer__icon">🎬</span>
-        <span class="player-drawer__label" id="drawer-label">Capítulos</span>
-        <span class="player-drawer__arrow">▲</span>
-      </button>
-      <div class="player-drawer__content" id="drawer-content">
-        <h2 id="player-title"></h2>
-        <p id="player-desc"></p>
-        <div class="player-overlay__chapters" id="player-chapters"></div>
-      </div>
+    <div class="grade">
+      <div class="card"><div class="ic">📊</div><h3>Histórico e forma</h3><p>Confrontos diretos, sequência recente, desempenho como mandante e visitante, padrões que se repetem há temporadas.</p></div>
+      <div class="card"><div class="ic">📰</div><h3>Notícias da semana</h3><p>Lesões, suspensões, escalação provável, troca de técnico, clima do elenco. O que saiu depois da última rodada.</p></div>
+      <div class="card"><div class="ic">🌦️</div><h3>Condições de jogo</h3><p>Previsão do tempo no horário da partida, estado do gramado, altitude, horário e desgaste de viagem.</p></div>
+      <div class="card"><div class="ic">⚖️</div><h3>E o resto</h3><p>Árbitro escalado, calendário apertado, importância da partida na tabela, desfalques por convocação — dezenas de fatores.</p></div>
     </div>
   </div>
+</section>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
-  <script src="firebase-config.js"></script>
-  <script src="script.js"></script>
+<section>
+  <div class="wrap">
+    <div class="titulo-sec">
+      <div class="olho">Como funciona</div>
+      <h2>Você pergunta como falaria com um amigo.</h2>
+    </div>
+    <div class="passos">
+      <div class="passo"><h3>Manda a pergunta</h3><p>No WhatsApp, do jeito que vier: “como vai ser o jogo de domingo?”, “vale olhar esse confronto?”, “por que esse time cai fora de casa?”.</p></div>
+      <div class="passo"><h3>O RAGUI cruza tudo</h3><p>Ele busca o histórico, lê as notícias recentes, confere as condições do jogo e pesa os fatores que de fato mudam o resultado.</p></div>
+      <div class="passo"><h3>Recebe a leitura</h3><p>Uma explicação curta e direta do que está em disputa — com os números por trás, se você quiser puxar o fio.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="franqueza">
+      <h2>O que o RAGUI <span style="color:var(--ambar)">não</span> é</h2>
+      <ul>
+        <li><span class="mk">—</span><span><b>Não é bola de cristal.</b> Futebol tem acaso, e nenhuma análise elimina isso. O RAGUI mostra o que os dados dizem, não o que vai acontecer.</span></li>
+        <li><span class="mk">—</span><span><b>Não dá palpite garantido</b> nem promete acerto. Quem promete isso está vendendo outra coisa.</span></li>
+        <li><span class="mk">—</span><span><b>Não é conselho financeiro.</b> Se você aposta, a decisão e o risco continuam sendo seus.</span></li>
+        <li><span class="mk">—</span><span><b>É para maiores de 18 anos.</b></span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="entrar">
+  <div class="wrap fecho">
+    <h2>Quer ser dos primeiros?</h2>
+    <p>Estamos liberando o acesso aos poucos, em grupos pequenos, para ajustar as análises com quem usa de verdade. Entre na lista e avisamos quando for sua vez.</p>
+    <a class="btn" id="cta-fim" href="#" rel="noopener">Entrar na lista pelo WhatsApp</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>© <span id="ano"></span> RAGUI · O Gênio da Bola</div>
+    <div><a href="/privacidade.html">Privacidade</a> · <span>Conteúdo para maiores de 18 anos</span></div>
+  </div>
+</footer>
+
+<script>
+  /* ====================================================================
+     TROQUE AQUI: número de WhatsApp que recebe os interessados.
+     Formato: código do país + DDD + número, só dígitos.
+     Ex.: "5511966160601"
+     Enquanto estiver como está, os botões avisam que falta configurar.
+     ==================================================================== */
+  var WHATSAPP = "SEU_NUMERO_AQUI";
+  var TEXTO = "Oi! Quero entrar na lista do RAGUI — o Gênio da Bola.";
+
+  document.getElementById("ano").textContent = new Date().getFullYear();
+
+  (function () {
+    var valido = /^\d{12,13}$/.test(WHATSAPP);
+    var destino = "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(TEXTO);
+    ["cta-topo", "cta-fim"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (valido) {
+        el.href = destino;
+        el.target = "_blank";
+      } else {
+        /* Sem número configurado: o botão não leva a lugar nenhum, mas
+           avisa o visitante com elegância em vez de quebrar. */
+        el.addEventListener("click", function (e) {
+          e.preventDefault();
+          el.textContent = "Em breve";
+          var nota = document.getElementById("nota-" + id);
+          if (!nota) {
+            nota = document.createElement("p");
+            nota.id = "nota-" + id;
+            nota.style.cssText = "font-size:13.5px;color:var(--texto-fraco);margin-top:14px";
+            nota.textContent = "Estamos abrindo em grupos pequenos. Volte em alguns dias.";
+            (el.closest(".acoes") || el).insertAdjacentElement("afterend", nota);
+          }
+        });
+      }
+    });
+  })();
+</script>
 </body>
 </html>
