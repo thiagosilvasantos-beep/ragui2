@@ -59,6 +59,25 @@ h1 em{font-style:normal;color:var(--ambar)}
 .acoes{display:flex;flex-wrap:wrap;gap:13px;margin-top:34px}
 .aviso-cta{font-size:13.5px;color:var(--texto-fraco);margin-top:16px}
 
+/* Formulario de entrada: so o celular. Quem fala primeiro e o RAGUI.
+   A classe se chama .campo-tel, NAO .campo: '.campo' ja existe nesta pagina
+   como o gramado decorativo do hero (position:absolute, pointer-events:none)
+   e deixava o input esticado e impossivel de clicar. */
+.form-entrar{display:flex;flex-wrap:wrap;gap:11px;align-items:center;margin-top:34px}
+.campo-tel{font-family:var(--ui);font-size:15px;color:var(--texto);background:var(--tinta);
+  border:1px solid var(--borda);border-radius:14px;padding:15px 17px;
+  flex:1 1 248px;min-width:0;max-width:330px;transition:border-color .15s}
+.campo-tel::placeholder{color:var(--texto-fraco)}
+.campo-tel:focus{outline:none;border-color:var(--ambar)}
+.campo-tel[aria-invalid="true"]{border-color:#E8897A}
+.form-entrar .btn{flex:0 0 auto}
+.form-entrar .btn[disabled]{opacity:.6;cursor:progress;transform:none}
+.msg{font-family:var(--ui);font-size:13.5px;line-height:1.5;color:var(--texto-fraco);margin-top:14px}
+.msg.ok{color:var(--ambar)}
+.msg.erro{color:#E8897A}
+.so-leitor{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
 /* ---------- mock de conversa ---------- */
 .fone{background:var(--tinta);border:1px solid var(--borda);border-radius:var(--raio-lg);padding:20px;max-width:420px;margin-inline:auto;width:100%}
 .fone .cab{display:flex;align-items:center;gap:11px;padding-bottom:15px;border-bottom:1px solid var(--borda);margin-bottom:17px}
@@ -138,11 +157,16 @@ footer a{color:var(--texto-fraco)}
       <span class="selo"><span class="vivo"></span>Abrindo aos poucos</span>
       <h1>Entenda o jogo <em>antes</em> de ele começar.</h1>
       <p class="sub">O RAGUI é uma inteligência artificial que cruza o histórico das equipes, as notícias da semana, as condições de campo e mais uma dezena de fatores — e te explica, em português, o que está realmente em disputa.</p>
-      <div class="acoes">
-        <a class="btn" id="cta-topo" href="#" rel="noopener">Entrar na lista pelo WhatsApp</a>
+      <form class="form-entrar" id="form-topo" novalidate>
+        <label class="so-leitor" for="tel-topo">Seu WhatsApp com DDD</label>
+        <input class="campo-tel" id="tel-topo" name="telefone" type="tel" inputmode="numeric"
+               autocomplete="tel" placeholder="DDD + número, ex: 11 98888-7777" maxlength="20" required>
+        <button class="btn" type="submit">Quero entrar</button>
         <a class="btn btn-fantasma" href="#como">Ver como funciona</a>
-      </div>
-      <p class="aviso-cta">Sem custo nesta fase. Avisamos assim que sua vez chegar.</p>
+      </form>
+      <p class="msg" id="msg-topo" role="status" aria-live="polite"></p>
+      <p class="aviso-cta">Deixe o número e o RAGUI te chama no WhatsApp. Sem custo nesta
+        fase; você sai quando quiser escrevendo <em>sair</em>.</p>
     </div>
 
     <div class="fone" aria-label="Exemplo de conversa com o RAGUI">
@@ -210,7 +234,13 @@ footer a{color:var(--texto-fraco)}
   <div class="wrap fecho">
     <h2>Quer ser dos primeiros?</h2>
     <p>Estamos liberando o acesso aos poucos, em grupos pequenos, para ajustar as análises com quem usa de verdade. Entre na lista e avisamos quando for sua vez.</p>
-    <a class="btn" id="cta-fim" href="#" rel="noopener">Entrar na lista pelo WhatsApp</a>
+    <form class="form-entrar" id="form-fim" novalidate>
+      <label class="so-leitor" for="tel-fim">Seu WhatsApp com DDD</label>
+      <input class="campo-tel" id="tel-fim" name="telefone" type="tel" inputmode="numeric"
+             autocomplete="tel" placeholder="DDD + número, ex: 11 98888-7777" maxlength="20" required>
+      <button class="btn" type="submit">Quero entrar</button>
+    </form>
+    <p class="msg" id="msg-fim" role="status" aria-live="polite"></p>
   </div>
 </section>
 
@@ -222,43 +252,114 @@ footer a{color:var(--texto-fraco)}
 </footer>
 
 <script>
-  /* ====================================================================
-     TROQUE AQUI: número de WhatsApp que recebe os interessados.
-     Formato: código do país + DDD + número, só dígitos.
-     Ex.: "5511966160601"
-     Enquanto estiver como está, os botões avisam que falta configurar.
-     ==================================================================== */
-  var WHATSAPP = "SEU_NUMERO_AQUI";
-  var TEXTO = "Oi! Quero entrar na lista do RAGUI — o Gênio da Bola.";
+  /* Inscricao pela landing: a pessoa deixa so o celular e o RAGUI se
+     apresenta. O POST vai como text/plain de proposito — assim o
+     navegador nao dispara preflight de CORS. */
+  var ENDPOINT = "https://qubitadvisors.app.n8n.cloud/webhook/genio-inscricao";
 
   document.getElementById("ano").textContent = new Date().getFullYear();
 
   (function () {
-    var valido = /^\d{12,13}$/.test(WHATSAPP);
-    var destino = "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(TEXTO);
-    ["cta-topo", "cta-fim"].forEach(function (id) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      if (valido) {
-        el.href = destino;
-        el.target = "_blank";
-      } else {
-        /* Sem número configurado: o botão não leva a lugar nenhum, mas
-           avisa o visitante com elegância em vez de quebrar. */
-        el.addEventListener("click", function (e) {
-          e.preventDefault();
-          el.textContent = "Em breve";
-          var nota = document.getElementById("nota-" + id);
-          if (!nota) {
-            nota = document.createElement("p");
-            nota.id = "nota-" + id;
-            nota.style.cssText = "font-size:13.5px;color:var(--texto-fraco);margin-top:14px";
-            nota.textContent = "Estamos abrindo em grupos pequenos. Volte em alguns dias.";
-            (el.closest(".acoes") || el).insertAdjacentElement("afterend", nota);
-          }
-        });
-      }
-    });
+    function digitos(s) { return String(s || "").replace(/\D/g, ""); }
+
+    function mascara(v) {
+      var d = digitos(v);
+      /* Quem digita com o +55 nao pode ter o DDI lido como DDD: isso
+         mandava mensagem para numero errado. */
+      if (d.length > 11 && d.indexOf("55") === 0) d = d.slice(2);
+      d = d.slice(0, 11);
+      if (d.length <= 2) return d;
+      if (d.length <= 6) return "(" + d.slice(0, 2) + ") " + d.slice(2);
+      if (d.length <= 10) return "(" + d.slice(0, 2) + ") " + d.slice(2, 6) + "-" + d.slice(6);
+      return "(" + d.slice(0, 2) + ") " + d.slice(2, 7) + "-" + d.slice(7);
+    }
+
+    /* DDDs que existem de verdade. A faixa 11-99 aceitava 20, 25, 30, 40,
+       50, 52, 56-60, 70, 76, 80 e 90, que nao sao DDD de lugar nenhum. */
+    var DDDS = [11,12,13,14,15,16,17,18,19,21,22,24,27,28,31,32,33,34,35,37,38,
+                41,42,43,44,45,46,47,48,49,51,53,54,55,61,62,63,64,65,66,67,68,
+                69,71,73,74,75,77,79,81,82,83,84,85,86,87,88,89,91,92,93,94,95,
+                96,97,98,99];
+    function valido(d) {
+      if (d.length > 11 && d.indexOf("55") === 0) d = d.slice(2);
+      if (d.length !== 10 && d.length !== 11) return false;
+      if (DDDS.indexOf(parseInt(d.slice(0, 2), 10)) < 0) return false;
+      /* Celular de 9 digitos sempre comeca com 9; fixo de 8 nunca comeca com 0 ou 1. */
+      if (d.length === 11 && d.charAt(2) !== "9") return false;
+      if (d.length === 10 && "01".indexOf(d.charAt(2)) >= 0) return false;
+      return true;
+    }
+
+    function diz(el, classe, texto) {
+      el.className = "msg" + (classe ? " " + classe : "");
+      el.textContent = texto;
+    }
+
+    function ligar(sufixo) {
+      var f = document.getElementById("form-" + sufixo);
+      var inp = document.getElementById("tel-" + sufixo);
+      var msg = document.getElementById("msg-" + sufixo);
+      if (!f || !inp || !msg) return;
+      var btn = f.querySelector('button[type="submit"]');
+
+      inp.addEventListener("input", function () {
+        var pos = inp.value.length;
+        inp.value = mascara(inp.value);
+        if (pos >= inp.value.length) inp.removeAttribute("aria-invalid");
+        diz(msg, "", "");
+      });
+
+      f.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var d = digitos(inp.value);
+        if (d.length > 11 && d.indexOf("55") === 0) d = d.slice(2);
+        if (!valido(d)) {
+          inp.setAttribute("aria-invalid", "true");
+          diz(msg, "erro", "Confere o número: precisa de DDD mais 8 ou 9 dígitos.");
+          inp.focus();
+          return;
+        }
+        var rotulo = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "Enviando...";
+        diz(msg, "", "");
+
+        fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ telefone: d, origem: String(location.href).slice(0, 300) })
+        })
+          .then(function (r) {
+            return r.json().catch(function () { return { ok: r.ok }; });
+          })
+          .then(function (j) {
+            j = j || {};
+            if (j.ok && j.enviado) {
+              diz(msg, "ok", "Pronto! Acabei de te chamar no WhatsApp \u2014 olha lá. \uD83D\uDC4B");
+              f.reset();
+            } else if (j.ok && j.motivo === "ja_inscrito") {
+              diz(msg, "ok", "Esse número já está na lista. Procura a conversa do RAGUI no seu WhatsApp.");
+            } else if (j.motivo === "telefone_invalido") {
+              inp.setAttribute("aria-invalid", "true");
+              diz(msg, "erro", "Esse número não parece válido. Confere o DDD?");
+            } else {
+              /* Inclui o caso de teto por IP: nao vale explicar o limite
+                 a quem pode estar abusando dele. */
+              diz(msg, "erro", "Não consegui te chamar agora. Tenta de novo em alguns minutos?");
+            }
+          })
+          .catch(function () {
+            diz(msg, "erro", "Não conseguimos falar com o servidor. Tenta de novo?");
+          })
+          .then(function () {
+            btn.disabled = false;
+            btn.textContent = rotulo;
+          });
+      });
+    }
+
+    ligar("topo");
+    ligar("fim");
   })();
 </script>
 </body>
