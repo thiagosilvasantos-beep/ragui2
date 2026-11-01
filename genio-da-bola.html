@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAGUI — O Gênio da Bola</title>
+<meta name="description" content="Uma inteligência artificial que cruza estatística, notícias e condições de jogo para explicar o que está em disputa antes da bola rolar.">
+<meta property="og:title" content="RAGUI — O Gênio da Bola">
+<meta property="og:description" content="Entenda o jogo antes de ele começar. Estatística, notícias e condições de campo, cruzadas por IA e explicadas no seu WhatsApp.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fundo:#0A1129; --tinta:#16255A; --borda:#24305A;
+  --ambar:#F2A93B; --ambar-fraco:rgba(242,169,59,.12);
+  --texto:#DDE3F2; --texto-fraco:#93A0BE; --branco:#fff;
+  --disp:"Sora",system-ui,sans-serif; --ui:"Public Sans",system-ui,sans-serif;
+  --raio:18px; --raio-lg:28px; --gutter:clamp(20px,5vw,48px);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--fundo);color:var(--texto);font-family:var(--ui);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{width:min(1120px,100% - var(--gutter)*2);margin-inline:auto}
+section{padding:clamp(64px,9vw,120px) 0}
+h1,h2,h3{font-family:var(--disp);line-height:1.1;letter-spacing:-.02em}
+a{color:inherit}
+
+/* ---------- chrome ---------- */
+.topo{position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);background:rgba(10,17,41,.82);border-bottom:1px solid var(--borda)}
+.topo .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+.marca{font-family:var(--disp);font-weight:800;font-size:21px;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.marca .pt{width:9px;height:9px;border-radius:50%;background:var(--ambar);flex:none}
+.marca small{display:block;font-family:var(--ui);font-weight:500;font-size:11px;letter-spacing:.16em;color:var(--texto-fraco);text-transform:uppercase;margin-top:-2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;font-family:var(--disp);font-weight:600;font-size:15px;
+  padding:13px 22px;border-radius:999px;background:var(--ambar);color:#15223f;text-decoration:none;border:0;cursor:pointer;
+  transition:transform .15s ease,filter .15s ease;white-space:nowrap}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.07)}
+.btn-fantasma{background:transparent;color:var(--texto);border:1px solid var(--borda)}
+.btn-fantasma:hover{border-color:var(--ambar);color:var(--ambar)}
+.topo .btn{padding:10px 18px;font-size:14px}
+
+/* ---------- hero ---------- */
+.hero{position:relative;padding-top:clamp(56px,8vw,92px);overflow:hidden}
+.hero .campo{position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:
+    radial-gradient(900px 440px at 78% 8%, rgba(242,169,59,.10), transparent 62%),
+    radial-gradient(760px 420px at 6% 86%, rgba(36,48,90,.55), transparent 64%);}
+.hero .linhas{position:absolute;inset:0;pointer-events:none;opacity:.5}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.08fr .92fr;gap:clamp(32px,5vw,64px);align-items:center}
+.selo{display:inline-flex;align-items:center;gap:9px;font-family:var(--ui);font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ambar);background:var(--ambar-fraco);border:1px solid rgba(242,169,59,.42);padding:7px 15px;border-radius:999px;margin-bottom:26px}
+.selo .vivo{width:7px;height:7px;border-radius:50%;background:var(--ambar);box-shadow:0 0 0 0 rgba(242,169,59,.6);animation:pulsa 2.4s infinite}
+@keyframes pulsa{0%{box-shadow:0 0 0 0 rgba(242,169,59,.55)}70%{box-shadow:0 0 0 11px rgba(242,169,59,0)}100%{box-shadow:0 0 0 0 rgba(242,169,59,0)}}
+h1{font-size:clamp(40px,6.4vw,70px);font-weight:800}
+h1 em{font-style:normal;color:var(--ambar)}
+.sub{font-size:clamp(17px,2vw,20px);color:var(--texto-fraco);margin-top:22px;max-width:52ch}
+.acoes{display:flex;flex-wrap:wrap;gap:13px;margin-top:34px}
+.aviso-cta{font-size:13.5px;color:var(--texto-fraco);margin-top:16px}
+
+/* ---------- mock de conversa ---------- */
+.fone{background:var(--tinta);border:1px solid var(--borda);border-radius:var(--raio-lg);padding:20px;max-width:420px;margin-inline:auto;width:100%}
+.fone .cab{display:flex;align-items:center;gap:11px;padding-bottom:15px;border-bottom:1px solid var(--borda);margin-bottom:17px}
+.fone .av{width:38px;height:38px;border-radius:50%;background:var(--ambar);color:#15223f;display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:16px;flex:none}
+.fone .nome{font-family:var(--disp);font-weight:600;font-size:15px}
+.fone .status{font-size:11.5px;color:var(--texto-fraco)}
+.bolha{border-radius:16px;padding:13px 16px;font-size:14.5px;margin-bottom:11px;max-width:86%;line-height:1.55}
+.bolha.eu{background:var(--ambar);color:#15223f;margin-left:auto;border-bottom-right-radius:5px;font-weight:500}
+.bolha.ele{background:rgba(255,255,255,.05);border:1px solid var(--borda);border-bottom-left-radius:5px}
+.bolha.ele b{color:var(--ambar);font-weight:600}
+.bolha .fator{display:flex;gap:9px;margin-top:9px;font-size:13.5px;color:var(--texto-fraco)}
+.bolha .fator span:first-child{flex:none}
+
+/* ---------- grades ---------- */
+.titulo-sec{max-width:62ch;margin-bottom:clamp(36px,5vw,56px)}
+.titulo-sec .olho{font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ambar);margin-bottom:14px;font-family:var(--ui)}
+h2{font-size:clamp(28px,4vw,44px);font-weight:700}
+.titulo-sec p{color:var(--texto-fraco);margin-top:16px;font-size:17px}
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:18px}
+.card{background:var(--tinta);border:1px solid var(--borda);border-radius:var(--raio);padding:28px 24px}
+.card .ic{width:44px;height:44px;border-radius:12px;background:var(--ambar-fraco);border:1px solid rgba(242,169,59,.34);
+  display:grid;place-items:center;font-size:20px;margin-bottom:18px}
+.card h3{font-size:19px;font-weight:600;margin-bottom:9px}
+.card p{color:var(--texto-fraco);font-size:15px}
+
+/* ---------- passos ---------- */
+.passos{counter-reset:p;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.passo{position:relative;padding:30px 24px;border:1px solid var(--borda);border-radius:var(--raio);background:var(--tinta)}
+.passo::before{counter-increment:p;content:counter(p);font-family:var(--disp);font-weight:800;font-size:15px;
+  width:34px;height:34px;border-radius:50%;background:var(--ambar);color:#15223f;display:grid;place-items:center;margin-bottom:16px}
+.passo h3{font-size:18px;font-weight:600;margin-bottom:8px}
+.passo p{color:var(--texto-fraco);font-size:15px}
+
+/* ---------- honestidade ---------- */
+.franqueza{background:var(--tinta);border:1px solid var(--borda);border-left:3px solid var(--ambar);border-radius:var(--raio);padding:clamp(28px,4vw,42px)}
+.franqueza h2{font-size:clamp(24px,3vw,32px);margin-bottom:20px}
+.franqueza ul{list-style:none;display:grid;gap:13px;max-width:70ch}
+.franqueza li{display:flex;gap:13px;color:var(--texto-fraco);font-size:16px}
+.franqueza li b{color:var(--texto);font-weight:600}
+.franqueza .mk{color:var(--ambar);flex:none;font-weight:700}
+
+/* ---------- fecho ---------- */
+.fecho{text-align:center}
+.fecho h2{margin-bottom:18px}
+.fecho p{color:var(--texto-fraco);max-width:54ch;margin:0 auto 32px;font-size:17px}
+footer{border-top:1px solid var(--borda);padding:38px 0;color:var(--texto-fraco);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center}
+footer a{color:var(--texto-fraco)}
+
+@media(max-width:880px){
+  .hero .wrap{grid-template-columns:1fr}
+  .fone{order:2;margin-top:8px}
+  .topo .btn{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <div class="marca"><span class="pt"></span><div>RAGUI<small>o gênio da bola</small></div></div>
+    <a class="btn" href="#entrar">Entrar na lista</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="campo"></div>
+  <svg class="linhas" viewBox="0 0 1440 700" preserveAspectRatio="none" aria-hidden="true">
+    <g fill="none" stroke="#24305A" stroke-width="1.2">
+      <circle cx="1180" cy="330" r="150"/><circle cx="1180" cy="330" r="4" fill="#24305A"/>
+      <path d="M1440 150 H1030 V510 H1440"/><path d="M1440 240 H1150 V420 H1440"/>
+      <path d="M0 640 H330"/><path d="M0 672 H210"/>
+    </g>
+  </svg>
+  <div class="wrap">
+    <div>
+      <span class="selo"><span class="vivo"></span>Abrindo aos poucos</span>
+      <h1>Entenda o jogo <em>antes</em> de ele começar.</h1>
+      <p class="sub">O RAGUI é uma inteligência artificial que cruza o histórico das equipes, as notícias da semana, as condições de campo e mais uma dezena de fatores — e te explica, em português, o que está realmente em disputa.</p>
+      <div class="acoes">
+        <a class="btn" id="cta-topo" href="#" rel="noopener">Entrar na lista pelo WhatsApp</a>
+        <a class="btn btn-fantasma" href="#como">Ver como funciona</a>
+      </div>
+      <p class="aviso-cta">Sem custo nesta fase. Avisamos assim que sua vez chegar.</p>
+    </div>
+
+    <div class="fone" aria-label="Exemplo de conversa com o RAGUI">
+      <div class="cab">
+        <div class="av">R</div>
+        <div><div class="nome">RAGUI</div><div class="status">o gênio da bola · online</div></div>
+      </div>
+      <div class="bolha eu">E o clássico de domingo?</div>
+      <div class="bolha ele">
+        Jogo de poucas chances. Três coisas pesam mais que o retrospecto:
+        <div class="fator"><span>📉</span><span>O visitante não vence fora há <b>7 rodadas</b> — e cede a posse em média 58% nesses jogos.</span></div>
+        <div class="fator"><span>🏥</span><span>Dois titulares do meio saíram lesionados na quarta. O substituto provável tem perfil defensivo.</span></div>
+        <div class="fator"><span>🌧️</span><span>Previsão de <b>chuva forte</b> no horário. Campo pesado historicamente derruba o volume de finalizações nesse estádio.</span></div>
+      </div>
+      <div class="bolha ele">Quer que eu abra os números de algum desses pontos?</div>
+    </div>
+  </div>
+</section>
+
+<section id="como">
+  <div class="wrap">
+    <div class="titulo-sec">
+      <div class="olho">O que ele olha</div>
+      <h2>Não é achismo. É cruzamento de dados.</h2>
+      <p>Antes de responder, o RAGUI varre camadas de informação que ninguém consegue acompanhar sozinho — e só te conta o que muda a leitura do jogo.</p>
+    </div>
+    <div class="grade">
+      <div class="card"><div class="ic">📊</div><h3>Histórico e forma</h3><p>Confrontos diretos, sequência recente, desempenho como mandante e visitante, padrões que se repetem há temporadas.</p></div>
+      <div class="card"><div class="ic">📰</div><h3>Notícias da semana</h3><p>Lesões, suspensões, escalação provável, troca de técnico, clima do elenco. O que saiu depois da última rodada.</p></div>
+      <div class="card"><div class="ic">🌦️</div><h3>Condições de jogo</h3><p>Previsão do tempo no horário da partida, estado do gramado, altitude, horário e desgaste de viagem.</p></div>
+      <div class="card"><div class="ic">⚖️</div><h3>E o resto</h3><p>Árbitro escalado, calendário apertado, importância da partida na tabela, desfalques por convocação — dezenas de fatores.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="titulo-sec">
+      <div class="olho">Como funciona</div>
+      <h2>Você pergunta como falaria com um amigo.</h2>
+    </div>
+    <div class="passos">
+      <div class="passo"><h3>Manda a pergunta</h3><p>No WhatsApp, do jeito que vier: “como vai ser o jogo de domingo?”, “vale olhar esse confronto?”, “por que esse time cai fora de casa?”.</p></div>
+      <div class="passo"><h3>O RAGUI cruza tudo</h3><p>Ele busca o histórico, lê as notícias recentes, confere as condições do jogo e pesa os fatores que de fato mudam o resultado.</p></div>
+      <div class="passo"><h3>Recebe a leitura</h3><p>Uma explicação curta e direta do que está em disputa — com os números por trás, se você quiser puxar o fio.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="franqueza">
+      <h2>O que o RAGUI <span style="color:var(--ambar)">não</span> é</h2>
+      <ul>
+        <li><span class="mk">—</span><span><b>Não é bola de cristal.</b> Futebol tem acaso, e nenhuma análise elimina isso. O RAGUI mostra o que os dados dizem, não o que vai acontecer.</span></li>
+        <li><span class="mk">—</span><span><b>Não dá palpite garantido</b> nem promete acerto. Quem promete isso está vendendo outra coisa.</span></li>
+        <li><span class="mk">—</span><span><b>Não é conselho financeiro.</b> Se você aposta, a decisão e o risco continuam sendo seus.</span></li>
+        <li><span class="mk">—</span><span><b>É para maiores de 18 anos.</b></span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="entrar">
+  <div class="wrap fecho">
+    <h2>Quer ser dos primeiros?</h2>
+    <p>Estamos liberando o acesso aos poucos, em grupos pequenos, para ajustar as análises com quem usa de verdade. Entre na lista e avisamos quando for sua vez.</p>
+    <a class="btn" id="cta-fim" href="#" rel="noopener">Entrar na lista pelo WhatsApp</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>© <span id="ano"></span> RAGUI · O Gênio da Bola</div>
+    <div><a href="/privacidade.html">Privacidade</a> · <span>Conteúdo para maiores de 18 anos</span></div>
+  </div>
+</footer>
+
+<script>
+  /* ====================================================================
+     TROQUE AQUI: número de WhatsApp que recebe os interessados.
+     Formato: código do país + DDD + número, só dígitos.
+     Ex.: "5511966160601"
+     Enquanto estiver como está, os botões avisam que falta configurar.
+     ==================================================================== */
+  var WHATSAPP = "SEU_NUMERO_AQUI";
+  var TEXTO = "Oi! Quero entrar na lista do RAGUI — o Gênio da Bola.";
+
+  document.getElementById("ano").textContent = new Date().getFullYear();
+
+  (function () {
+    var valido = /^\d{12,13}$/.test(WHATSAPP);
+    var destino = "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(TEXTO);
+    ["cta-topo", "cta-fim"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (valido) {
+        el.href = destino;
+        el.target = "_blank";
+      } else {
+        el.addEventListener("click", function (e) {
+          e.preventDefault();
+          alert("Falta configurar o número de WhatsApp nesta página (variável WHATSAPP no final do arquivo).");
+        });
+      }
+    });
+  })();
+</script>
+</body>
+</html>
