@@ -102,9 +102,11 @@ footer a:hover{color:var(--ambar)}
     WhatsApp e o que você escreve na conversa — para responder suas perguntas
     sobre os jogos. O site tem um só campo: o seu celular. Quando você o envia,
     está nos pedindo para te chamar, e é o RAGUI quem manda a primeira mensagem.
-    Não usamos cookies. Não vendemos seus dados a ninguém. Você sai quando quiser
-    escrevendo <b>sair</b> na conversa, e pode pedir correção ou apagamento pelos
-    canais no fim desta página. O serviço é destinado a maiores de 18 anos.
+    Não usamos cookies. Não vendemos seus dados a ninguém. Há planos pagos, com
+    teste grátis de 5 dias sem cartão, e os preços estão na seção 10 — o cartão é
+    processado pelo Stripe e nós nunca o vemos. Você sai quando quiser escrevendo
+    <b>sair</b> na conversa, e pode pedir correção ou apagamento pelos canais no
+    fim desta página. O serviço é destinado a maiores de 18 anos.
   </div>
 
   <nav class="indice" aria-label="Sumário">
@@ -142,6 +144,7 @@ footer a:hover{color:var(--ambar)}
         <tr><td>Endereço de IP e data/hora</td><td>No envio do formulário</td><td>Impedir que alguém cadastre o número de outras pessoas em massa</td></tr>
         <tr><td>Nome de exibição do WhatsApp</td><td>Junto com a mensagem</td><td>Saber como te chamar</td></tr>
         <tr><td>Conteúdo das conversas</td><td>Durante o uso, no WhatsApp</td><td>Entender sua pergunta e lembrar o contexto do que você já perguntou</td></tr>
+        <tr><td>Plano, data de vencimento e identificadores da assinatura</td><td>Se você assinar</td><td>Saber até quando seu acesso vale e renovar ou encerrar corretamente</td></tr>
       </tbody>
     </table>
   </div>
@@ -150,9 +153,11 @@ footer a:hover{color:var(--ambar)}
     WhatsApp</strong> — nada mais. Nada é enviado por você abrir a página: só
     quando você toca em entrar. Ao fazer isso, você está nos pedindo para te
     chamar, e é o RAGUI quem manda a primeira mensagem. Se o número não for seu,
-    basta responder <strong>sair</strong> e não escrevemos de novo. Não
-    coletamos dados de pagamento — o serviço não é vendido hoje (veja a seção
-    10). Não
+    basta responder <strong>sair</strong> e não escrevemos de novo. <strong>Não coletamos dados de pagamento.</strong> Se você
+    assinar, os dados do cartão são digitados e guardados pelo <strong>Stripe</strong>,
+    o processador de pagamentos — eles não passam por nós e nós nunca os vemos. De
+    volta para cá vêm apenas o plano contratado, a data de vencimento e os
+    identificadores da assinatura. Não
     solicitamos dados sensíveis (origem racial, convicção religiosa, saúde, etc.)
     — se algum aparecer espontaneamente numa conversa, não o utilizamos para
     nenhuma outra finalidade.
@@ -204,6 +209,7 @@ footer a:hover{color:var(--ambar)}
         <tr><td>Meta Platforms (WhatsApp)</td><td>Transporta as mensagens entre você e o RAGUI</td></tr>
         <tr><td>GitHub, Inc. (Microsoft)</td><td>Hospeda este site e mantém registros técnicos de acesso</td></tr>
         <tr><td>Provedores de modelos de inteligência artificial</td><td>Processam o texto da sua pergunta para gerar a resposta</td></tr>
+        <tr><td>Stripe</td><td>Processa o pagamento da assinatura. É quem recebe e guarda os dados do seu cartão; nós recebemos de volta só o plano e o vencimento</td></tr>
       </tbody>
     </table>
   </div>
@@ -230,6 +236,7 @@ footer a:hover{color:var(--ambar)}
   <ul>
     <li><strong>Número de WhatsApp e nome de exibição:</strong> mantidos enquanto durar a relação com você e por até 12 meses após o último contato, salvo obrigação legal de retenção maior;</li>
     <li><strong>Endereço de IP do formulário:</strong> mantido por 12 meses, só para a contenção de abuso descrita na seção 4;</li>
+    <li><strong>Registros de assinatura e pagamento:</strong> mantidos por 5 anos após o encerramento, por obrigação legal de guarda fiscal e para defesa em eventual disputa (art. 7º, II e VI da LGPD). Esse prazo não é encurtado por pedido de exclusão, e os dados do cartão nunca estiveram conosco;</li>
     <li><strong>Conversas:</strong> mantidas enquanto você estiver usando o serviço, para manter o contexto das suas perguntas;</li>
     <li><strong>Após pedido de exclusão:</strong> apagamos os dados em até 15 dias, exceto o que a lei exigir conservar.</li>
   </ul>
@@ -277,13 +284,36 @@ footer a:hover{color:var(--ambar)}
       dela é seu.
     </p>
   </div>
-  <h3>Preço e disponibilidade</h3>
+  <h3>Planos e preços</h3>
+  <p>
+    O acesso ainda está abrindo em grupos pequenos, por lista de espera. Estes são
+    os planos, publicados aqui <em>antes</em> de qualquer contratação, como
+    prometido:
+  </p>
+  <div class="rolagem">
+    <table>
+      <thead><tr><th>Plano</th><th>Cobrança</th><th>Equivale a</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Rodada</strong></td><td>R$ 49,90 por mês</td><td>R$ 49,90/mês</td></tr>
+        <tr><td><strong>Returno</strong></td><td>R$ 239,40 a cada 6 meses</td><td>R$ 39,90/mês</td></tr>
+        <tr><td><strong>Temporada</strong></td><td>R$ 358,80 por ano</td><td>R$ 29,90/mês</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Teste, renovação e cancelamento</h3>
   <ul>
-    <li>Hoje o RAGUI — O Gênio da Bola <strong>não é vendido</strong>: o acesso é por lista de espera, aberta em grupos pequenos, e não cobramos nada por ele;</li>
-    <li>Quando houver plano pago, o preço, a forma de pagamento e as regras de cancelamento serão informados <em>antes</em> da contratação e publicados nesta página;</li>
-    <li>Em qualquer compra online valerá o direito de arrependimento em 7 dias (art. 49 do CDC), com reembolso integral;</li>
-    <li>Você pode sair quando quiser, sem custo, escrevendo na própria conversa do WhatsApp.</li>
+    <li><strong>Teste grátis de 5 dias, sem cartão</strong>, contado a partir da sua primeira conversa com o RAGUI. Terminado o teste, você só continua se escolher assinar;</li>
+    <li><strong>Todos os planos renovam automaticamente</strong> ao fim do período contratado, pelo mesmo valor, até você cancelar. Avisamos antes de qualquer mudança de preço;</li>
+    <li><strong>Cancele quando quiser</strong>, sem multa, escrevendo na própria conversa do WhatsApp. O cancelamento vale a partir do ciclo seguinte, e você mantém o acesso até o fim do período que já pagou;</li>
+    <li>Nos planos Returno e Temporada, se você cancelar no meio do período, <strong>devolvemos proporcionalmente os meses ainda não iniciados</strong>;</li>
+    <li><strong>Direito de arrependimento:</strong> em até 7 dias da contratação, você pode desistir e receber <strong>reembolso integral</strong>, sem precisar justificar (art. 49 do CDC);</li>
+    <li>O pagamento é processado pelo <strong>Stripe</strong>. Os dados do seu cartão ficam com ele, não conosco.</li>
   </ul>
+  <p>
+    Assinar não compra acerto. Compra acesso à leitura dos jogos descrita na seção
+    anterior, com os limites que estão lá — inclusive o de que ninguém, nem nós,
+    sabe o resultado de uma partida antes dela.
+  </p>
   <h3>Uso adequado</h3>
   <ul>
     <li>Você deve ter 18 anos ou mais e escrever de um número de WhatsApp próprio;</li>
